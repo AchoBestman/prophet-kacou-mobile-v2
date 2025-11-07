@@ -1,0 +1,3 @@
+#Start the iOS Simulator with the following command:
+
+open -a Simulator
