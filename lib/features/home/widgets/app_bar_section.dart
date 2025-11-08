@@ -22,8 +22,7 @@ class AppBarSection extends StatelessWidget {
         ),
         ElevatedButton.icon(
           onPressed: () {
-            // Navigation vers sermons
-            debugPrint('Navigate to sermons');
+            Navigator.pushReplacementNamed(context, '/sermons');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,

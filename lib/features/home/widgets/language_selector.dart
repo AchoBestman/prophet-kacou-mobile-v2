@@ -15,9 +15,7 @@ class LanguageSelector extends StatelessWidget {
 
     // Afficher un loader pendant l'initialisation
     if (!languageProvider.isInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Column(
@@ -43,19 +41,29 @@ class LanguageSelector extends StatelessWidget {
                 runSpacing: 4,
                 alignment: WrapAlignment.start,
                 children: languages.map((item) {
-                  final isSelected = languageProvider.currentLanguage?.lang == item.lang;
-                  
+                  final isSelected =
+                      languageProvider.currentLanguage?.lang == item.lang;
+
                   return InkWell(
                     onTap: () async {
                       await languageProvider.changeLanguage(item);
+                      if (context.mounted) {
+                        Future.microtask(() {
+                          Navigator.pushReplacementNamed(context, '/sermons');
+                        });
+                      }
                     },
                     child: Container(
                       width: 65,
                       height: 45,
                       decoration: BoxDecoration(
-                        color: isSelected ? pkpIndigo.withOpacity(0.1) : Colors.white,
+                        color: isSelected
+                            ? pkpIndigo.withOpacity(0.1)
+                            : Colors.white,
                         border: Border.all(
-                          color: isSelected ? pkpIndigo : pkpIndigo.withOpacity(0.5),
+                          color: isSelected
+                              ? pkpIndigo
+                              : pkpIndigo.withOpacity(0.5),
                           width: isSelected ? 2 : 1,
                         ),
                         borderRadius: BorderRadius.circular(4),

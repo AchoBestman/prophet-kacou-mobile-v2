@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/features/sermons/pages/sermons_page.dart';
 import 'package:prophet_kacou/i18n/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
@@ -18,6 +19,10 @@ class HomePage extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: pkpIndigo)),
       home: const LandingPage(),
+      initialRoute: '/',
+      routes: {
+        '/sermons': (context) => const SermonsPage(),
+      },
     );
   }
 }
