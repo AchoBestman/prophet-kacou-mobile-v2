@@ -1,0 +1,20 @@
+{
+  // Formatage automatique à la sauvegarde
+  "editor.formatOnSave": true,
+
+  // Organisation des imports et correction automatique à la sauvegarde pour les fichiers Dart
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,           // appliquera toutes les corrections automatiques (ex : const, lint)
+      "source.organizeImports": true   // organisera / supprimera les imports inutilisés
+    }
+  },
+
+  // Pour détecter et proposer automatiquement des imports quand tu tapes une classe non importée
+  // (fonctionnalité native de l’extension Dart/Flutter)  
+  "dart.autocompleteImportPackages": true,
+
+  // Optionnel : désactiver les suggestions d’inlays si tu préfères un code plus épuré
+  "editor.inlayHints.enabled": "off"
+}

@@ -1,3 +1,5 @@
 #Start the iOS Simulator with the following command:
 
 open -a Simulator
+
+sips -z 3000 2000 assets/images/1080X564.png --out assets/images/2000X3000.png
