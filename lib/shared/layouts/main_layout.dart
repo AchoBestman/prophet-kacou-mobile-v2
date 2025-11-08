@@ -6,11 +6,13 @@ import 'package:prophet_kacou/i18n/i18n.dart';
 class MainLayout extends StatelessWidget {
   final String title;
   final Widget body;
+  final List<Widget>? actions; 
 
   const MainLayout({
     super.key,
     required this.title,
     required this.body,
+    this.actions
   });
 
   @override
@@ -19,7 +21,12 @@ class MainLayout extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: pkpIndigo,
-        title: Text(title),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(title, style: const TextStyle(
+            color: Colors.white, // 👈 titre en blanc
+            fontWeight: FontWeight.w600,
+          )),
+          actions: actions
       ),
       drawer: Drawer(
         child: ListView(
@@ -103,7 +110,7 @@ class MainLayout extends StatelessWidget {
               leading: const Icon(Icons.info),
               title: const Text('À propos'),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/about');
+                Navigator.pushReplacementNamed(context, '/abouts');
               },
             ),
           ],
