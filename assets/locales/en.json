@@ -26,7 +26,8 @@
     "church": "Assemblies",
     "biography": "Biography",
     "photos": "Photos",
-    "videos": "Videos" 
+    "videos": "Videos",
+    "settings": "Settings"
   },
   "button": {
     "search": "Search",
@@ -122,5 +123,21 @@
     "delete_all": "Delete all",
     "see": "See",
     "make_as_read": "Mark as read"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "dark_mode": "Dark mode",
+    "dark_mode_enabled": "Dark mode enabled",
+    "light_mode_enabled": "Light mode enabled",
+    "theme_mode": "Theme selection",
+    "light_theme": "Light theme",
+    "dark_theme": "Dark theme",
+    "system_theme": "Follow system",
+    "system_theme_desc": "Use your device theme",
+    "color_preview": "Color preview",
+    "light_bg": "Light background",
+    "dark_bg": "Dark background",
+    "primary_color": "Primary color"
   }
 }

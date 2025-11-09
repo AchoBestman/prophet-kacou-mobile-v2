@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/app/themes/app_theme.dart';
 import 'package:prophet_kacou/features/abouts/pages/abouts_page.dart';
 import 'package:prophet_kacou/features/assemblies/pages/assemblies_page.dart';
 import 'package:prophet_kacou/features/biographies/pages/biographies_page.dart';
@@ -23,18 +24,21 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    // Écouter les changements de thème
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return MaterialApp(
       title: 'Prophet Kacou',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: pkpIndigo)),
+      theme: themeProvider.lightTheme,
+      darkTheme: themeProvider.darkTheme,
+      themeMode: themeProvider.themeMode,
       home: const LandingPage(),
       initialRoute: '/',
       routes: {
         '/sermons': (context) => const SermonsPage(),
-        '/sermon_detail': (context) => const SermonDetailPage(
-        title: 'Détail',
-        date: '2025-01-01',
-      ),
+        '/sermon_detail': (context) => SermonDetailPage(sermon: null,),
         '/biographies': (context) => const BiographiesPage(),
 
         '/photos': (context) => const PhotosPage(),

@@ -1,4 +1,3 @@
-// lib/layouts/main_layout.dart
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
@@ -6,117 +5,140 @@ import 'package:prophet_kacou/i18n/i18n.dart';
 class MainLayout extends StatelessWidget {
   final String title;
   final Widget body;
-  final List<Widget>? actions; 
+  final List<Widget>? actions;
 
   const MainLayout({
     super.key,
     required this.title,
     required this.body,
-    this.actions
+    this.actions,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    //final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      // ✅ Utilise automatiquement theme.scaffoldBackgroundColor
       appBar: AppBar(
         backgroundColor: pkpIndigo,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(title, style: const TextStyle(
-            color: Colors.white, // 👈 titre en blanc
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
             fontWeight: FontWeight.w600,
-          )),
-          actions: actions
+          ),
+        ),
+        actions: actions,
       ),
       drawer: Drawer(
+        // ✅ Background du Drawer adapté au thème
+        backgroundColor: theme.scaffoldBackgroundColor,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF1A237E)),
+              decoration: const BoxDecoration(color: pkpIndigo),
               child: Text(
                 i18n.tr('home.title'),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: Text(i18n.tr('home.home')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.home,
+              title: i18n.tr('home.home'),
+              route: '/',
             ),
-            ListTile(
-              leading: const Icon(Icons.menu_book),
-              title: Text(i18n.tr('home.sermon')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/sermons');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.menu_book,
+              title: i18n.tr('home.sermon'),
+              route: '/sermons',
             ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: Text(i18n.tr('home.biography')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/biographies');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.person,
+              title: i18n.tr('home.biography'),
+              route: '/biographies',
             ),
-            ListTile(
-              leading: const Icon(Icons.photo),
-              title: Text(i18n.tr('home.photos')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/photos');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.photo,
+              title: i18n.tr('home.photos'),
+              route: '/photos',
             ),
-            ListTile(
-              leading: const Icon(Icons.video_settings),
-              title: Text(i18n.tr('home.videos')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/videos');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.video_settings,
+              title: i18n.tr('home.videos'),
+              route: '/videos',
             ),
-            ListTile(
-              leading: const Icon(Icons.audiotrack),
-              title: Text(i18n.tr('home.hymns')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/hymns');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.audiotrack,
+              title: i18n.tr('home.hymns'),
+              route: '/hymns',
             ),
-            ListTile(
-              leading: const Icon(Icons.home_filled),
-              title: Text(i18n.tr('home.church')),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/assemblies');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.home_filled,
+              title: i18n.tr('home.church'),
+              route: '/assemblies',
             ),
-             ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('Informations'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/informations');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.info_outline,
+              title: 'Informations',
+              route: '/informations',
             ),
-             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/settings');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.settings,
+              title: 'Settings',
+              route: '/settings',
             ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('À propos'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/abouts');
-              },
+            _buildDrawerItem(
+              context,
+              icon: Icons.info,
+              title: 'À propos',
+              route: '/abouts',
             ),
           ],
         ),
       ),
       body: SafeArea(child: body),
+    );
+  }
+
+  Widget _buildDrawerItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String route,
+  }) {
+    final theme = Theme.of(context);
+    
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: theme.iconTheme.color,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: theme.textTheme.bodyLarge?.color,
+        ),
+      ),
+      onTap: () {
+        Navigator.pushReplacementNamed(context, route);
+      },
     );
   }
 }
