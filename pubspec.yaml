@@ -38,6 +38,10 @@ dependencies:
   flutter_riverpod: ^3.0.3
   url_launcher: ^6.3.2
   provider: ^6.1.1
+  sqflite: ^2.4.0
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:
@@ -97,3 +101,8 @@ flutter:
   - assets/images/
   - assets/images/drapeau/
   - assets/images/1080X564.png
+  - assets/databases/common/common.db
+  - assets/databases/en/matth25v6_en.db
+  - assets/databases/fr/matth25v6_fr.db
+  - assets/databases/pt/matth25v6_pt.db
+  - assets/databases/es/matth25v6_es.db
