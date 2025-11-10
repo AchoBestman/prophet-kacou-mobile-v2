@@ -23,3 +23,34 @@ List<ParsedReference> parseConcordance(String input) {
 
   return result;
 }
+
+
+  String getVideoId(String url) {
+    if (url.isEmpty) return '';
+
+    Uri? uri;
+    try {
+      uri = Uri.parse(url);
+    } catch (_) {
+      return '';
+    }
+
+    // Essayer d'abord de récupérer list=xxxx
+    if (uri.queryParameters.containsKey('list')) {
+      return uri.queryParameters['list'] ?? '';
+    }
+
+    // Sinon récupérer v=xxxx
+    if (uri.queryParameters.containsKey('v')) {
+      return uri.queryParameters['v'] ?? '';
+    }
+
+    // fallback : essayer de prendre le dernier segment après '='
+    final segments = url.split(RegExp(r'[?&]'));
+    for (final s in segments) {
+      if (s.startsWith('v=')) return s.substring(2);
+      if (s.startsWith('list=')) return s.substring(5);
+    }
+
+    return '';
+  }

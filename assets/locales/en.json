@@ -29,7 +29,10 @@
     "videos": "Videos",
     "settings": "Settings",
     "countries": "Countries",
-    "informations": "Informations"
+    "informations": "Informations",
+    "contacts": "Contacts",
+    "contact_us": "Contact us",
+    "brother": "brother"
   },
   "button": {
     "search": "Search",

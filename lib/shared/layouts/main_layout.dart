@@ -68,18 +68,7 @@ class MainLayout extends StatelessWidget {
               title: i18n.tr('home.biography'),
               route: '/biographies',
             ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.photo,
-              title: i18n.tr('home.photos'),
-              route: '/photos',
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.video_settings,
-              title: i18n.tr('home.videos'),
-              route: '/videos',
-            ),
+            
             _buildDrawerItem(
               context,
               icon: Icons.audiotrack,
@@ -94,20 +83,32 @@ class MainLayout extends StatelessWidget {
             ),
             _buildDrawerItem(
               context,
+              icon: Icons.photo,
+              title: i18n.tr('home.photos'),
+              route: '/photos',
+            ),
+            _buildDrawerItem(
+              context,
+              icon: Icons.video_settings,
+              title: i18n.tr('home.videos'),
+              route: '/videos',
+            ),
+            _buildDrawerItem(
+              context,
               icon: Icons.info_outline,
-              title: 'Informations',
+              title: i18n.tr('home.informations'),
               route: '/informations',
             ),
             _buildDrawerItem(
               context,
               icon: Icons.settings,
-              title: 'Settings',
+              title: i18n.tr('home.settings'),
               route: '/settings',
             ),
             _buildDrawerItem(
               context,
               icon: Icons.info,
-              title: 'À propos',
+              title: i18n.tr('home.contacts'),
               route: '/abouts',
             ),
           ],
