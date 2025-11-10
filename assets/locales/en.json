@@ -28,7 +28,8 @@
     "photos": "Photos",
     "videos": "Videos",
     "settings": "Settings",
-    "countries": "Countries"
+    "countries": "Countries",
+    "informations": "Informations"
   },
   "button": {
     "search": "Search",

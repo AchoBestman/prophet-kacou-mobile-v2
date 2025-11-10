@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/country.dart';
 import 'package:prophet_kacou/core/repositories/country.dart';
+import 'package:prophet_kacou/features/assemblies/pages/city_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
@@ -23,7 +24,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
   bool _isSearching = false;
   bool _isAscending = true;
   String _searchQuery = '';
-  
+
   int _currentPage = 1;
   int _totalCount = 0;
   final int _perPage = 20;
@@ -83,9 +84,9 @@ class _AssembliesPageState extends State<AssembliesPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -148,7 +149,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
           if (_isSearching)
             Container(
               padding: const EdgeInsets.all(8.0),
-              color: isDark ? pkpDark: pkpSand,
+              color: isDark ? pkpDark : pkpSand,
               child: TextField(
                 controller: _searchController,
                 autofocus: true,
@@ -177,7 +178,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
                 onChanged: _onSearchChanged,
               ),
             ),
-          
+
           // Liste des pays
           Expanded(
             child: RefreshIndicator(
@@ -185,34 +186,34 @@ class _AssembliesPageState extends State<AssembliesPage> {
               child: _countries.isEmpty && _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _countries.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              i18n.tr('table.no_result'),
-                              style: const TextStyle(fontSize: 18),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.only(top: 5),
-                          itemCount: _countries.length + (_hasMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index >= _countries.length) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-
-                            final country = _countries[index];
-                            return _buildCountryCard(country, isDark);
-                          },
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          i18n.tr('table.no_result'),
+                          style: const TextStyle(fontSize: 18),
+                          textAlign: TextAlign.center,
                         ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: EdgeInsets.only(top: 5),
+                      itemCount: _countries.length + (_hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= _countries.length) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+
+                        final country = _countries[index];
+                        return _buildCountryCard(country, isDark);
+                      },
+                    ),
             ),
           ),
         ],
@@ -229,21 +230,17 @@ class _AssembliesPageState extends State<AssembliesPage> {
       color: isDark ? pkpDark : pkpSand,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.zero,
-        side: BorderSide(
-          color: Colors.black12,
-          width: 0.5,
-        ),
+        side: BorderSide(color: Colors.black12, width: 0.5),
       ),
       child: InkWell(
         onTap: () {
-          // Navigation vers les détails du pays
-          // Navigator.push(context, ...);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CityPage(country: country)),
+          );
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8.0,
-            vertical: 6.0,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
           child: Row(
             children: [
               // Drapeau
@@ -252,10 +249,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
                 height: 36,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.0),
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: Colors.white, width: 1.5),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
@@ -280,9 +274,9 @@ class _AssembliesPageState extends State<AssembliesPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Informations du pays
               Expanded(
                 child: Column(
@@ -296,7 +290,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
                         fontSize: 16,
                       ),
                     ),
-           
+
                     Text(
                       country.sigle.toUpperCase(),
                       style: TextStyle(
@@ -308,7 +302,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
                   ],
                 ),
               ),
-              
+
               // Icône chevron
               Icon(
                 Icons.chevron_right,
