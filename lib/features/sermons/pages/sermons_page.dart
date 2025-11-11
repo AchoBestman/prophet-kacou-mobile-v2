@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
-import 'package:prophet_kacou/core/models/sermon_model.dart';
+import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:prophet_kacou/core/repositories/sermon.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
-import 'package:prophet_kacou/features/sermons/services/sermon_service.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
@@ -16,10 +16,12 @@ class SermonsPage extends StatefulWidget {
 class _SermonsPageState extends State<SermonsPage>
     with SingleTickerProviderStateMixin {
   bool ascending = true;
+  String searchQuery = '';
   late TabController _tabController;
-  final SermonService service = SermonService();
-  
+  final SermonRepository repository = SermonRepository();
+
   List<Sermon> sermonsList = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -35,31 +37,36 @@ class _SermonsPageState extends State<SermonsPage>
   }
 
   Future<void> _loadSermons() async {
+    setState(() => isLoading = true);
     try {
-      final result = await service.findAll(
-        'fr-fr',
-        params: {'per_page': 174},
-        order: {'column': 'number', 'direction': ascending ? 'ASC' : 'DESC'},
+      final result = await repository.findAll(
+        lang: i18n.lang,
+        searchQuery: searchQuery,
+        orderBy: 'number ${ascending ? "ASC" : "DESC"}',
       );
 
       setState(() {
-        sermonsList = List<Sermon>.from(result.data);
+        sermonsList = result;
+        isLoading = false;
       });
     } catch (e) {
       print("Erreur lors du chargement des sermons : $e");
+      setState(() => isLoading = false);
     }
   }
 
   void _toggleOrder() {
     setState(() {
       ascending = !ascending;
-      sermonsList = List<Sermon>.from(sermonsList)
-        ..sort(
-          (a, b) => ascending
-              ? a.number.compareTo(b.number)
-              : b.number.compareTo(a.number),
-        );
     });
+    _loadSermons();
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      searchQuery = query;
+    });
+    _loadSermons();
   }
 
   @override
@@ -68,30 +75,32 @@ class _SermonsPageState extends State<SermonsPage>
     final isDark = theme.brightness == Brightness.dark;
 
     return MainLayout(
-      title: i18n.tr('home.sermon'),
+      title: "Sermons",
       actions: [
+        // 🔍 Recherche
         IconButton(
           icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Recherche globale')));
+          onPressed: () async {
+            final query = await showSearch<String>(
+              context: context,
+              delegate: SermonSearchDelegate(onSearch: _onSearchChanged),
+            );
+            if (query != null) {
+              _onSearchChanged(query);
+            }
           },
         ),
+        // 🔽 Tri
         IconButton(
           icon: Icon(
             ascending ? Icons.arrow_downward : Icons.arrow_upward,
             color: Colors.white,
           ),
           onPressed: _toggleOrder,
-          tooltip: ascending
-              ? 'Trier par ordre décroissant'
-              : 'Trier par ordre croissant',
         ),
       ],
       body: Column(
         children: [
-          // TabBar avec background adapté au thème
           Container(
             color: theme.scaffoldBackgroundColor,
             child: TabBar(
@@ -100,165 +109,142 @@ class _SermonsPageState extends State<SermonsPage>
               unselectedLabelColor: theme.tabBarTheme.unselectedLabelColor,
               indicatorColor: theme.tabBarTheme.indicatorColor,
               tabs: const [
-                Tab(text: 'THE 74 SERMONS'),
+                Tab(text: 'SERMONS'),
                 Tab(text: 'READ A PASSAGE'),
               ],
             ),
           ),
-          // Contenu des onglets
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Liste des sermons
                 RefreshIndicator(
                   onRefresh: _loadSermons,
-                  child: Container(
-                    color: theme.scaffoldBackgroundColor,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(0),
-                      itemCount: sermonsList.length,
-                      itemBuilder: (context, index) {
-                        final sermon = sermonsList[index];
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(0),
+                          itemCount: sermonsList.length,
+                          itemBuilder: (context, index) {
+                            final sermon = sermonsList[index];
 
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    SermonDetailPage(sermon: sermon),
-                              ),
-                            );
-                          },
-                          child: Card(
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 0.6,
-                              horizontal: 0,
-                            ),
-                            elevation: 1,
-                            // ✅ Enlever color pour utiliser theme.cardTheme.color automatiquement
-                            color: isDark ? pkpDark :pkpSand,
-                            child: Padding(
-                              padding: const EdgeInsets.all(6.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        SermonDetailPage(sermonId: sermon.id),
+                                  ),
+                                );
+                              },
+                              child: Card(
+                                color: isDark ? pkpDark : pkpSand,
+                                margin: const EdgeInsets.symmetric(vertical: 1),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        child: Text(
-                                          sermon.chapter,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark
-                                                ? Colors.lightBlue
-                                                : Colors.blue,
-                                          ),
-                                        ),
-                                      ),
-                                      if (sermon.publicationDate != null)
-                                        Text(
-                                          sermon.publicationDate!,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: isDark
-                                                ? Colors.lightBlue
-                                                : Colors.blue,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    sermon.title,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: theme.textTheme.bodyLarge?.color,
-                                    ),
-                                  ),
-                                  
-                                  const SizedBox(height: 6),
-                                  if (sermon.audio != null)
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                      // 🔹 Ligne du haut : Chapter et Publication Date
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          IconButton(
-                                            style: ButtonStyle(
-                                              elevation:
-                                                  WidgetStateProperty.all(0),
-                                              padding: WidgetStateProperty.all(
-                                                EdgeInsets.zero,
-                                              ),
-                                              minimumSize:
-                                                  WidgetStateProperty.all(
-                                                    Size.zero,
-                                                  ),
-                                              tapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                            ),
-                                            icon: Icon(
-                                              Icons.play_arrow,
-                                              color: Colors.orange[600],
-                                            ),
-                                            onPressed: () {
-                                              // Logique play/pause
-                                            },
-                                          ),
-                                          IconButton(
-                                            style: ButtonStyle(
-                                              elevation:
-                                                  WidgetStateProperty.all(0),
-                                              minimumSize:
-                                                  WidgetStateProperty.all(
-                                                    Size.zero,
-                                                  ),
-                                              tapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                              padding: WidgetStateProperty.all(
-                                                EdgeInsets.zero,
-                                              ),
-                                            ),
-                                            icon: Icon(
-                                              Icons.download,
+                                          Text(
+                                            sermon.chapter,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
                                               color: isDark
                                                   ? Colors.lightBlue
                                                   : Colors.blue,
                                             ),
-                                            onPressed: () {
-                                              // Logique téléchargement
-                                            },
                                           ),
+                                          if (sermon.publicationDate != null)
+                                            Text(
+                                              sermon.publicationDate!,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: isDark
+                                                    ? Colors.lightBlue
+                                                    : Colors.blue,
+                                              ),
+                                            ),
                                         ],
                                       ),
-                                    ),
-                                ],
+
+                                      // 🔹 Titre du sermon
+                                      Text(
+                                        sermon.title,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color:
+                                              theme.textTheme.bodyLarge?.color,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+
+                                      // 🔹 Boutons en bas à droite
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          if (sermon.audio != null)
+                                            InkWell(
+                                              onTap: () {
+                                                // TODO: logique lecture audio
+                                              },
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  0.0,
+                                                ), // Contrôle total du padding
+                                                child: Icon(
+                                                  Icons.play_arrow_rounded,
+                                                  color: Colors.orange[600],
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          const SizedBox(
+                                            width: 4,
+                                          ), // Espacement entre les icônes
+                                          if (sermon.audio != null)
+                                            InkWell(
+                                              onTap: () {
+                                                // TODO: logique téléchargement
+                                              },
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  0.0,
+                                                ),
+                                                child: Icon(
+                                                  Icons.download_rounded,
+                                                  color: isDark
+                                                      ? Colors.lightBlue
+                                                      : Colors.blue,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                            );
+                          },
+                        ),
                 ),
-                // Onglet 2
                 Container(
-                  color: theme.scaffoldBackgroundColor,
-                  child: Center(
-                    child: Text(
-                      'No passage selected yet.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isDark ? Colors.grey[400] : Colors.grey,
-                      ),
-                    ),
-                  ),
+                  alignment: Alignment.center,
+                  child: const Text("No passage selected yet."),
                 ),
               ],
             ),
@@ -267,4 +253,38 @@ class _SermonsPageState extends State<SermonsPage>
       ),
     );
   }
+}
+
+/// 🔍 Délégué pour la recherche
+class SermonSearchDelegate extends SearchDelegate<String> {
+  final Function(String) onSearch;
+
+  SermonSearchDelegate({required this.onSearch});
+
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        query = '';
+        onSearch(query);
+      },
+    ),
+  ];
+
+  @override
+  Widget? buildLeading(BuildContext context) => IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () => close(context, ''),
+  );
+
+  @override
+  Widget buildResults(BuildContext context) {
+    onSearch(query);
+    close(context, query);
+    return Container();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) => Container();
 }

@@ -6,7 +6,6 @@ import 'package:prophet_kacou/features/biographies/pages/biographies_page.dart';
 import 'package:prophet_kacou/features/hymns/pages/hymns_page.dart';
 import 'package:prophet_kacou/features/informations/pages/informations_page.dart';
 import 'package:prophet_kacou/features/photos/pages/photos_page.dart';
-import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermons_page.dart';
 import 'package:prophet_kacou/features/settings/pages/settings_page.dart';
 import 'package:prophet_kacou/features/videos/pages/videos_page.dart';
@@ -38,21 +37,13 @@ class HomePage extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/sermons': (context) => const SermonsPage(),
-        '/sermon_detail': (context) => SermonDetailPage(sermon: null,),
         '/biographies': (context) => const BiographiesPage(),
-
         '/photos': (context) => const PhotosPage(),
-
         '/videos': (context) => const VideosPage(),
-
         '/hymns': (context) => const HymnsPage(),
-
         '/assemblies': (context) => const AssembliesPage(),
-
         '/informations': (context) => const InformationsPage(),
-
         '/settings': (context) => const SettingsPage(),
-
         '/abouts': (context) => const AboutsPage(),
       },
     );

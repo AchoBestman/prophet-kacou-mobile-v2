@@ -5,3 +5,31 @@ open -a Simulator
 sips -z 3000 2000 assets/images/1080X564.png --out assets/images/2000X3000.png
 
 flutter pub run build_runner build --delete-conflicting-outputs
+
+
+xcrun simctl list devices
+== Devices ==
+-- iOS 18.6 --
+    iPhone 16 Pro (466DF4E4-613C-423C-B436-63BFEAD73C1D) (Shutdown) 
+    iPhone 16 Pro Max (51B1A350-D7DE-4DFF-BCE9-2C49A96819F2) (Shutdown) 
+    iPhone 16e (D04F82FD-AFAE-4FD3-ABFB-843A7FC13663) (Shutdown) 
+    iPhone 16 (11DBDD48-109C-4DA5-BA31-CD2EDB5037B1) (Shutdown) 
+    iPhone 16 Plus (94FC4071-B9A2-4E15-92BB-4E5502B5DF79) (Booted) 
+    iPhone SE (8800DF26-E5C0-4EA9-BE4C-A983126F2684) (Shutdown) 
+    iPhone SE (302A6F6F-EE53-4D08-B6E9-3B0C329A1746) (Shutdown) 
+    iPad Pro 11-inch (M4) (D7C4CDDA-E5BB-4014-9473-3AF09CD2511B) (Shutdown) 
+    iPad Pro 13-inch (M4) (A7887495-E51D-4176-B2E8-D77C4EAE998E) (Shutdown) 
+    iPad mini (A17 Pro) (AB65290B-9394-4D1B-80F5-1FD3A506DBBD) (Shutdown) 
+    iPad (A16) (947DBFF0-E35F-4922-B5A7-2053A9B95C2B) (Shutdown) 
+    iPad Air 13-inch (M3) (2D2E044F-7865-4EF9-9073-F43E37B699A9) (Shutdown) 
+    iPad Air 11-inch (M3) (FD8689F9-0587-4476-8F24-53D3D9A862D9) (Shutdown) 
+aikpeachile@AIKPEs-MacBook-Pro prophet_kacou % 
+
+5. Lancer Flutter sur un simulateur spécifique
+flutter run -d "iPhone SE (3rd generation)"
+
+# Lancer sur iPhone SE
+flutter run -d "iPhone SE"
+
+xcrun simctl boot "iPad Air"
+flutter run -d "iPad Air 13-inch (M3)"
