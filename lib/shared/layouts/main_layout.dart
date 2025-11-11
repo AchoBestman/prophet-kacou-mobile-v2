@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/shared/widgets/audio_player_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
@@ -195,7 +196,12 @@ class MainLayout extends StatelessWidget {
           ],
         ),
       ),
-      body: SafeArea(child: body),
+      body: SafeArea(child: Column(
+        children: [
+          Expanded(child: body),
+          const AudioPlayerWidget(), // 👈 Ajoutez ici
+        ],
+      )),
     );
   }
 
