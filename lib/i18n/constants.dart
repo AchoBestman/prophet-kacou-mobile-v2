@@ -1,5 +1,6 @@
 const String defaultLang = "en-en";
 const String preferenceKeyLang = "lang";
+const  String defaultCountryCode = "en";
 
 const String defaultLangName = "English";
 const String preferenceKeyLangName = "langName";

@@ -1,25 +1,30 @@
-// lib/features/assemblies/pages/assemblies_page.dart
+// lib/features/langues/pages/languages_page.dart
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
-import 'package:prophet_kacou/core/models/country.dart';
-import 'package:prophet_kacou/core/repositories/country.dart';
-import 'package:prophet_kacou/features/assemblies/pages/city_page.dart';
+import 'package:prophet_kacou/core/models/langue.dart';
+import 'package:prophet_kacou/core/repositories/langue.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
+import 'package:prophet_kacou/features/sermons/pages/sermons_page.dart';
+import 'package:prophet_kacou/features/settings/pages/update_button.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
+import 'package:prophet_kacou/i18n/language_provider.dart';
+import 'package:prophet_kacou/i18n/langue_model.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
+import 'package:provider/provider.dart';
 
-class AssembliesPage extends StatefulWidget {
-  const AssembliesPage({super.key});
+class LanguagesPage extends StatefulWidget {
+  const LanguagesPage({super.key});
 
   @override
-  State<AssembliesPage> createState() => _AssembliesPageState();
+  State<LanguagesPage> createState() => _LanguagesPageState();
 }
 
-class _AssembliesPageState extends State<AssembliesPage> {
-  final CountryRepository _repository = CountryRepository();
-  final TextEditingController _searchController = TextEditingController();
+class _LanguagesPageState extends State<LanguagesPage> {
+  final LangueRepository _repository = LangueRepository();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
 
-  final List<Country> _countries = [];
+  final List<Langue> _langues = [];
   bool _isLoading = false;
   bool _isSearching = false;
   bool _isAscending = true;
@@ -33,14 +38,14 @@ class _AssembliesPageState extends State<AssembliesPage> {
   @override
   void initState() {
     super.initState();
-    _loadCountries();
+    _loadLangues();
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -49,18 +54,18 @@ class _AssembliesPageState extends State<AssembliesPage> {
             _scrollController.position.maxScrollExtent * 0.9 &&
         !_isLoading &&
         _hasMore) {
-      _loadMoreCountries();
+      _loadMoreLangues();
     }
   }
 
-  Future<void> _loadCountries({bool refresh = false}) async {
+  Future<void> _loadLangues({bool refresh = false}) async {
     if (_isLoading) return;
 
     setState(() {
       _isLoading = true;
       if (refresh) {
         _currentPage = 1;
-        _countries.clear();
+        _langues.clear();
       }
     });
 
@@ -69,14 +74,14 @@ class _AssembliesPageState extends State<AssembliesPage> {
         page: _currentPage,
         perPage: _perPage,
         name: _searchQuery.isEmpty ? null : _searchQuery,
-        orderBy: _isAscending ? 'name ASC' : 'name DESC',
-        isActive: true,
+        initial: _searchQuery.isEmpty ? null : _searchQuery,
+        orderBy: _isAscending ? '"order" ASC' : '"order" DESC',
       );
 
       setState(() {
-        _countries.addAll(result.data);
+        _langues.addAll(result.data);
         _totalCount = result.total;
-        _hasMore = _countries.length < _totalCount;
+        _hasMore = _langues.length < _totalCount;
         _isLoading = false;
       });
     } catch (e) {
@@ -91,12 +96,12 @@ class _AssembliesPageState extends State<AssembliesPage> {
     }
   }
 
-  Future<void> _loadMoreCountries() async {
+  Future<void> _loadMoreLangues() async {
     if (_hasMore && !_isLoading) {
       setState(() {
         _currentPage++;
       });
-      await _loadCountries();
+      await _loadLangues();
     }
   }
 
@@ -106,7 +111,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
       if (!_isSearching) {
         _searchController.clear();
         _searchQuery = '';
-        _loadCountries(refresh: true);
+        _loadLangues(refresh: true);
       }
     });
   }
@@ -115,23 +120,44 @@ class _AssembliesPageState extends State<AssembliesPage> {
     setState(() {
       _searchQuery = value;
     });
-    _loadCountries(refresh: true);
+    _loadLangues(refresh: true);
   }
 
   void _toggleSortOrder() {
     setState(() {
       _isAscending = !_isAscending;
     });
-    _loadCountries(refresh: true);
+    _loadLangues(refresh: true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
+    Future<void> _checkForUpdates() async {
+      // TODO: Implémenter la logique de recherche de mises à jour
+      // Par exemple : vérifier les nouvelles traductions disponibles sur le serveur
+      setState(() => _isLoading = true);
+
+      try {
+        // Logique de vérification...
+        await Future.delayed(const Duration(seconds: 2)); // Simulation
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Vérification terminée')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    }
 
     return MainLayout(
-      title: i18n.tr('home.countries'),
+      title: i18n.tr('home.langues'),
       actions: [
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -142,10 +168,13 @@ class _AssembliesPageState extends State<AssembliesPage> {
           onPressed: _toggleSortOrder,
           tooltip: _isAscending ? 'A-Z' : 'Z-A',
         ),
+        UpdateButton(
+          isOnLanguagesPage: true,
+          onUpdateCheck: _checkForUpdates, // Créez cette méthode
+        ),
       ],
       body: Column(
         children: [
-          // Barre de recherche dans le body
           if (_isSearching)
             Container(
               padding: const EdgeInsets.all(8.0),
@@ -178,14 +207,12 @@ class _AssembliesPageState extends State<AssembliesPage> {
                 onChanged: _onSearchChanged,
               ),
             ),
-
-          // Liste des pays
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () => _loadCountries(refresh: true),
-              child: _countries.isEmpty && _isLoading
+              onRefresh: () => _loadLangues(refresh: true),
+              child: _langues.isEmpty && _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _countries.isEmpty
+                  : _langues.isEmpty
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -198,20 +225,21 @@ class _AssembliesPageState extends State<AssembliesPage> {
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.only(top: 5),
-                      itemCount: _countries.length + (_hasMore ? 1 : 0),
+                      itemCount: _langues.length + (_hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
-                        if (index >= _countries.length) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: CircularProgressIndicator(),
-                            ),
+                        if (index >= _langues.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
                           );
                         }
 
-                        final country = _countries[index];
-                        return _buildCountryCard(country, isDark);
+                        final langue = _langues[index];
+                        return _buildLangueCard(
+                          langue,
+                          isDark,
+                          languageProvider,
+                        );
                       },
                     ),
             ),
@@ -221,8 +249,13 @@ class _AssembliesPageState extends State<AssembliesPage> {
     );
   }
 
-  Widget _buildCountryCard(Country country, bool isDark) {
-    final flagPath = 'assets/images/drapeau/${country.sigle.toLowerCase()}.jpg';
+  Widget _buildLangueCard(
+    Langue langue,
+    bool isDark,
+    LanguageProvider languageProvider,
+  ) {
+    final countryCode = extractCountryCode(langue.initial).toLowerCase();
+    final flagPath = 'assets/images/drapeau/$countryCode.jpg';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -233,11 +266,24 @@ class _AssembliesPageState extends State<AssembliesPage> {
         side: BorderSide(color: Colors.black12, width: 0.5),
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CityPage(country: country)),
+        onTap: () async {
+          await languageProvider.changeLanguage(
+            LanguageData(
+              id: langue.id,
+              name: langue.libelle,
+              lang: langue.initial,
+              countryFip: countryCode,
+              icon: flagPath,
+              translation: langue.webTranslation ?? "",
+            ),
           );
+
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => SermonsPage()),
+            );
+          }
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
@@ -261,7 +307,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
                         color: Theme.of(context).primaryColor.withOpacity(0.1),
                         child: Center(
                           child: Text(
-                            country.sigle,
+                            langue.initial.toUpperCase(),
                             style: TextStyle(
                               color: Theme.of(context).primaryColor,
                               fontWeight: FontWeight.bold,
@@ -274,25 +320,21 @@ class _AssembliesPageState extends State<AssembliesPage> {
                   ),
                 ),
               ),
-
               const SizedBox(width: 16),
-
-              // Informations du pays
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      country.name,
+                      langue.libelle,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
                     ),
-
                     Text(
-                      country.sigle.toUpperCase(),
+                      langue.initial.toUpperCase(),
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -302,11 +344,70 @@ class _AssembliesPageState extends State<AssembliesPage> {
                   ],
                 ),
               ),
-
-              // Icône chevron
-              Icon(
-                Icons.chevron_right,
-                color: isDark ? Colors.white : Colors.black,
+              // 4 icônes
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      // TODO: lecture audio
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: const Padding(
+                      padding: EdgeInsets.all(0),
+                      child: Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () {
+                      // TODO: téléchargement
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(0),
+                      child: Icon(
+                        Icons.download_rounded,
+                        color: isDark ? Colors.lightBlue : Colors.blue,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () {
+                      // TODO: refresh
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: const Padding(
+                      padding: EdgeInsets.all(0),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () {
+                      // TODO: delete
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: const Padding(
+                      padding: EdgeInsets.all(0),
+                      child: Icon(
+                        Icons.delete_rounded,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

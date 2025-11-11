@@ -32,7 +32,8 @@
     "informations": "Informations",
     "contacts": "Contacts",
     "contact_us": "Contact us",
-    "brother": "brother"
+    "brother": "brother",
+    "langues": "Langues"
   },
   "button": {
     "search": "Search",
@@ -143,6 +144,8 @@
     "color_preview": "Color preview",
     "light_bg": "Light background",
     "dark_bg": "Dark background",
-    "primary_color": "Primary color"
+    "primary_color": "Primary color",
+    "font_size":"Text size",
+    "font":"Adjust the text size and font throughout the app"
   }
 }

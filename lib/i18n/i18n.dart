@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/i18n/constants.dart';
 import 'package:prophet_kacou/i18n/langue_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,11 +12,13 @@ class I18n {
 
   Map<String, dynamic> _localizedStrings = {};
   String lang = defaultLang;
+  String countryCode = defaultCountryCode;
   String langName = defaultLangName;
 
   Future<void> init() async {
   final prefs = await SharedPreferences.getInstance();
   lang = prefs.getString(preferenceKeyLang) ?? defaultLang;
+  countryCode = extractCountryCode(lang);
   langName = prefs.getString(preferenceKeyLangName) ?? defaultLangName;
   await load(prefs.getString(preferenceKeyLangTranslation) ?? defaultLangTranslation);
 }
@@ -36,6 +39,7 @@ class I18n {
   Future<void> setLanguage(AppDefaultLanguage appDefaultLang) async {
     final prefs = await SharedPreferences.getInstance();
     lang = appDefaultLang.lang;
+    countryCode = extractCountryCode(lang);
     langName = appDefaultLang.langName;
 
     await prefs.setString(preferenceKeyLang, appDefaultLang.lang);

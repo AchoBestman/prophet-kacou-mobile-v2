@@ -54,3 +54,8 @@ import 'package:prophet_kacou/core/models/concordance.dart';
 
     return '';
   }
+
+String extractCountryCode(String locale) {
+  if (locale.isEmpty) return '';
+  return locale.split('-').first.toLowerCase();
+}

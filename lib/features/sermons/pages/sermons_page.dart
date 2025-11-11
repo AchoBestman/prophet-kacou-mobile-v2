@@ -3,6 +3,7 @@ import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
+import 'package:prophet_kacou/features/settings/pages/update_button.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
@@ -98,6 +99,7 @@ class _SermonsPageState extends State<SermonsPage>
           ),
           onPressed: _toggleOrder,
         ),
+        const UpdateButton()
       ],
       body: Column(
         children: [

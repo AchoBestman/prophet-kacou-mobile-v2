@@ -17,7 +17,80 @@ class SettingsPage extends StatelessWidget {
       title: i18n.tr('home.settings'),
       body: ListView(
         children: [
-          // Section Apparence
+          // ================== SECTION POLICE ==================
+          _buildSectionHeader(context, i18n.tr('settings.font')),
+
+          // Font Family
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButton<String>(
+              value: themeProvider.customFont.fontFamily,
+              isExpanded: true,
+              items: ['Roboto', 'Arial', 'Times New Roman', 'Montserrat']
+                  .map((font) => DropdownMenuItem(
+                        value: font,
+                        child: Text(font, style: TextStyle(fontFamily: font)),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  themeProvider.customFont.setFontFamily(value);
+                }
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Font Size
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(i18n.tr('settings.font_size') + ": ${themeProvider.customFont.fontSize.toInt()}"),
+                Slider(
+                  min: 10,
+                  max: 24,
+                  divisions: 7,
+                  label: themeProvider.customFont.fontSize.toStringAsFixed(0),
+                  value: themeProvider.customFont.fontSize,
+                  onChanged: (value) => themeProvider.customFont.setFontSize(value),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Font Style
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                const Text('Normal'),
+                Radio<FontStyle>(
+                  value: FontStyle.normal,
+                  groupValue: themeProvider.customFont.fontStyle,
+                  onChanged: (value) {
+                    if (value != null) themeProvider.customFont.setFontStyle(value);
+                  },
+                ),
+                const Text('Italic'),
+                Radio<FontStyle>(
+                  value: FontStyle.italic,
+                  groupValue: themeProvider.customFont.fontStyle,
+                  onChanged: (value) {
+                    if (value != null) themeProvider.customFont.setFontStyle(value);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(),
+
+          // ================== SECTION APPARENCE ==================
           _buildSectionHeader(context, i18n.tr('settings.appearance')),
 
           // Toggle Dark/Light Mode
@@ -48,9 +121,7 @@ class SettingsPage extends StatelessWidget {
             value: ThemeMode.light,
             groupValue: themeProvider.themeMode,
             onChanged: (value) {
-              if (value != null) {
-                themeProvider.setThemeMode(value);
-              }
+              if (value != null) themeProvider.setThemeMode(value);
             },
             secondary: const Icon(Icons.light_mode, color: Colors.amber),
           ),
@@ -60,9 +131,7 @@ class SettingsPage extends StatelessWidget {
             value: ThemeMode.dark,
             groupValue: themeProvider.themeMode,
             onChanged: (value) {
-              if (value != null) {
-                themeProvider.setThemeMode(value);
-              }
+              if (value != null) themeProvider.setThemeMode(value);
             },
             secondary: const Icon(Icons.dark_mode, color: Colors.indigo),
           ),
@@ -73,16 +142,14 @@ class SettingsPage extends StatelessWidget {
             value: ThemeMode.system,
             groupValue: themeProvider.themeMode,
             onChanged: (value) {
-              if (value != null) {
-                themeProvider.setThemeMode(value);
-              }
+              if (value != null) themeProvider.setThemeMode(value);
             },
             secondary: const Icon(Icons.phone_android, color: Colors.grey),
           ),
 
           const Divider(),
 
-          // Preview des couleurs
+          // ================== SECTION COULEUR ==================
           _buildSectionHeader(context, i18n.tr('settings.color_preview')),
 
           Padding(

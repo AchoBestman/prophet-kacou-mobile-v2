@@ -7,6 +7,7 @@ import 'package:prophet_kacou/features/hymns/pages/hymns_page.dart';
 import 'package:prophet_kacou/features/informations/pages/informations_page.dart';
 import 'package:prophet_kacou/features/photos/pages/photos_page.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermons_page.dart';
+import 'package:prophet_kacou/features/settings/pages/languages_page.dart';
 import 'package:prophet_kacou/features/settings/pages/settings_page.dart';
 import 'package:prophet_kacou/features/videos/pages/videos_page.dart';
 import 'package:prophet_kacou/i18n/language_provider.dart';
@@ -23,29 +24,34 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     // Écouter les changements de thème
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
-    return MaterialApp(
-      title: 'Prophet Kacou',
-      debugShowCheckedModeBanner: false,
-      theme: themeProvider.lightTheme,
-      darkTheme: themeProvider.darkTheme,
-      themeMode: themeProvider.themeMode,
-      home: const LandingPage(),
-      initialRoute: '/',
-      routes: {
-        '/sermons': (context) => const SermonsPage(),
-        '/biographies': (context) => const BiographiesPage(),
-        '/photos': (context) => const PhotosPage(),
-        '/videos': (context) => const VideosPage(),
-        '/hymns': (context) => const HymnsPage(),
-        '/assemblies': (context) => const AssembliesPage(),
-        '/informations': (context) => const InformationsPage(),
-        '/settings': (context) => const SettingsPage(),
-        '/abouts': (context) => const AboutsPage(),
-      },
+
+    return AnimatedTheme(
+      data: themeProvider.lightTheme,
+      duration: const Duration(milliseconds: 400), // ⏱️ durée de la transition
+      curve: Curves.easeInOut,
+      child: MaterialApp(
+        title: 'Prophet Kacou',
+        debugShowCheckedModeBanner: false,
+        theme: themeProvider.lightTheme,
+        darkTheme: themeProvider.darkTheme,
+        themeMode: themeProvider.themeMode,
+        home: const LandingPage(),
+        initialRoute: '/',
+        routes: {
+          '/sermons': (context) => const SermonsPage(),
+          '/biographies': (context) => const BiographiesPage(),
+          '/photos': (context) => const PhotosPage(),
+          '/videos': (context) => const VideosPage(),
+          '/hymns': (context) => const HymnsPage(),
+          '/assemblies': (context) => const AssembliesPage(),
+          '/informations': (context) => const InformationsPage(),
+          '/langues': (context) => const LanguagesPage(),
+          '/settings': (context) => const SettingsPage(),
+          '/abouts': (context) => const AboutsPage(),
+        },
+      ),
     );
   }
 }

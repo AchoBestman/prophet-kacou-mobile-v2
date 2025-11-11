@@ -1,83 +1,56 @@
-
+// lib/core/repositories/langue_repository.dart
 import 'package:prophet_kacou/core/database/db_manager.dart';
+import 'package:prophet_kacou/core/models/langue.dart';
 import 'package:prophet_kacou/core/models/paginated_result.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:prophet_kacou/core/models/langue.dart';
 
 class LangueRepository {
   final DBManager _dbManager = DBManager();
 
-  /// Récupère toutes les langues avec pagination et filtres
+  /// Récupère toutes les langues actives avec pagination, recherche et tri
   Future<PaginatedResult<Langue>> findAll({
     int page = 1,
     int perPage = 20,
-    String? libelle,
+    String? name,
     String? initial,
-    int? countryId,
-    bool? principal,
-    bool? isActive,
-    String orderBy = 'langues.order ASC',
+    String orderBy = '"order" ASC',
   }) async {
     final db = await _dbManager.openCommonDB();
 
-    // Construction de la clause WHERE
-    final List<String> whereConditions = [];
-    final List<dynamic> whereArgs = [];
+    final whereConditions = <String>['is_active = 1'];
+    final whereArgs = <dynamic>[];
 
-    if (libelle != null && libelle.isNotEmpty) {
-      whereConditions.add('langues.libelle LIKE ?');
-      whereArgs.add('%$libelle%');
+    // Recherche sur libelle
+    if (name != null && name.trim().isNotEmpty) {
+      whereConditions.add('libelle LIKE ?');
+      whereArgs.add('%${name.trim()}%');
     }
 
-    if (initial != null && initial.isNotEmpty) {
-      whereConditions.add('langues.initial LIKE ?');
-      whereArgs.add('%$initial%');
+    // Recherche sur initial
+    if (initial != null && initial.trim().isNotEmpty) {
+      whereConditions.add('initial LIKE ?');
+      whereArgs.add('%${initial.trim()}%');
     }
 
-    if (countryId != null) {
-      whereConditions.add('langues.country_id = ?');
-      whereArgs.add(countryId);
-    }
+    final whereClause =
+        whereConditions.isNotEmpty ? whereConditions.join(' AND ') : '';
 
-    if (principal != null) {
-      whereConditions.add('langues.principal = ?');
-      whereArgs.add(principal ? 1 : 0);
-    }
-
-    if (isActive != null) {
-      whereConditions.add('langues.is_active = ?');
-      whereArgs.add(isActive ? 1 : 0);
-    }
-
-    final String whereClause =
-        whereConditions.isNotEmpty ? ' WHERE ${whereConditions.join(' AND ')}' : '';
-
-    // Compter le nombre total d'éléments
+    // Compter le total
     final countResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM langues$whereClause',
+      'SELECT COUNT(*) as count FROM langues WHERE $whereClause',
       whereArgs,
     );
     final totalCount = Sqflite.firstIntValue(countResult) ?? 0;
 
-    // Récupérer les données paginées avec jointure
+    // Pagination
     final offset = (page - 1) * perPage;
-    final String query = '''
-      SELECT 
-        langues.*,
-        countries.name as country_name,
-        countries.sigle as country_sigle,
-        countries.order as country_order,
-        countries.is_active as country_is_active
-      FROM langues
-      LEFT JOIN countries ON langues.country_id = countries.id
-      $whereClause
-      ORDER BY $orderBy
-      LIMIT ? OFFSET ?
-    ''';
-
-    final List<Map<String, dynamic>> results = await db.rawQuery(
-      query,
-      [...whereArgs, perPage, offset],
+    final List<Map<String, dynamic>> results = await db.query(
+      'langues',
+      where: whereClause.isNotEmpty ? whereClause : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: orderBy,
+      limit: perPage,
+      offset: offset,
     );
 
     final langues = results.map((map) => Langue.fromMap(map)).toList();
@@ -90,28 +63,18 @@ class LangueRepository {
     );
   }
 
-  /// Récupère une langue par
-  Future<Langue?> findById({String key = 'id', value}) async {
+  /// Récupère une langue par id
+  Future<Langue?> findById(int id) async {
     final db = await _dbManager.openCommonDB();
-
-    final String query = '''
-      SELECT 
-        langues.*,
-        countries.name as country_name,
-        countries.sigle as country_sigle,
-        countries.order as country_order,
-        countries.is_active as country_is_active
-      FROM langues
-      LEFT JOIN countries ON langues.country_id = countries.id
-      WHERE langues.$key = ?
-      LIMIT 1
-    ''';
-
-    final List<Map<String, dynamic>> results = await db.rawQuery(query, [value]);
+    final List<Map<String, dynamic>> results = await db.query(
+      'langues',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
 
     if (results.isEmpty) return null;
 
     return Langue.fromMap(results.first);
   }
-
 }

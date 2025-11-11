@@ -3,6 +3,7 @@ import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
+  // === THEME ===
   static const String _themeKey = 'theme_mode';
   ThemeMode _themeMode = ThemeMode.light;
   bool _isInitialized = false;
@@ -11,11 +12,22 @@ class ThemeProvider extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
-  // Initialisation au démarrage
+  // === FONT ===
+  late CustomFont customFont;
+
+  ThemeProvider() {
+    customFont = CustomFont(_notify);
+  }
+
+  // Callback pour notifier le ThemeProvider
+  void _notify() => notifyListeners();
+
+  // === INITIALISATION ===
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Init thème
     final savedTheme = prefs.getString(_themeKey);
-    
     if (savedTheme == 'dark') {
       _themeMode = ThemeMode.dark;
     } else if (savedTheme == 'light') {
@@ -23,22 +35,22 @@ class ThemeProvider extends ChangeNotifier {
     } else {
       _themeMode = ThemeMode.system;
     }
-    
+
+    // Init police
+    await customFont.init();
+
     _isInitialized = true;
     notifyListeners();
   }
 
-  // Changer le thème
+  // === CHANGER THEME ===
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
-    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_themeKey, mode.toString().split('.').last);
-    
     notifyListeners();
   }
 
-  // Toggle entre light et dark
   Future<void> toggleTheme() async {
     if (_themeMode == ThemeMode.light) {
       await setThemeMode(ThemeMode.dark);
@@ -47,7 +59,7 @@ class ThemeProvider extends ChangeNotifier {
     }
   }
 
-  // Thème Light
+  // === LIGHT THEME ===
   ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -64,29 +76,18 @@ class ThemeProvider extends ChangeNotifier {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      cardTheme: const CardThemeData(
-        color: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 2,
-      ),
-      tabBarTheme: TabBarThemeData(
-        labelColor: pkpIndigo,
-        unselectedLabelColor: Colors.grey,
-        indicatorColor: pkpIndigo,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: pkpIndigo, width: 2),
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(
+          color: Colors.black87,
+          fontFamily: customFont.fontFamily,
+          fontSize: customFont.fontSize,
+          fontStyle: customFont.fontStyle,
         ),
       ),
-      textTheme: const TextTheme(
-        bodyLarge: TextStyle(color: Colors.black87),
-        bodyMedium: TextStyle(color: Colors.black87),
-        bodySmall: TextStyle(color: Colors.black54),
-      ),
-      iconTheme: const IconThemeData(color: Colors.black87),
     );
   }
 
-  // Thème Dark
+  // === DARK THEME ===
   ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -103,25 +104,64 @@ class ThemeProvider extends ChangeNotifier {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      cardTheme: CardThemeData(
-        color: Colors.grey[900],
-        surfaceTintColor: Colors.transparent,
-        elevation: 2,
-      ),
-      tabBarTheme: TabBarThemeData(
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey[400],
-        indicatorColor: pkpIndigo,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: pkpIndigo, width: 2),
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(
+          color: Colors.white,
+          fontFamily: customFont.fontFamily,
+          fontSize: customFont.fontSize,
+          fontStyle: customFont.fontStyle,
         ),
       ),
-      textTheme: const TextTheme(
-        bodyLarge: TextStyle(color: Colors.white),
-        bodyMedium: TextStyle(color: Colors.white),
-        bodySmall: TextStyle(color: Colors.white70),
-      ),
-      iconTheme: const IconThemeData(color: Colors.white),
     );
+  }
+}
+
+// === CUSTOM FONT ===
+class CustomFont {
+  static const String _fontFamilyKey = 'font_family';
+  static const String _fontSizeKey = 'font_size';
+  static const String _fontStyleKey = 'font_style';
+
+  final VoidCallback _notify;
+
+  String _fontFamily = 'Roboto';
+  double _fontSize = 14;
+  FontStyle _fontStyle = FontStyle.normal;
+
+  CustomFont(this._notify);
+
+  String get fontFamily => _fontFamily;
+  double get fontSize => _fontSize;
+  FontStyle get fontStyle => _fontStyle;
+
+  // === INIT ===
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _fontFamily = prefs.getString(_fontFamilyKey) ?? 'Roboto';
+    _fontSize = prefs.getDouble(_fontSizeKey) ?? 14;
+    final styleString = prefs.getString(_fontStyleKey) ?? 'normal';
+    _fontStyle = styleString == 'italic' ? FontStyle.italic : FontStyle.normal;
+    _notify();
+  }
+
+  Future<void> setFontFamily(String family) async {
+    _fontFamily = family;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_fontFamilyKey, family);
+    _notify();
+  }
+
+  Future<void> setFontSize(double size) async {
+    _fontSize = size;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_fontSizeKey, size);
+    _notify();
+  }
+
+  Future<void> setFontStyle(FontStyle style) async {
+    _fontStyle = style;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_fontStyleKey, style == FontStyle.italic ? 'italic' : 'normal');
+    _notify();
   }
 }
