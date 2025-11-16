@@ -8,6 +8,7 @@ import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/song.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/core/utils/download_utils.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
@@ -43,16 +44,8 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
 
   Future<void> _checkDownloadedSongs() async {
     for (var song in _songs) {
-      if (song.audio != null) {
-        final fullPath = await DownloadUtils.createPaths(
-          i18n.lang,
-          AudioFolder.hymns,
-          song.title,
-          FileExtension.mp3,
-        );
-        final file = File(fullPath);
-        _downloadedSongs[song.id] = await file.exists();
-      }
+      final file = await localSongPath(song, i18n.lang);
+      _downloadedSongs[song.id] = await file.exists();
     }
     if (mounted) setState(() {});
   }
@@ -119,35 +112,30 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
     _loadSongs();
   }
 
-  void _playSong(Song song, BuildContext context) {
-    if (song.audio == null) return;
+  void _playSong(Song song, BuildContext context) async{
 
     final audioProvider = Provider.of<AudioPlayerProvider>(
       context,
       listen: false,
     );
 
+    final localFullPath = await localSongPath(song, i18n.lang);
+
     final audioItem = AudioItem(
       id: song.id,
       title: song.title,
-      audioUrl: song.audio!,
+      audioUrl: song.audio,
       albumId: widget.album.id,
       fileOriginalName: song.title,
+      localFullPath: localFullPath
     );
 
     audioProvider.setAudio(audioItem, autoPlay: true);
   }
 
   Future<void> _downloadSong(Song song) async {
-    if (song.audio == null) return;
-
     try {
-      final fullPath = await DownloadUtils.createPaths(
-        i18n.lang,
-        AudioFolder.hymns,
-        song.title,
-        FileExtension.mp3,
-      );
+      final localFullPath = await localSongPath(song, i18n.lang);
 
       if (!mounted) return;
 
@@ -159,8 +147,8 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
       await downloadProvider.startDownload(
         id: 'song_${song.id}',
         title: song.title,
-        audioUrl: song.audio!,
-        filePath: fullPath,
+        audioUrl: song.audio,
+        filePath: localFullPath,
         albumTitle: widget.album.title,
         albumId: widget.album.id,
       );
