@@ -127,7 +127,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
       localFullPath: localFullPath
     );
 
-    audioProvider.setAudio(audioItem, autoPlay: true);
+    if(context.mounted)audioProvider.setAudio(context, audioItem, autoPlay: true);
   }
 
   Future<void> _downloadSong(Song song) async {
