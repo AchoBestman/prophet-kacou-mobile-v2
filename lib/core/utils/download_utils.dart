@@ -54,7 +54,7 @@ class DownloadUtils {
   static Future<void> startDownload(
     BuildContext context,
     String initial,
-    String filePath,
+    File filePath,
     String ? url, {
     required void Function(DownloadProgress) onProgress,
     required void Function() onCompleted,
@@ -74,7 +74,7 @@ class DownloadUtils {
     }
     if (downloadUrl == null) return;
 
-    final fullPath = '${appDir.path}/$filePath';
+    final fullPath = File('${appDir.path}/${filePath.path}');
 
     final subscription = _downloadManager.progressStream(initial).listen((progress) {
       switch (progress.status) {
