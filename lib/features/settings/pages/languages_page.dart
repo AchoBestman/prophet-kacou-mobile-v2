@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/database/db_manager.dart';
@@ -80,7 +81,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
     await DownloadUtils.startDownload(
       context,
       langue.initial,
-      fullPath,
+      File(fullPath),
       null,
       onProgress: (progress) {
         if (!mounted) return;

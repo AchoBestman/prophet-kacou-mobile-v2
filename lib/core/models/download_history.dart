@@ -37,7 +37,7 @@ class DownloadHistory {
         'id': id,
         'title': title,
         'audioUrl': audioUrl,
-        'filePath': filePath,
+        'filePath': filePath.path,
         'percent': percent,
         'downloadedMb': downloadedMb,
         'totalMb': totalMb,

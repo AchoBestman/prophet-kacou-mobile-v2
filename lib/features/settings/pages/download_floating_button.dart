@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/features/settings/pages/download_history_page.dart';
 import 'package:provider/provider.dart';
@@ -34,7 +35,7 @@ class DownloadFloatingButton extends StatelessWidget {
                   child: CustomPaint(
                     painter: _CircularProgressPainter(
                       progress: _calculateAverageProgress(provider),
-                      color: Colors.orange,
+                      color: Colors.red,
                     ),
                   ),
                 ),
@@ -43,7 +44,7 @@ class DownloadFloatingButton extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: Colors.orange,
+                    color: Colors.grey.shade300,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -58,7 +59,7 @@ class DownloadFloatingButton extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.download_rounded,
-                        color: Colors.white,
+                        color: pkpIndigo,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
