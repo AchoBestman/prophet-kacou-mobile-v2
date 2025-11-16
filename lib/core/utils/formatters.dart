@@ -108,3 +108,7 @@ Future<File> localSongPath(Song song, initial) async {
 
   return file;
 }
+
+String songIdInDownloadProviderFormatter(Song song) {
+  return 'song_${song.id}';
+}
