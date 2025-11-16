@@ -61,15 +61,15 @@ class AudioPlayerProvider with ChangeNotifier {
     bool autoPlay = false,
   }) async {
     try {
-      _currentAudio = audio;
-
-      _firstAudioId ??= audio.id;
-
       if (!await ConnectionUtils.hasConnection() &&
           !await localFileExit(audio)) {
         if (context.mounted) ConnectionUtils.showNoConnectionMessage(context);
         return;
       }
+
+      _currentAudio = audio;
+
+      _firstAudioId ??= audio.id;
 
       // Charger l'audio (local ou distant)
       if (await localFileExit(audio)) {
@@ -84,8 +84,11 @@ class AudioPlayerProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      if (context.mounted){
-        NotificactionService.showErrorMessage(context, 'Erreur lors du chargement audio: $e');
+      if (context.mounted) {
+        NotificactionService.showErrorMessage(
+          context,
+          'Erreur lors du chargement audio: $e',
+        );
         stop();
       }
     }

@@ -112,3 +112,10 @@ Future<File> localSongPath(Song song, initial) async {
 String songIdInDownloadProviderFormatter(Song song) {
   return 'song_${song.id}';
 }
+
+int extractNumberValueFromAudioFormattedId(String key) {
+  final parts = key.split('_');
+  if (parts.length != 2) return -1;
+
+  return int.tryParse(parts[1]) ?? -1;
+}
