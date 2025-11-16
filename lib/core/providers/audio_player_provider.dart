@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
+import 'package:prophet_kacou/core/utils/connection.dart';
 
 class AudioPlayerProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  
+
   AudioItem? _currentAudio;
   PlayMode _repeatMode = PlayMode.none;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   int? _firstAudioId;
-  
+
   // Getters
   AudioPlayer get audioPlayer => _audioPlayer;
   AudioItem? get currentAudio => _currentAudio;
@@ -23,65 +24,85 @@ class AudioPlayerProvider with ChangeNotifier {
   String? get currentAudioUrl => _currentAudio?.audioUrl;
   int? get currentAudioId => _currentAudio?.id;
   int? get currentAlbumId => _currentAudio?.albumId;
-  
+
   AudioPlayerProvider() {
     _initAudioPlayer();
   }
-  
+
   void _initAudioPlayer() {
     // Écouter les changements de position
     _audioPlayer.positionStream.listen((position) {
       _position = position;
       notifyListeners();
     });
-    
+
     // Écouter les changements de durée
     _audioPlayer.durationStream.listen((duration) {
       _duration = duration ?? Duration.zero;
       notifyListeners();
     });
-    
+
     // Écouter l'état de lecture
     _audioPlayer.playerStateStream.listen((state) {
       _isPlaying = state.playing;
       notifyListeners();
-      
+
       // Gérer la fin de la lecture
       if (state.processingState == ProcessingState.completed) {
         _handleAudioEnd();
       }
     });
   }
-  
-  Future<void> setAudio(AudioItem audio, {bool autoPlay = false}) async {
+
+  Future<void> setAudio(
+    BuildContext context,
+    AudioItem audio, {
+    bool autoPlay = false,
+  }) async {
     try {
       _currentAudio = audio;
-      
-      if (_firstAudioId == null) {
-        _firstAudioId = audio.id;
+
+      _firstAudioId ??= audio.id;
+
+      if (!await ConnectionUtils.hasConnection() &&
+          await localFileExit(audio)) {
+        if (context.mounted) ConnectionUtils.showNoConnectionMessage(context);
+        return;
       }
-      
+
       // Charger l'audio (local ou distant)
-      await _audioPlayer.setUrl(audio.audioUrl);
-      
+      if (await localFileExit(audio)) {
+        await _audioPlayer.setUrl(audio.localFullPath!.path);
+      } else {
+        await _audioPlayer.setUrl(audio.audioUrl);
+      }
+
       if (autoPlay) {
         await play();
       }
-      
+
       notifyListeners();
     } catch (e) {
       debugPrint('Erreur lors du chargement audio: $e');
     }
   }
-  
+
+  Future<bool> localFileExit(AudioItem audio) async {
+    if (audio.localFullPath == null) {
+      return false;
+    }
+
+    return audio.localFullPath!.exists();
+  }
+
   Future<void> play() async {
     await _audioPlayer.play();
   }
-  
+
   Future<void> pause() async {
     await _audioPlayer.pause();
   }
-  
+
   Future<void> togglePlayPause() async {
     if (_isPlaying) {
       await pause();
@@ -89,16 +110,16 @@ class AudioPlayerProvider with ChangeNotifier {
       await play();
     }
   }
-  
+
   Future<void> seek(Duration position) async {
     await _audioPlayer.seek(position);
   }
-  
+
   void setRepeatMode(PlayMode mode) {
     _repeatMode = mode;
     notifyListeners();
   }
-  
+
   void toggleRepeatMode() {
     switch (_repeatMode) {
       case PlayMode.none:
@@ -113,7 +134,7 @@ class AudioPlayerProvider with ChangeNotifier {
     }
     notifyListeners();
   }
-  
+
   Future<void> _handleAudioEnd() async {
     if (_repeatMode == PlayMode.one) {
       // Rejouer la même chanson
@@ -127,10 +148,10 @@ class AudioPlayerProvider with ChangeNotifier {
       await playNext(shouldLoop: false);
     }
   }
-  
+
   Future<void> playNext({bool shouldLoop = false}) async {
     if (_currentAudio == null) return;
-    
+
     try {
       // TODO: Appeler votre API/repository pour obtenir la chanson suivante
       // final nextAudio = await _repository.findNext(
@@ -138,10 +159,10 @@ class AudioPlayerProvider with ChangeNotifier {
       //   albumId: _currentAudio!.albumId,
       //   firstAudioId: shouldLoop ? _firstAudioId : null,
       // );
-      
+
       // Pour l'instant, simulation
       debugPrint('Lecture suivante...');
-      
+
       // Exemple:
       // if (nextAudio != null) {
       //   await setAudio(nextAudio, autoPlay: true);
@@ -150,19 +171,19 @@ class AudioPlayerProvider with ChangeNotifier {
       debugPrint('Erreur playNext: $e');
     }
   }
-  
+
   Future<void> playPrevious() async {
     if (_currentAudio == null) return;
-    
+
     try {
       // TODO: Appeler votre API/repository pour obtenir la chanson précédente
       // final prevAudio = await _repository.findPrevious(
       //   currentId: _currentAudio!.id,
       //   albumId: _currentAudio!.albumId,
       // );
-      
+
       debugPrint('Lecture précédente...');
-      
+
       // Exemple:
       // if (prevAudio != null) {
       //   await setAudio(prevAudio, autoPlay: true);
@@ -171,14 +192,14 @@ class AudioPlayerProvider with ChangeNotifier {
       debugPrint('Erreur playPrevious: $e');
     }
   }
-  
+
   Future<void> stop() async {
     await _audioPlayer.stop();
     _currentAudio = null;
     _firstAudioId = null;
     notifyListeners();
   }
-  
+
   @override
   void dispose() {
     _audioPlayer.dispose();
