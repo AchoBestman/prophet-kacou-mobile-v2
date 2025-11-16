@@ -27,6 +27,9 @@ class AudioPlayerProvider with ChangeNotifier {
   int? get currentAudioId => _currentAudio?.id;
   int? get currentAlbumId => _currentAudio?.albumId;
 
+  bool _isMinimized = false;
+  bool get isMinimized => _isMinimized;
+
   AudioPlayerProvider() {
     _initAudioPlayer();
   }
@@ -107,6 +110,16 @@ class AudioPlayerProvider with ChangeNotifier {
     if (await localFileExit(audio)) {
       await Share.shareXFiles([XFile(audio.localFullPath!.path)]);
     }
+  }
+
+  void minimizePlayer() {
+    _isMinimized = true;
+    notifyListeners();
+  }
+
+  void expandPlayer() {
+    _isMinimized = false;
+    notifyListeners();
   }
 
   Future<void> play() async {

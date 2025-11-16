@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/features/settings/pages/download_floating_button.dart';
-import 'package:prophet_kacou/shared/widgets/audio_player_widget.dart';
+import 'package:prophet_kacou/shared/widgets/audio_player.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
