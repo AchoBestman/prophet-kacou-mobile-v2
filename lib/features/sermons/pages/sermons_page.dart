@@ -50,13 +50,7 @@ class _SermonsPageState extends State<SermonsPage>
   Future<void> _checkDownloadedSermons() async {
     for (var sermon in sermonsList) {
       if (sermon.audio != null) {
-        final fullPath = await DownloadUtils.createPaths(
-          i18n.lang,
-          AudioFolder.sermons,
-          sermonFileNameFormatter(sermon),
-          FileExtension.mp3,
-        );
-        final file = File(fullPath);
+        final file = await localSermonPath(sermon, i18n.lang);
         _downloadedSermons[sermon.id] = await file.exists();
       }
     }
@@ -106,13 +100,7 @@ class _SermonsPageState extends State<SermonsPage>
       listen: false,
     );
 
-    final file = await DownloadUtils.createPaths(
-      i18n.lang,
-      AudioFolder.sermons,
-      sermonFileNameFormatter(sermon),
-      FileExtension.mp3,
-    );
-    final localFullPath = File(file);
+    final localFullPath = await localSermonPath(sermon, i18n.lang);
 
     final audioItem = AudioItem(
       id: sermon.id,
@@ -130,12 +118,7 @@ class _SermonsPageState extends State<SermonsPage>
     if (sermon.audio == null) return;
 
     try {
-      final fullPath = await DownloadUtils.createPaths(
-        i18n.lang,
-        AudioFolder.sermons,
-        sermonFileNameFormatter(sermon),
-        FileExtension.mp3,
-      );
+      final localFullPath = await localSermonPath(sermon, i18n.lang);
 
       if (!mounted) return;
 
@@ -148,7 +131,7 @@ class _SermonsPageState extends State<SermonsPage>
         id: sermonIdInDownloadProviderFormatter(sermon),
         title: sermonTitleFormatter(sermon),
         audioUrl: sermon.audio!,
-        filePath: fullPath,
+        filePath: localFullPath,
         albumTitle: sermon.subTitle,
         albumId: null,
       );
@@ -324,7 +307,7 @@ class _SermonsPageState extends State<SermonsPage>
       body: Stack(
         children: [
           MainLayout(
-            title: "Sermons",
+            title: i18n.tr("home.sermons"),
             actions: [
               // 🔍 Recherche
               IconButton(
