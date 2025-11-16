@@ -29,7 +29,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
 
   List<Song> _songs = [];
   List<Song> _filteredSongs = [];
-  Map<int, bool> _downloadedSongs = {}; // Track downloaded songs
+  final Map<int, bool> _downloadedSongs = {}; // Track downloaded songs
   bool _isLoading = false;
   bool _isSearching = false;
   bool _isAscending = true;

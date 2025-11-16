@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:prophet_kacou/core/models/song.dart';
 import 'package:prophet_kacou/core/utils/download_utils.dart';
 import 'package:slugify/slugify.dart';
 
@@ -89,6 +90,18 @@ Future<File> localSermonPath(Sermon sermon, initial) async {
     initial,
     AudioFolder.sermons,
     sermonFileNameFormatter(sermon),
+    FileExtension.mp3,
+  );
+  final file = File(fullPath);
+
+  return file;
+}
+
+Future<File> localSongPath(Song song, initial) async {
+  final fullPath = await DownloadUtils.createPaths(
+    initial,
+    AudioFolder.hymns,
+    song.title,
     FileExtension.mp3,
   );
   final file = File(fullPath);
