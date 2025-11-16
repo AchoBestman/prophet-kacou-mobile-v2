@@ -111,7 +111,7 @@ class _SermonsPageState extends State<SermonsPage>
       localFullPath: localFullPath,
     );
 
-    audioProvider.setAudio(audioItem, autoPlay: true);
+    if(context.mounted)audioProvider.setAudio(context, audioItem, autoPlay: true);
   }
 
   Future<void> _downloadSermon(Sermon sermon) async {
