@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:prophet_kacou/core/utils/download_utils.dart';
 import 'package:slugify/slugify.dart';
 
 // List<ParsedReference> parseConcordance(String input) {
@@ -68,14 +72,26 @@ String cleanAndSlugifyFileName(String fileName, String extension) {
   return slug;
 }
 
-String sermonFileNameFormatter(Sermon sermon){
+String sermonFileNameFormatter(Sermon sermon) {
   return "${sermon.chapter.toLowerCase()}_${sermon.title.toLowerCase()}";
 }
 
-String sermonTitleFormatter(Sermon sermon){
+String sermonTitleFormatter(Sermon sermon) {
   return "${sermon.chapter}: ${sermon.title}";
 }
 
-String sermonIdInDownloadProviderFormatter(Sermon sermon){
+String sermonIdInDownloadProviderFormatter(Sermon sermon) {
   return 'sermon_${sermon.id}';
+}
+
+Future<File> localSermonPath(Sermon sermon, initial) async {
+  final fullPath = await DownloadUtils.createPaths(
+    initial,
+    AudioFolder.sermons,
+    sermonFileNameFormatter(sermon),
+    FileExtension.mp3,
+  );
+  final file = File(fullPath);
+
+  return file;
 }

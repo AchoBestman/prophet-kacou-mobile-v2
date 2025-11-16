@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/constants/app_strings.dart';
 import 'package:prophet_kacou/core/models/download_progress.dart';
@@ -66,7 +67,7 @@ class DownloadHistoryProvider extends ChangeNotifier {
     required String id,
     required String title,
     required String audioUrl,
-    required String filePath,
+    required File filePath,
     String? albumTitle,
     int? albumId,
   }) async {

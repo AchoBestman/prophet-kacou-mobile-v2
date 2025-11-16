@@ -1,10 +1,12 @@
+import 'dart:io';
+
 class AudioItem {
   final int id;
   final String title;
   final String audioUrl;
   final int? albumId;
   final String? fileOriginalName;
-  final String? localFullPath;
+  final File? localFullPath;
   
   AudioItem({
     required this.id,

@@ -24,7 +24,7 @@ class DownloadManager {
   Future<DownloadProgress> download({
     required String id,
     required String url,
-    required String fileFullPath,
+    required File fileFullPath,
   }) async {
     // Éviter les doublons
     if (_tasks.containsKey(id)) {
@@ -34,11 +34,10 @@ class DownloadManager {
     final cancelToken = CancelToken();
     _tasks[id] = cancelToken;
 
-    final file = File(fileFullPath);
-    final tempPath = "${file.path}.tmp";
+    final tempPath = "${fileFullPath.path}.tmp";
 
     try {
-      await file.parent.create(recursive: true);
+      await fileFullPath.parent.create(recursive: true);
       int received = 0;
       int total = 0;
 
@@ -54,7 +53,7 @@ class DownloadManager {
           _controllers[id]?.add(
             DownloadProgress(
               id: id,
-              filePath: file.path,
+              filePath: fileFullPath.path,
               percent: percent,
               downloadedMb: count / (1024 * 1024),
               totalMb: totalBytes / (1024 * 1024),
@@ -68,7 +67,7 @@ class DownloadManager {
         await File(tempPath).delete().catchError((_) {});
         final cancelled = DownloadProgress(
           id: id,
-          filePath: file.path,
+          filePath: fileFullPath.path,
           percent: (received / (total == 0 ? 1 : total)) * 100.0,
           downloadedMb: received / (1024 * 1024),
           totalMb: total / (1024 * 1024),
@@ -79,11 +78,11 @@ class DownloadManager {
         throw Exception('Cancelled');
       }
 
-      await File(tempPath).rename(file.path);
+      await File(tempPath).rename(fileFullPath.path);
 
       final completed = DownloadProgress(
         id: id,
-        filePath: file.path,
+        filePath: fileFullPath.path,
         percent: 100.0,
         downloadedMb: total / (1024 * 1024),
         totalMb: total / (1024 * 1024),
@@ -101,7 +100,7 @@ class DownloadManager {
     } catch (e) {
       final failed = DownloadProgress(
         id: id,
-        filePath: file.path,
+        filePath: fileFullPath.path,
         percent: 0.0,
         downloadedMb: 0.0,
         totalMb: 0.0,

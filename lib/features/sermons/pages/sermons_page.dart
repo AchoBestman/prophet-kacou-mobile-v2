@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
@@ -100,7 +98,7 @@ class _SermonsPageState extends State<SermonsPage>
     _loadSermons();
   }
 
-  void _playSermon(Sermon sermon, BuildContext context) {
+  void _playSermon(Sermon sermon, BuildContext context) async {
     if (sermon.audio == null) return;
 
     final audioProvider = Provider.of<AudioPlayerProvider>(
@@ -108,12 +106,21 @@ class _SermonsPageState extends State<SermonsPage>
       listen: false,
     );
 
+    final file = await DownloadUtils.createPaths(
+      i18n.lang,
+      AudioFolder.sermons,
+      sermonFileNameFormatter(sermon),
+      FileExtension.mp3,
+    );
+    final localFullPath = File(file);
+
     final audioItem = AudioItem(
       id: sermon.id,
-      title: sermon.title,
+      title: sermonTitleFormatter(sermon),
       audioUrl: sermon.audio!,
       albumId: null, // Pas d'album pour les sermons
-      fileOriginalName: sermon.chapter,
+      fileOriginalName: sermonTitleFormatter(sermon),
+      localFullPath: localFullPath,
     );
 
     audioProvider.setAudio(audioItem, autoPlay: true);
@@ -168,7 +175,7 @@ class _SermonsPageState extends State<SermonsPage>
       builder: (context, audioProvider, downloadProvider, child) {
         final isCurrentSermon = audioProvider.currentAudioId == sermon.id;
         final isPlaying = isCurrentSermon && audioProvider.isPlaying;
-        final downloadId = 'sermon_${sermon.id}';
+        final downloadId = sermonIdInDownloadProviderFormatter(sermon);
         final downloadHistory = downloadProvider.history
             .where((d) => d.id == downloadId)
             .firstOrNull;
@@ -276,7 +283,8 @@ class _SermonsPageState extends State<SermonsPage>
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      value: (downloadHistory?.percent ?? 0) / 100,
+                                      value:
+                                          (downloadHistory?.percent ?? 0) / 100,
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                         isDark ? Colors.lightBlue : Colors.blue,
                                       ),
@@ -290,8 +298,8 @@ class _SermonsPageState extends State<SermonsPage>
                                     color: isDownloaded
                                         ? Colors.orange
                                         : (isDark
-                                            ? Colors.lightBlue
-                                            : Colors.blue),
+                                              ? Colors.lightBlue
+                                              : Colors.blue),
                                     size: 20,
                                   ),
                           ),
@@ -339,7 +347,7 @@ class _SermonsPageState extends State<SermonsPage>
                 ),
                 onPressed: _toggleOrder,
               ),
-              const UpdateButton()
+              const UpdateButton(),
             ],
             body: Column(
               children: [
@@ -348,7 +356,8 @@ class _SermonsPageState extends State<SermonsPage>
                   child: TabBar(
                     controller: _tabController,
                     labelColor: theme.tabBarTheme.labelColor,
-                    unselectedLabelColor: theme.tabBarTheme.unselectedLabelColor,
+                    unselectedLabelColor:
+                        theme.tabBarTheme.unselectedLabelColor,
                     indicatorColor: theme.tabBarTheme.indicatorColor,
                     tabs: const [
                       Tab(text: 'SERMONS'),
@@ -408,20 +417,20 @@ class SermonSearchDelegate extends SearchDelegate<String> {
 
   @override
   List<Widget>? buildActions(BuildContext context) => [
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            query = '';
-            onSearch(query);
-          },
-        ),
-      ];
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        query = '';
+        onSearch(query);
+      },
+    ),
+  ];
 
   @override
   Widget? buildLeading(BuildContext context) => IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => close(context, ''),
-      );
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () => close(context, ''),
+  );
 
   @override
   Widget buildResults(BuildContext context) {

@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:prophet_kacou/core/models/download_progress.dart';
 
 class DownloadHistory {
   final String id;
   final String title;
   final String audioUrl;
-  final String filePath;
+  final File filePath;
   final double percent;
   final double downloadedMb;
   final double totalMb;
@@ -74,7 +76,7 @@ class DownloadHistory {
     String? id,
     String? title,
     String? audioUrl,
-    String? filePath,
+    File? filePath,
     double? percent,
     double? downloadedMb,
     double? totalMb,

@@ -28,12 +28,12 @@ class DownloadUtils {
     final cleanFileName = cleanAndSlugifyFileName(fileName, extension.label);
 
     final fullPath = subFolder == AudioFolder.hymns 
-          ? '${downloadsDir.path}/${subFolder.label}/$cleanFileName.$extension' 
+          ? '${downloadsDir.path}/${subFolder.label}/$cleanFileName.${extension.label}' 
           : '${downloadsDir.path}/${subFolder.label}/${extractLangueCode(initial)}/${extractLangueCode(initial)}/$cleanFileName.${extension.label}';
 
     final directory = Directory(fullPath).parent;
     if (!await directory.exists()) await directory.create(recursive: true);
-print(fullPath);
+
     return fullPath;
   }
 
