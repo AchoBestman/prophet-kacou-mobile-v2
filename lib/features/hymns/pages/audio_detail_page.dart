@@ -3,7 +3,7 @@ import 'package:prophet_kacou/core/models/audio_item.dart';
 
 class AudioDetailPage extends StatelessWidget {
   final AudioItem audio;
-
+  static const routeName = '/audio_detail';
   const AudioDetailPage({super.key, required this.audio});
 
   @override

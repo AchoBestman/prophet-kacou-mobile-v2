@@ -7,7 +7,7 @@ import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
 class SermonDetailPage extends StatefulWidget {
   final int sermonId;
-
+  static const routeName = '/sermon_detail';
   const SermonDetailPage({super.key, required this.sermonId});
 
   @override

@@ -7,6 +7,7 @@ class AudioItem {
   final int? albumId;
   final String? fileOriginalName;
   final File? localFullPath;
+  final String? content;
   
   AudioItem({
     required this.id,
@@ -14,6 +15,7 @@ class AudioItem {
     required this.audioUrl,
     this.albumId,
     this.fileOriginalName,
-    this.localFullPath
+    this.localFullPath,
+    this.content
   });
 }

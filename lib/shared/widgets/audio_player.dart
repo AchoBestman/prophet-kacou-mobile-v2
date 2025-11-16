@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
+import 'package:prophet_kacou/features/hymns/pages/audio_detail_page.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +14,7 @@ class AudioPlayerWidget extends StatelessWidget {
     final provider = Provider.of<AudioPlayerProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (provider.currentAudio == null) {
+    if (provider.currentAudio == null || provider.isMinimized) {
       return const SizedBox.shrink();
     }
 
@@ -32,9 +33,8 @@ class AudioPlayerWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Titre et contrôles
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
             child: Row(
               children: [
                 Expanded(
@@ -42,7 +42,7 @@ class AudioPlayerWidget extends StatelessWidget {
                     provider.currentAudio!.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -51,63 +51,34 @@ class AudioPlayerWidget extends StatelessWidget {
                 IconButton(
                   icon: Icon(_getRepeatIcon(provider.repeatMode)),
                   onPressed: provider.toggleRepeatMode,
-                  iconSize: 20,
+                  iconSize: 25,
                   color: pkpOcean,
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => _showStopConfirmation(context, provider),
-                  iconSize: 20,
+                  iconSize: 25,
                   color: pkpOcean,
                 ),
-
-                // ➤ 1. Bouton page détail
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                             SermonDetailPage(sermonId: provider.currentAudio!.id),
-                      ),
-                    );
-                  },
-                  color: pkpOcean,
-                ),
-
-                // ➤ 2. Bouton partager (uniquement si fichier téléchargé)
-                FutureBuilder<bool>(
-                  future: provider.localFileExit(provider.currentAudio!),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState != ConnectionState.done ||
-                        snapshot.data != true) {
-                      return const SizedBox.shrink();
-                    }
-
-                    return IconButton(
-                      icon: const Icon(Icons.share),
-                      onPressed: () {
-                        provider.shareAudio(provider.currentAudio!);
-                      },
-                      color: pkpOcean,
-                    );
-                  },
-                ),
-
-                // ➤ 3. Bouton réduire
+                _buildInfoButton(context, provider),
+                if (provider.currentAudio!.localFullPath?.existsSync() == true)
+                  IconButton(
+                    icon: const Icon(Icons.share),
+                    onPressed: () {
+                      provider.shareAudio(provider.currentAudio!);
+                    },
+                    iconSize: 20,
+                    color: pkpOcean,
+                  ),
                 IconButton(
                   icon: const Icon(Icons.keyboard_arrow_down),
-                  onPressed: () {
-                    provider.minimizePlayer();
-                  },
+                  onPressed: provider.minimizePlayer,
+                  iconSize: 30,
                   color: pkpOcean,
                 ),
               ],
             ),
           ),
-
-          // Barre de progression
           Slider(
             value: provider.position.inSeconds.toDouble(),
             max: provider.duration.inSeconds.toDouble().clamp(
@@ -118,51 +89,61 @@ class AudioPlayerWidget extends StatelessWidget {
               provider.seek(Duration(seconds: value.toInt()));
             },
             activeColor: pkpOcean,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
-
-          // Temps
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   _formatDuration(provider.position),
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 13),
                 ),
                 Text(
                   _formatDuration(provider.duration),
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 13),
                 ),
               ],
             ),
           ),
-
-          // Contrôles de lecture
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 2, top: 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
+                  constraints:
+                      const BoxConstraints(), // enlève les marges internes
+                  padding: EdgeInsets.zero,
                   icon: const Icon(Icons.skip_previous),
                   onPressed: provider.playPrevious,
                   iconSize: 32,
+                  color: pkpOcean,
                 ),
                 const SizedBox(width: 16),
                 IconButton(
+                  constraints:
+                      const BoxConstraints(), // enlève les marges internes
+                  padding: EdgeInsets.zero,
                   icon: Icon(
                     provider.isPlaying ? Icons.pause_circle : Icons.play_circle,
+                     
                   ),
                   onPressed: provider.togglePlayPause,
                   iconSize: 48,
-                  color: Colors.orange,
+                 
+                  color: pkpOcean,
                 ),
                 const SizedBox(width: 16),
                 IconButton(
+                  constraints:
+                      const BoxConstraints(), // enlève les marges internes
+                  padding: EdgeInsets.zero,
                   icon: const Icon(Icons.skip_next),
                   onPressed: () => provider.playNext(),
                   iconSize: 32,
+                  color: pkpOcean,
                 ),
               ],
             ),
@@ -214,5 +195,52 @@ class AudioPlayerWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildInfoButton(BuildContext context, AudioPlayerProvider provider) {
+    final audio = provider.currentAudio;
+    if (audio == null) return const SizedBox.shrink();
+
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+
+    if (audio.albumId != null && audio.content != null) {
+      if (currentRoute == AudioDetailPage.routeName) {
+        return const SizedBox.shrink();
+      }
+
+      return IconButton(
+        icon: const Icon(Icons.info_outline),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AudioDetailPage(audio: audio)),
+          );
+        },
+        iconSize: 20,
+        color: pkpOcean,
+      );
+    }
+
+    if (audio.albumId == null && !audio.title.toUpperCase().contains("KACOU")) {
+      if (currentRoute == SermonDetailPage.routeName) {
+        return const SizedBox.shrink();
+      }
+
+      return IconButton(
+        icon: const Icon(Icons.info_outline),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SermonDetailPage(sermonId: audio.id),
+            ),
+          );
+        },
+        iconSize: 20,
+        color: pkpOcean,
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }

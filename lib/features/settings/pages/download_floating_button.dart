@@ -30,8 +30,8 @@ class DownloadFloatingButton extends StatelessWidget {
               children: [
                 // Cercle de progression animé
                 SizedBox(
-                  width: 60,
-                  height: 60,
+                  width: 50,
+                  height: 50,
                   child: CustomPaint(
                     painter: _CircularProgressPainter(
                       progress: _calculateAverageProgress(provider),
@@ -41,8 +41,8 @@ class DownloadFloatingButton extends StatelessWidget {
                 ),
                 // Container principal
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
                     shape: BoxShape.circle,

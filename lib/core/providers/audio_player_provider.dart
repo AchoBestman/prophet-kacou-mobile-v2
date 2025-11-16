@@ -35,24 +35,20 @@ class AudioPlayerProvider with ChangeNotifier {
   }
 
   void _initAudioPlayer() {
-    // Écouter les changements de position
     _audioPlayer.positionStream.listen((position) {
       _position = position;
       notifyListeners();
     });
 
-    // Écouter les changements de durée
     _audioPlayer.durationStream.listen((duration) {
       _duration = duration ?? Duration.zero;
       notifyListeners();
     });
 
-    // Écouter l'état de lecture
     _audioPlayer.playerStateStream.listen((state) {
       _isPlaying = state.playing;
       notifyListeners();
 
-      // Gérer la fin de la lecture
       if (state.processingState == ProcessingState.completed) {
         _handleAudioEnd();
       }
@@ -72,10 +68,8 @@ class AudioPlayerProvider with ChangeNotifier {
       }
 
       _currentAudio = audio;
-
       _firstAudioId ??= audio.id;
 
-      // Charger l'audio (local ou distant)
       if (await localFileExit(audio)) {
         await _audioPlayer.setFilePath(audio.localFullPath!.path);
       } else {
@@ -102,13 +96,15 @@ class AudioPlayerProvider with ChangeNotifier {
     if (audio.localFullPath == null) {
       return false;
     }
-
     return audio.localFullPath!.exists();
   }
 
   Future<void> shareAudio(AudioItem audio) async {
     if (await localFileExit(audio)) {
-      await Share.shareXFiles([XFile(audio.localFullPath!.path)]);
+      await Share.shareXFiles(
+        [XFile(audio.localFullPath!.path)],
+        text: audio.title,
+      );
     }
   }
 
@@ -164,14 +160,11 @@ class AudioPlayerProvider with ChangeNotifier {
 
   Future<void> _handleAudioEnd() async {
     if (_repeatMode == PlayMode.one) {
-      // Rejouer la même chanson
       await _audioPlayer.seek(Duration.zero);
       await play();
     } else if (_repeatMode == PlayMode.all) {
-      // Passer au suivant (avec boucle)
       await playNext(shouldLoop: true);
     } else {
-      // Passer au suivant (sans boucle)
       await playNext(shouldLoop: false);
     }
   }
@@ -180,20 +173,7 @@ class AudioPlayerProvider with ChangeNotifier {
     if (_currentAudio == null) return;
 
     try {
-      // TODO: Appeler votre API/repository pour obtenir la chanson suivante
-      // final nextAudio = await _repository.findNext(
-      //   currentId: _currentAudio!.id,
-      //   albumId: _currentAudio!.albumId,
-      //   firstAudioId: shouldLoop ? _firstAudioId : null,
-      // );
-
-      // Pour l'instant, simulation
       debugPrint('Lecture suivante...');
-
-      // Exemple:
-      // if (nextAudio != null) {
-      //   await setAudio(nextAudio, autoPlay: true);
-      // }
     } catch (e) {
       debugPrint('Erreur playNext: $e');
     }
@@ -203,18 +183,7 @@ class AudioPlayerProvider with ChangeNotifier {
     if (_currentAudio == null) return;
 
     try {
-      // TODO: Appeler votre API/repository pour obtenir la chanson précédente
-      // final prevAudio = await _repository.findPrevious(
-      //   currentId: _currentAudio!.id,
-      //   albumId: _currentAudio!.albumId,
-      // );
-
       debugPrint('Lecture précédente...');
-
-      // Exemple:
-      // if (prevAudio != null) {
-      //   await setAudio(prevAudio, autoPlay: true);
-      // }
     } catch (e) {
       debugPrint('Erreur playPrevious: $e');
     }

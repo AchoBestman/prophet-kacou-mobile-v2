@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/features/settings/pages/download_floating_button.dart';
+import 'package:prophet_kacou/shared/widgets/audio_mini_player.dart';
 import 'package:prophet_kacou/shared/widgets/audio_player.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
@@ -203,13 +205,59 @@ class MainLayout extends StatelessWidget {
           ],
         ),
       ),
-      body: SafeArea(child: Column(
-        children: [
-          Expanded(child: body),
-          const AudioPlayerWidget(), 
-          const DownloadFloatingButton(),// 👈 Ajoutez ici
-        ],
-      )),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Contenu principal avec padding bottom pour éviter que AudioPlayerWidget cache le contenu
+            Consumer<AudioPlayerProvider>(
+              builder: (context, provider, child) {
+                // Calculer le padding bottom en fonction de ce qui est visible
+                double bottomPadding = 0;
+
+                // Si AudioPlayerWidget est visible (non minimized et currentAudio != null)
+                if (provider.currentAudio != null && !provider.isMinimized) {
+                  bottomPadding =
+                      140; // Hauteur approximative du AudioPlayerWidget + espacement
+                }
+                return Padding(
+                  padding: EdgeInsets.only(bottom: bottomPadding),
+                  child: body,
+                );
+              },
+            ),
+
+            // AudioPlayerWidget en bas au centre
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: AudioPlayerWidget(),
+            ),
+
+            // Boutons flottants en bas à droite avec alignement vertical
+            Positioned(
+              right: 8,
+              bottom: 20,
+              child: Consumer<AudioPlayerProvider>(
+                builder: (context, provider, child) {
+                  final showMiniPlayer =
+                      provider.currentAudio != null && provider.isMinimized;
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (showMiniPlayer) ...[
+                        MiniPlayer(),
+                        const SizedBox(height: 12),
+                      ],
+                      DownloadFloatingButton(),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

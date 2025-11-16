@@ -124,7 +124,8 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
       audioUrl: song.audio,
       albumId: widget.album.id,
       fileOriginalName: song.title,
-      localFullPath: localFullPath
+      localFullPath: localFullPath,
+      content: song.content
     );
 
     if(context.mounted)audioProvider.setAudio(context, audioItem, autoPlay: true);
