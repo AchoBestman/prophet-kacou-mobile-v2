@@ -7,6 +7,7 @@ import 'package:prophet_kacou/features/hymns/pages/hymns_page.dart';
 import 'package:prophet_kacou/features/informations/pages/informations_page.dart';
 import 'package:prophet_kacou/features/photos/pages/photos_page.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermons_page.dart';
+import 'package:prophet_kacou/features/settings/pages/download_history_page.dart';
 import 'package:prophet_kacou/features/settings/pages/languages_page.dart';
 import 'package:prophet_kacou/features/settings/pages/settings_page.dart';
 import 'package:prophet_kacou/features/videos/pages/videos_page.dart';
@@ -50,6 +51,7 @@ class HomePage extends StatelessWidget {
           '/langues': (context) => const LanguagesPage(),
           '/settings': (context) => const SettingsPage(),
           '/abouts': (context) => const AboutsPage(),
+          '/downloads': (context) => const DownloadHistoryPage(),
         },
       ),
     );

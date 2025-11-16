@@ -7,9 +7,17 @@ class AppStrings {
   // Clés de préférences (SharedPreferences)
   static const prefsVersionKey = 'app_version';
 
+  //cles pour recupererer les langues mises a jour du localStorage
+  static const downloadDbUpdates = "download_db_updates";
+
+  static const downloadHistory = "download_history";
+
   // Dossiers internes
   static const databasesDirName = 'databases';
-  static const downloadDirName = 'downloads';
+  static const downloadDirName = 'Philippekacou';
+  static const dbName = 'matth25v6';
+  static const apiUrl = "https://api.philippekacou.org/api";
+
 
   // Bases de données embarquées
   static const defaultDatabases = [
@@ -18,6 +26,10 @@ class AppStrings {
     'en/matth25v6_en.db',
     'pt/matth25v6_pt.db',
     'es/matth25v6_es.db',
+    'sa/matth25v6_ar.db',
+    'ir/matth25v6_fa.db',
+    'in/matth25v6_hi.db',
+    'cn/matth25v6_zh.db',
   ];
 
   // Clé générique pour indiquer le dossier commun

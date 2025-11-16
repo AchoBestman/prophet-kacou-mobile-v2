@@ -4,6 +4,7 @@ import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/city.dart';
 import 'package:prophet_kacou/core/models/country.dart';
 import 'package:prophet_kacou/core/repositories/city.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/assemblies/pages/assemblies_detail_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 
@@ -92,9 +93,7 @@ class _CityPageState extends State<CityPage>
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        NotificactionService.showErrorMessage(context, 'Erreur : $e');
       }
     }
   }

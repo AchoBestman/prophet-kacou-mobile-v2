@@ -1,3 +1,5 @@
+import 'package:prophet_kacou/i18n/i18n.dart';
+
 class AppDefaultLanguage {
   final String lang;
   final String langName;
@@ -30,7 +32,7 @@ class LanguageData {
   });
 
   static List<LanguageData> homeLanguages() {
-    
+    i18n.lang;
     return [
     LanguageData(
       id: 1,
@@ -96,21 +98,37 @@ class LanguageData {
       icon: 'assets/images/drapeau/ir.jpg',
       translation: 'fa',
     ),
+    // LanguageData(
+    //   id: 9,
+    //   name: 'Deutsch',
+    //   lang: 'de-de',
+    //   countryFip: 'de',
+    //   icon: 'assets/images/drapeau/de.jpg',
+    //   translation: 'de',
+    // ),
+    // LanguageData(
+    //   id: 9,
+    //   name: 'Italiano',
+    //   lang: 'it-it',
+    //   countryFip: 'it',
+    //   icon: 'assets/images/drapeau/it.jpg',
+    //   translation: 'it',
+    // ),
     LanguageData(
       id: 9,
-      name: 'Deutsch',
-      lang: 'de-de',
-      countryFip: 'de',
-      icon: 'assets/images/drapeau/de.jpg',
-      translation: 'de',
+      name: i18n.tr('home.others'),
+      lang: i18n.lang,
+      countryFip: i18n.countryCode,
+      icon: 'langues',
+      translation: i18n.langTranslation,
     ),
     LanguageData(
       id: 9,
-      name: 'Italiano',
-      lang: 'it-it',
-      countryFip: 'it',
-      icon: 'assets/images/drapeau/it.jpg',
-      translation: 'it',
+      name: i18n.tr('home.share'),
+      lang: i18n.lang,
+      countryFip: i18n.countryCode,
+      icon: 'share',
+      translation: i18n.langTranslation,
     ),
   ];
   }

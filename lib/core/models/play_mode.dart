@@ -3,6 +3,7 @@ enum AudioFolder {
   hymns,
   sermons,
   files,
+  database,
   others,
 }
 /// Définit toutes les extensions de fichiers prises en charge.
@@ -11,6 +12,7 @@ enum FileExtension {
   mp3,
   mp4,
   doc,
+  db
 }
 
 extension AudioFolderExtension on AudioFolder {
@@ -19,6 +21,7 @@ extension AudioFolderExtension on AudioFolder {
     AudioFolder.sermons => "Sermons",
     AudioFolder.files => "Files",
     AudioFolder.others => "Others",
+    AudioFolder.database => "Database",
   };
 }
 
@@ -28,5 +31,6 @@ extension AudioFileExtension on FileExtension {
     FileExtension.mp3 => "mp3",
     FileExtension.mp4 => "mp4",
     FileExtension.doc => "doc",
+    FileExtension.db => "db",
   };
 }

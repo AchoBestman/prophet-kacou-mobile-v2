@@ -8,7 +8,7 @@ class FooterSection extends StatelessWidget {
 
   const FooterSection({
     super.key,
-    this.height = 0.065, // ratio par défaut (6,5% de la hauteur d’écran)
+    this.height = 0.070, // ratio par défaut (6,5% de la hauteur d’écran)
   });
 
   @override

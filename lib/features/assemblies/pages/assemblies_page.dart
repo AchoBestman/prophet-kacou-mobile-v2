@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/country.dart';
 import 'package:prophet_kacou/core/repositories/country.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/assemblies/pages/city_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
@@ -84,9 +85,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        NotificactionService.showErrorMessage(context, 'Erreur : $e');
       }
     }
   }

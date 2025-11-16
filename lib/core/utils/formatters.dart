@@ -1,4 +1,5 @@
-import 'package:prophet_kacou/core/models/concordance.dart';
+import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:slugify/slugify.dart';
 
 // List<ParsedReference> parseConcordance(String input) {
 //   final regex = RegExp(r'\[Kc\.(\d+)v([\d,\-\s]+)\]');
@@ -24,38 +25,57 @@ import 'package:prophet_kacou/core/models/concordance.dart';
 //   return result;
 // }
 
+String getVideoId(String url) {
+  if (url.isEmpty) return '';
 
-  String getVideoId(String url) {
-    if (url.isEmpty) return '';
-
-    Uri? uri;
-    try {
-      uri = Uri.parse(url);
-    } catch (_) {
-      return '';
-    }
-
-    // Essayer d'abord de récupérer list=xxxx
-    if (uri.queryParameters.containsKey('list')) {
-      return uri.queryParameters['list'] ?? '';
-    }
-
-    // Sinon récupérer v=xxxx
-    if (uri.queryParameters.containsKey('v')) {
-      return uri.queryParameters['v'] ?? '';
-    }
-
-    // fallback : essayer de prendre le dernier segment après '='
-    final segments = url.split(RegExp(r'[?&]'));
-    for (final s in segments) {
-      if (s.startsWith('v=')) return s.substring(2);
-      if (s.startsWith('list=')) return s.substring(5);
-    }
-
+  Uri? uri;
+  try {
+    uri = Uri.parse(url);
+  } catch (_) {
     return '';
   }
 
-String extractCountryCode(String locale) {
-  if (locale.isEmpty) return '';
-  return locale.split('-').first.toLowerCase();
+  // Essayer d'abord de récupérer list=xxxx
+  if (uri.queryParameters.containsKey('list')) {
+    return uri.queryParameters['list'] ?? '';
+  }
+
+  // Sinon récupérer v=xxxx
+  if (uri.queryParameters.containsKey('v')) {
+    return uri.queryParameters['v'] ?? '';
+  }
+
+  // fallback : essayer de prendre le dernier segment après '='
+  final segments = url.split(RegExp(r'[?&]'));
+  for (final s in segments) {
+    if (s.startsWith('v=')) return s.substring(2);
+    if (s.startsWith('list=')) return s.substring(5);
+  }
+
+  return '';
+}
+
+String cleanAndSlugifyFileName(String fileName, String extension) {
+  // 1. Supprimer l'extension
+  final cleanFileName = fileName.replaceAll(
+    RegExp('\\.$extension\$', caseSensitive: false),
+    '',
+  );
+
+  // 2. Convertir en slug
+  final slug = slugify(cleanFileName);
+
+  return slug;
+}
+
+String sermonFileNameFormatter(Sermon sermon){
+  return "${sermon.chapter.toLowerCase()}_${sermon.title.toLowerCase()}";
+}
+
+String sermonTitleFormatter(Sermon sermon){
+  return "${sermon.chapter}: ${sermon.title}";
+}
+
+String sermonIdInDownloadProviderFormatter(Sermon sermon){
+  return 'sermon_${sermon.id}';
 }

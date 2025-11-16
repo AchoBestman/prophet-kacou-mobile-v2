@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/information.dart';
 import 'package:prophet_kacou/core/repositories/information.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/informations/pages/information_detail_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
@@ -61,9 +62,7 @@ class _InformationsPageState extends State<InformationsPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        NotificactionService.showErrorMessage(context, 'Erreur : $e');
       }
     }
   }

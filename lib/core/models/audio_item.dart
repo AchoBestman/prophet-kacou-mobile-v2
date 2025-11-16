@@ -4,6 +4,7 @@ class AudioItem {
   final String audioUrl;
   final int? albumId;
   final String? fileOriginalName;
+  final String? localFullPath;
   
   AudioItem({
     required this.id,
@@ -11,5 +12,6 @@ class AudioItem {
     required this.audioUrl,
     this.albumId,
     this.fileOriginalName,
+    this.localFullPath
   });
 }

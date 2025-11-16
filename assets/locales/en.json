@@ -33,7 +33,9 @@
     "contacts": "Contacts",
     "contact_us": "Contact us",
     "brother": "brother",
-    "langues": "Langues"
+    "langues": "Langues",
+    "others": "Others",
+    "share": "Share"
   },
   "button": {
     "search": "Search",

@@ -49,12 +49,22 @@ class LanguageSelector extends StatelessWidget {
                       await languageProvider.changeLanguage(item);
                       if (context.mounted) {
                         Future.microtask(() {
-                          Navigator.pushReplacementNamed(context, '/sermons');
+                          if(item.icon =="langues"){
+                            Navigator.pushReplacementNamed(context, '/langues');
+                            return ;
+                          }
+                          if(item.icon =="share"){
+                            //share app
+                          }
+                          else{
+                            Navigator.pushReplacementNamed(context, '/sermons');
+                          }
+                          
                         });
                       }
                     },
                     child: Container(
-                      width: 65,
+                      width: item.icon !="langues" && item.icon !="share" ? 65 : 75,
                       height: 45,
                       decoration: BoxDecoration(
                         color: isSelected
@@ -64,7 +74,7 @@ class LanguageSelector extends StatelessWidget {
                           color: isSelected
                               ? pkpIndigo
                               : pkpIndigo.withOpacity(0.5),
-                          width: isSelected ? 2 : 1,
+                          width: isSelected ? 0 : 1,
                         ),
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [
@@ -85,13 +95,16 @@ class LanguageSelector extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: Colors.grey[200],
+                                width: 70,
+                                height: 36,
+                                color: const Color.fromARGB(255, 3, 42, 70),
                                 child: Center(
                                   child: Text(
-                                    item.name.substring(0, 2),
+                                    item.icon !="langues" && item.icon !="share" ? item.name.substring(0, 2) : item.name,
                                     style: TextStyle(
-                                      color: pkpIndigo,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
+                                      overflow: TextOverflow.ellipsis
                                     ),
                                   ),
                                 ),

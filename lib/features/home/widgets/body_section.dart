@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/features/home/widgets/citation_section.dart';
-import 'package:prophet_kacou/features/home/widgets/share_link_section.dart';
 import 'package:prophet_kacou/features/home/widgets/top_text_section.dart';
 
 class BodySection extends StatelessWidget {
@@ -25,8 +24,8 @@ class BodySection extends StatelessWidget {
               TopTextSection(),
               Spacer(),
               CitationSection(),
-              Spacer(),
-              ShareLinkSection()
+              Spacer(flex: 3),
+              // ShareLinkSection()
               ],
           ),
         ),

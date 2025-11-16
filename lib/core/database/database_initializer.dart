@@ -7,6 +7,7 @@ import 'package:prophet_kacou/core/utils/path_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DatabaseInitializer {
+  
   static Future<void> initializeDatabases() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -27,18 +28,40 @@ class DatabaseInitializer {
   }
 
   static Future<void> _copyAllDatabases(Directory dbRoot) async {
-    if (await dbRoot.exists()) {
-      await dbRoot.delete(recursive: true);
-    }
+    // S'assurer que le dossier existe
     await dbRoot.create(recursive: true);
 
-    for (final path in AppStrings.defaultDatabases) {
-      final data = await rootBundle.load('assets/databases/$path');
-      final file = File(join(dbRoot.path, path));
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(data.buffer.asUint8List());
-    }
+    for (final relativePath in AppStrings.defaultDatabases) {
+      final newDbData = await rootBundle.load('assets/databases/$relativePath');
+      final targetFile = File(join(dbRoot.path, relativePath));
 
-    print("✅ Bases copiées dans ${dbRoot.path}");
+      // Créer le dossier parent si nécessaire
+      await targetFile.parent.create(recursive: true);
+
+      // 1️⃣ Si l’ancienne DB existe, on la sauvegarde temporairement
+      File? oldFileBackup;
+      if (await targetFile.exists()) {
+        final backupPath = "${targetFile.path}.bak";
+        oldFileBackup = await targetFile.copy(backupPath);
+      }
+
+      try {
+        // 2️⃣ On écrit la nouvelle base
+        await targetFile.writeAsBytes(newDbData.buffer.asUint8List());
+
+        // 3️⃣ Si succès → supprimer la backup
+        if (oldFileBackup != null && await oldFileBackup.exists()) {
+          await oldFileBackup.delete();
+        }
+
+        print("✅ Base copiée : ${targetFile.path}");
+      } catch (e) {
+        // 4️⃣ En cas d’échec → restaurer l’ancienne base
+        if (oldFileBackup != null && await oldFileBackup.exists()) {
+          await oldFileBackup.rename(targetFile.path);
+        }
+        print("❌ ERREUR copie DB : $relativePath → $e");
+      }
+    }
   }
 }

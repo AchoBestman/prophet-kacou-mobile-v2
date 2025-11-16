@@ -3,6 +3,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:prophet_kacou/core/models/photo.dart';
 import 'package:prophet_kacou/core/repositories/photo.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
@@ -61,8 +62,7 @@ class _PhotosPageState extends State<PhotosPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        NotificactionService.showErrorMessage(context, 'Erreur : $e');
       }
     }
   }

@@ -1,49 +1,36 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:prophet_kacou/core/models/download_progress.dart';
 
-enum DownloadStatus { downloading, completed, failed, cancelled }
-
-class DownloadProgress {
-  final String id;
-  final String filePath;
-  final double percent;
-  final double downloadedMb;
-  final double totalMb;
-  final DownloadStatus status;
-  final String? error;
-
-  DownloadProgress({
-    required this.id,
-    required this.filePath,
-    required this.percent,
-    required this.downloadedMb,
-    required this.totalMb,
-    required this.status,
-    this.error,
-  });
-}
-
-/// Service global pour gérer les téléchargements (avec annulation)
 class DownloadManager {
   static final DownloadManager _instance = DownloadManager._internal();
   factory DownloadManager() => _instance;
 
   final Dio _dio = Dio();
   final Map<String, CancelToken> _tasks = {};
-  final StreamController<DownloadProgress> _progressController =
-      StreamController.broadcast();
+  final Map<String, StreamController<DownloadProgress>> _controllers = {};
 
   DownloadManager._internal();
 
-  Stream<DownloadProgress> get progressStream => _progressController.stream;
+  /// Retourne un flux spécifique pour un téléchargement donné
+  Stream<DownloadProgress> progressStream(String id) {
+    if (!_controllers.containsKey(id)) {
+      _controllers[id] = StreamController<DownloadProgress>.broadcast();
+    }
+    return _controllers[id]!.stream;
+  }
 
-  /// Télécharge un fichier audio
   Future<DownloadProgress> download({
     required String id,
     required String url,
     required String fileFullPath,
   }) async {
+    // Éviter les doublons
+    if (_tasks.containsKey(id)) {
+      throw Exception('Download already in progress for id: $id');
+    }
+
     final cancelToken = CancelToken();
     _tasks[id] = cancelToken;
 
@@ -51,9 +38,7 @@ class DownloadManager {
     final tempPath = "${file.path}.tmp";
 
     try {
-      // Créer le répertoire si nécessaire
       await file.parent.create(recursive: true);
-
       int received = 0;
       int total = 0;
 
@@ -65,7 +50,8 @@ class DownloadManager {
           received = count;
           total = totalBytes;
           final percent = totalBytes > 0 ? (count / totalBytes) * 100.0 : 0.0;
-          _progressController.add(
+
+          _controllers[id]?.add(
             DownloadProgress(
               id: id,
               filePath: file.path,
@@ -80,24 +66,22 @@ class DownloadManager {
 
       if (cancelToken.isCancelled) {
         await File(tempPath).delete().catchError((_) {});
-        _progressController.add(
-          DownloadProgress(
-            id: id,
-            filePath: file.path,
-            percent: (received / (total == 0 ? 1 : total)) * 100.0,
-            downloadedMb: received / (1024 * 1024),
-            totalMb: total / (1024 * 1024),
-            status: DownloadStatus.cancelled,
-          ),
+        final cancelled = DownloadProgress(
+          id: id,
+          filePath: file.path,
+          percent: (received / (total == 0 ? 1 : total)) * 100.0,
+          downloadedMb: received / (1024 * 1024),
+          totalMb: total / (1024 * 1024),
+          status: DownloadStatus.cancelled,
         );
+        _controllers[id]?.add(cancelled);
+        // NE PAS fermer le controller ici
         throw Exception('Cancelled');
       }
 
-      // Remplacer le fichier final
-      final tempFile = File(tempPath);
-      await tempFile.rename(file.path);
+      await File(tempPath).rename(file.path);
 
-      final completedProgress = DownloadProgress(
+      final completed = DownloadProgress(
         id: id,
         filePath: file.path,
         percent: 100.0,
@@ -105,45 +89,60 @@ class DownloadManager {
         totalMb: total / (1024 * 1024),
         status: DownloadStatus.completed,
       );
-      _progressController.add(completedProgress);
+      _controllers[id]?.add(completed);
+
+      // Fermer et nettoyer seulement après succès
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _controllers[id]?.close();
+      _controllers.remove(id);
       _tasks.remove(id);
-      return completedProgress;
+
+      return completed;
     } catch (e) {
-      if (e is DioException && CancelToken.isCancel(e)) {
-        // Déjà traité
-      } else {
-        _progressController.add(
-          DownloadProgress(
-            id: id,
-            filePath: file.path,
-            percent: 0.0,
-            downloadedMb: 0.0,
-            totalMb: 0.0,
-            status: DownloadStatus.failed,
-            error: e.toString(),
-          ),
-        );
-      }
-      rethrow;
-    } finally {
+      final failed = DownloadProgress(
+        id: id,
+        filePath: file.path,
+        percent: 0.0,
+        downloadedMb: 0.0,
+        totalMb: 0.0,
+        status: DownloadStatus.failed,
+        error: e.toString(),
+      );
+      _controllers[id]?.add(failed);
+
+      // Fermer et nettoyer seulement après échec
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _controllers[id]?.close();
+      _controllers.remove(id);
       _tasks.remove(id);
+
+      rethrow;
     }
+    // Le bloc finally a été supprimé pour éviter la fermeture prématurée
   }
 
-  /// Annule un téléchargement
   bool cancel(String id) {
     final token = _tasks[id];
     if (token != null && !token.isCancelled) {
       token.cancel();
-      _tasks.remove(id);
       return true;
     }
     return false;
   }
 
-  /// Nettoie les ressources
   void dispose() {
-    _progressController.close();
+    // Annuler tous les téléchargements en cours
+    for (var token in _tasks.values) {
+      if (!token.isCancelled) {
+        token.cancel();
+      }
+    }
     _tasks.clear();
+
+    // Fermer tous les controllers
+    for (var c in _controllers.values) {
+      c.close();
+    }
+    _controllers.clear();
   }
 }

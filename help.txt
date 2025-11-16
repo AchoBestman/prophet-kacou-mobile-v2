@@ -6,7 +6,8 @@ sips -z 3000 2000 assets/images/1080X564.png --out assets/images/2000X3000.png
 
 sips -z 600 1080 assets/images/logo-pkacou3.jpeg --out assets/images/logo-pkacou3-1080×600.png
 
-flutter pub run build_runner build --delete-conflicting-outputs
+emplacement des bases de donnees
+flutter: ✅ Base copiée : /Users/aikpeachile/Library/Developer/CoreSimulator/Devices/94FC4071-B9A2-4E15-92BB-4E5502B5DF79/data/Containers/Data/Application/898CED77-C392-43DA-A7C2-A0BD38025D17/Documents/databases/en/matth25v6_en.db
 
 xcrun simctl list devices
 == Devices ==
@@ -34,3 +35,5 @@ flutter run -d "iPhone SE"
 
 xcrun simctl boot "iPad Air"
 flutter run -d "iPad Air 13-inch (M3)"
+
+xcrun simctl boot "iPhone SE"

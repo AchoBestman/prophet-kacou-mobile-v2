@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/models/video.dart';
 import 'package:prophet_kacou/core/repositories/video.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -57,9 +58,7 @@ class _VideosPageState extends State<VideosPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        NotificactionService.showErrorMessage(context, 'Erreur: $e');
       }
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/album.dart';
 import 'package:prophet_kacou/core/repositories/album.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 import 'album_detail_page.dart';
@@ -47,9 +48,10 @@ class _HymnsPageState extends State<HymnsPage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : $e')),
-      );
+
+      if (mounted) {
+        NotificactionService.showErrorMessage(context, 'Erreur : $e');
+      }
     }
   }
 
@@ -196,17 +198,17 @@ class _HymnsPageState extends State<HymnsPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _albums.isEmpty
-                    ? Center(child: Text(i18n.tr('table.no_result')))
-                    : RefreshIndicator(
-                        onRefresh: () => _loadAlbums(refresh: true),
-                        child: ListView.builder(
-                          itemCount: _albums.length,
-                          itemBuilder: (context, index) {
-                            final album = _albums[index];
-                            return _buildAlbumCard(album, isDark);
-                          },
-                        ),
-                      ),
+                ? Center(child: Text(i18n.tr('table.no_result')))
+                : RefreshIndicator(
+                    onRefresh: () => _loadAlbums(refresh: true),
+                    child: ListView.builder(
+                      itemCount: _albums.length,
+                      itemBuilder: (context, index) {
+                        final album = _albums[index];
+                        return _buildAlbumCard(album, isDark);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

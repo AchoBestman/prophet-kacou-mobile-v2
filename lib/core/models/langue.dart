@@ -12,6 +12,7 @@ class Langue {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final String? webTranslation;
+  bool isDownloaded;
 
   // Relation avec Country
   final Country? country;
@@ -28,6 +29,7 @@ class Langue {
     this.updatedAt,
     this.webTranslation,
     this.country,
+    this.isDownloaded = false,
   });
 
   /// Créer depuis la base de données

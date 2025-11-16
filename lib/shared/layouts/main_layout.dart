@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/features/settings/pages/download_floating_button.dart';
 import 'package:prophet_kacou/shared/widgets/audio_player_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
@@ -183,6 +184,12 @@ class MainLayout extends StatelessWidget {
             ),
             _buildDrawerItem(
               context,
+              icon: Icons.download,
+              title: i18n.tr('home.download_history'),
+              route: '/downloads',
+            ),
+            _buildDrawerItem(
+              context,
               icon: Icons.settings,
               title: i18n.tr('home.settings'),
               route: '/settings',
@@ -199,7 +206,8 @@ class MainLayout extends StatelessWidget {
       body: SafeArea(child: Column(
         children: [
           Expanded(child: body),
-          const AudioPlayerWidget(), // 👈 Ajoutez ici
+          const AudioPlayerWidget(), 
+          const DownloadFloatingButton(),// 👈 Ajoutez ici
         ],
       )),
     );

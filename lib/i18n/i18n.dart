@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:prophet_kacou/core/utils/formatters.dart';
+import 'package:prophet_kacou/core/utils/langues.dart';
 import 'package:prophet_kacou/i18n/constants.dart';
 import 'package:prophet_kacou/i18n/langue_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +14,7 @@ class I18n {
   String lang = defaultLang;
   String countryCode = defaultCountryCode;
   String langName = defaultLangName;
+  String langTranslation = defaultLangTranslation;
 
   Future<void> init() async {
   final prefs = await SharedPreferences.getInstance();
@@ -41,6 +42,7 @@ class I18n {
     lang = appDefaultLang.lang;
     countryCode = extractCountryCode(lang);
     langName = appDefaultLang.langName;
+    langTranslation = appDefaultLang.langTranslation;
 
     await prefs.setString(preferenceKeyLang, appDefaultLang.lang);
     await prefs.setString(preferenceKeyLangName, appDefaultLang.langName);
