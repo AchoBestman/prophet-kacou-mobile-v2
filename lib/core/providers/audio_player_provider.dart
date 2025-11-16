@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/utils/connection.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 
 class AudioPlayerProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -65,14 +66,14 @@ class AudioPlayerProvider with ChangeNotifier {
       _firstAudioId ??= audio.id;
 
       if (!await ConnectionUtils.hasConnection() &&
-          await localFileExit(audio)) {
+          !await localFileExit(audio)) {
         if (context.mounted) ConnectionUtils.showNoConnectionMessage(context);
         return;
       }
 
       // Charger l'audio (local ou distant)
       if (await localFileExit(audio)) {
-        await _audioPlayer.setUrl(audio.localFullPath!.path);
+        await _audioPlayer.setFilePath(audio.localFullPath!.path);
       } else {
         await _audioPlayer.setUrl(audio.audioUrl);
       }
@@ -83,7 +84,10 @@ class AudioPlayerProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      debugPrint('Erreur lors du chargement audio: $e');
+      if (context.mounted){
+        NotificactionService.showErrorMessage(context, 'Erreur lors du chargement audio: $e');
+        stop();
+      }
     }
   }
 
