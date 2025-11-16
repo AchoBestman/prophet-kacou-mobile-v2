@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/album.dart';
-import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/song.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/song.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
-import 'package:prophet_kacou/core/utils/download_utils.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 
 class AlbumDetailPage extends StatefulWidget {
   final Album album;
@@ -145,7 +142,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
       );
 
       await downloadProvider.startDownload(
-        id: 'song_${song.id}',
+        id: songIdInDownloadProviderFormatter(song),
         title: song.title,
         audioUrl: song.audio,
         filePath: localFullPath,
@@ -176,7 +173,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
       builder: (context, audioProvider, downloadProvider, child) {
         final isCurrentSong = audioProvider.currentAudioId == song.id;
         final isPlaying = isCurrentSong && audioProvider.isPlaying;
-        final downloadId = 'song_${song.id}';
+        final downloadId = songIdInDownloadProviderFormatter(song);
         final downloadHistory = downloadProvider.history
             .where((d) => d.id == downloadId)
             .firstOrNull;
@@ -219,7 +216,6 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (song.audio != null)
                       InkWell(
                         onTap: () {
                           if (isCurrentSong) {
@@ -243,7 +239,6 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                         ),
                       ),
                     const SizedBox(width: 4),
-                    if (song.audio != null)
                       InkWell(
                         onTap: isDownloading ? null : () => _downloadSong(song),
                         borderRadius: BorderRadius.circular(20),
