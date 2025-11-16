@@ -4,6 +4,7 @@ import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/utils/connection.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AudioPlayerProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -100,6 +101,12 @@ class AudioPlayerProvider with ChangeNotifier {
     }
 
     return audio.localFullPath!.exists();
+  }
+
+  Future<void> shareAudio(AudioItem audio) async {
+    if (await localFileExit(audio)) {
+      await Share.shareXFiles([XFile(audio.localFullPath!.path)]);
+    }
   }
 
   Future<void> play() async {

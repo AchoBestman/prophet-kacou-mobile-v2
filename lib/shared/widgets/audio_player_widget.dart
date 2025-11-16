@@ -69,7 +69,7 @@ class AudioPlayerWidget extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) =>
-                            SermonDetailPage(sermonId: provider.currentAudio!.id),
+                             SermonDetailPage(sermonId: provider.currentAudio!.id),
                       ),
                     );
                   },
