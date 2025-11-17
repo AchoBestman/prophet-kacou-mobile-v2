@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:prophet_kacou/core/models/concordance.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
+
 class Verse {
   final int id;
   final int number;
@@ -10,6 +13,8 @@ class Verse {
   final int sermonId;
   final String? title;
   final List<dynamic>? verseLinks;
+  List<ParsedReference>? concordances;
+  Concordance? concordance;
 
   Verse({
     required this.id,
@@ -21,6 +26,8 @@ class Verse {
     required this.sermonId,
     this.title,
     this.verseLinks,
+    this.concordances,
+    this.concordance
   });
 
   factory Verse.fromMap(Map<String, dynamic> map) {
@@ -32,6 +39,7 @@ class Verse {
         parsedLinks = [];
       }
     }
+
     return Verse(
       id: map['id'],
       number: map['number'],
@@ -41,6 +49,8 @@ class Verse {
       urlContent: map['url_content'],
       sermonId: map['sermon_id'],
       title: map['title'],
+      concordances: map['concordances'],
+      concordance: map['concordance'],
       verseLinks: parsedLinks,
     );
   }

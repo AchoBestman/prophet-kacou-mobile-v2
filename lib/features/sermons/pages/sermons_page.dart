@@ -195,9 +195,7 @@ class _SermonsPageState extends State<SermonsPage>
                         sermon.chapter,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: isCurrentSermon
-                              ? Colors.orange
-                              : (isDark ? Colors.lightBlue : Colors.blue),
+                          color: (isDark ? Colors.lightBlue : Colors.blue),
                         ),
                       ),
                       if (sermon.publicationDate != null)
@@ -216,9 +214,7 @@ class _SermonsPageState extends State<SermonsPage>
                     sermon.title,
                     style: TextStyle(
                       fontSize: 15,
-                      color: isCurrentSermon
-                          ? Colors.orange
-                          : Theme.of(context).textTheme.bodyLarge?.color,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -246,7 +242,7 @@ class _SermonsPageState extends State<SermonsPage>
                                   : Icons.play_circle_rounded,
                               color: isCurrentSermon
                                   ? Colors.orange
-                                  : Colors.orange[600],
+                                  : Colors.blue,
                               size: 24,
                             ),
                           ),
@@ -276,7 +272,7 @@ class _SermonsPageState extends State<SermonsPage>
                                   )
                                 : Icon(
                                     isDownloaded
-                                        ? Icons.download_done_rounded
+                                        ? Icons.download_for_offline
                                         : Icons.download_rounded,
                                     color: isDownloaded
                                         ? Colors.orange

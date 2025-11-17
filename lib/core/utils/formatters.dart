@@ -1,34 +1,43 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:convert/convert.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/models/song.dart';
 import 'package:prophet_kacou/core/utils/download_utils.dart';
 import 'package:slugify/slugify.dart';
 
-// List<ParsedReference> parseConcordance(String input) {
-//   final regex = RegExp(r'\[Kc\.(\d+)v([\d,\-\s]+)\]');
-//   final matches = regex.allMatches(input);
-//   final result = <ParsedReference>[];
+List<ParsedReference> parseConcordance(String input) {
+  final regex = RegExp(r'\[Kc\.(\d+)v([\d,\-\s]+)\]');
+  final matches = regex.allMatches(input);
+  final result = <ParsedReference>[];
 
-//   for (final match in matches) {
-//     final sermonNumber = int.parse(match.group(1)!);
-//     final verseParts = match.group(2)!.replaceAll(RegExp(r'\s+'), '').split(',');
+  for (final match in matches) {
+    final sermonNumber = int.parse(match.group(1)!);
+    final verseParts = match.group(2)!.replaceAll(RegExp(r'\s+'), '').split(',');
 
-//     var firstVerse = verseParts.first;
-//     if (firstVerse.contains('-')) {
-//       firstVerse = firstVerse.split('-').first;
-//     }
+    var firstVerse = verseParts.first;
+    if (firstVerse.contains('-')) {
+      firstVerse = firstVerse.split('-').first;
+    }
 
-//     result.add(ParsedReference(
-//       label: match.group(0)!,
-//       sermonNumber: sermonNumber,
-//       verseNumber: int.parse(firstVerse),
-//     ));
-//   }
+    result.add(ParsedReference(
+      label: match.group(0)!,
+      sermonNumber: sermonNumber,
+      verseNumber: int.parse(firstVerse),
+    ));
+  }
 
-//   return result;
-// }
+  return result;
+}
+
+class ParsedReference {
+  String? label;
+  int sermonNumber;
+  int verseNumber;
+  ParsedReference({this.label, this.sermonNumber =0, this.verseNumber =0});
+}
 
 String getVideoId(String url) {
   if (url.isEmpty) return '';
@@ -118,4 +127,8 @@ int extractNumberValueFromAudioFormattedId(String key) {
   if (parts.length != 2) return -1;
 
   return int.tryParse(parts[1]) ?? -1;
+}
+
+Uint8List decodeHexToBytes(String hexString) {
+  return Uint8List.fromList(hex.decode(hexString));
 }

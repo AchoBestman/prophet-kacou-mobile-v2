@@ -4,7 +4,7 @@ class NotificactionService {
   static void showErrorMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message, style: TextStyle(color: Colors.black),),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(0),
@@ -26,7 +26,7 @@ class NotificactionService {
   static void showInfoMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message, style: TextStyle(color: Colors.black),),
         backgroundColor: Colors.amber,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(0),

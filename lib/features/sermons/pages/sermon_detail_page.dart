@@ -1,9 +1,25 @@
+import 'dart:developer';
+import 'dart:ui' as flutter_html;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
+import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
+import 'package:prophet_kacou/core/models/audio_item.dart';
+import 'package:prophet_kacou/app/themes/app_theme.dart';
+import 'package:prophet_kacou/shared/widgets/display_concordance.dart';
+import 'package:prophet_kacou/shared/widgets/display_image.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:pdf/pdf.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class SermonDetailPage extends StatefulWidget {
   final int sermonId;
@@ -18,12 +34,20 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   final SermonRepository _repository = SermonRepository();
   Sermon? _sermon;
   bool _isLoading = true;
-  double _fontSize = 16.0;
+  String _searchQuery = '';
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadSermon();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSermon() async {
@@ -34,14 +58,235 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Erreur lors du chargement du sermon : $e');
+      log('Erreur lors du chargement du sermon : $e');
       setState(() => _isLoading = false);
     }
   }
 
+  String _normalizeLineBreaks(String html) {
+    // Remplace plusieurs <br> consécutifs par un seul
+    String normalized = html.replaceAll(
+      RegExp(r'(<br\s*\/?>){2,}', caseSensitive: false),
+      '<br>',
+    );
+    // Remplace plusieurs </p><p> consécutifs par un seul
+    normalized = normalized.replaceAll(
+      RegExp(r'(<\/p>\s*<p>){2,}', caseSensitive: false),
+      '</p><p>',
+    );
+    return normalized;
+  }
+
+  String _highlightText(String text, String query) {
+    if (query.isEmpty) return text;
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+
+    if (!lowerText.contains(lowerQuery)) return text;
+
+    final parts = <String>[];
+    int start = 0;
+
+    while (true) {
+      final index = lowerText.indexOf(lowerQuery, start);
+      if (index == -1) {
+        parts.add(text.substring(start));
+        break;
+      }
+
+      parts.add(text.substring(start, index));
+      parts.add(
+        '<mark style="background-color: #FFA726; color: black;">${text.substring(index, index + query.length)}</mark>',
+      );
+      start = index + query.length;
+    }
+
+    return parts.join('');
+  }
+
+  Future<void> _shareAsPdf() async {
+    try {
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  _sermon!.title,
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              ...?_sermon!.verses?.map((verse) {
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 12),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      if (verse.title != null)
+                        pw.Text(
+                          verse.title!,
+                          style: pw.TextStyle(
+                            fontSize: 18,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      pw.RichText(
+                        text: pw.TextSpan(
+                          children: [
+                            pw.TextSpan(
+                              text: '${verse.number} ',
+                              style: pw.TextStyle(
+                                fontSize: 14,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                            pw.TextSpan(
+                              text: verse.content.replaceAll(
+                                RegExp(r'<[^>]*>'),
+                                '',
+                              ),
+                              style: const pw.TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ];
+          },
+        ),
+      );
+
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/sermon_${_sermon!.id}.pdf');
+      await file.writeAsBytes(await pdf.save());
+
+      await Share.shareXFiles([XFile(file.path)], text: _sermon!.title);
+    } catch (e) {
+      if (mounted) {
+        NotificactionService.showErrorMessage(
+          context,
+          'Erreur lors de la génération du PDF: $e',
+        );
+      }
+    }
+  }
+
+  Future<void> _shareAsEpub() async {
+    try {
+      NotificactionService.showSuccessMessage(
+        context,
+        'Génération EPUB en cours de développement',
+      );
+    } catch (e) {
+      if (mounted) {
+        NotificactionService.showErrorMessage(
+          context,
+          'Erreur lors de la génération EPUB: $e',
+        );
+      }
+    }
+  }
+
+  void _showShareOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: const Text('Partager en PDF'),
+              onTap: () {
+                Navigator.pop(context);
+                _shareAsPdf();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.book, color: Colors.blue),
+              title: const Text('Partager en EPUB'),
+              onTap: () {
+                Navigator.pop(context);
+                _shareAsEpub();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handlePlayPause() async {
+    if (_sermon?.audio == null) return;
+
+    final audioProvider = Provider.of<AudioPlayerProvider>(
+      context,
+      listen: false,
+    );
+
+    // Si c'est déjà le sermon en cours, basculer play/pause
+    if (audioProvider.currentAudioId == widget.sermonId) {
+      audioProvider.togglePlayPause();
+      return;
+    }
+
+    // Sinon, charger et lire le nouveau sermon
+    final sermon = _sermon as Sermon;
+    final localFullPath = await localSermonPath(sermon, i18n.lang);
+
+    final audioItem = AudioItem(
+      id: sermon.id,
+      title: sermonTitleFormatter(sermon),
+      audioUrl: sermon.audio!,
+      albumId: null,
+      fileOriginalName: sermonTitleFormatter(sermon),
+      localFullPath: localFullPath,
+    );
+
+    if (context.mounted) {
+      audioProvider.setAudio(context, audioItem, autoPlay: true);
+    }
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        _searchQuery = '';
+      }
+    });
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() => _searchQuery = value);
+  }
+
+  IconData _getPlayIcon(AudioPlayerProvider audioProvider) {
+    if (audioProvider.currentAudioId == widget.sermonId) {
+      return audioProvider.isPlaying
+          ? Icons.pause_circle
+          : Icons.play_circle_outline;
+    }
+    return Icons.play_arrow;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final audioProvider = Provider.of<AudioPlayerProvider>(context);
 
     if (_isLoading) {
       return MainLayout(
@@ -58,82 +303,154 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     }
 
     return MainLayout(
-      title: _sermon!.title,
+      title: _sermon!.chapter,
       actions: [
         IconButton(
-          icon: const Icon(Icons.remove, color: Colors.white),
-          onPressed: () {
-            setState(() {
-              if (_fontSize > 12) _fontSize -= 2;
-            });
-          },
+          icon: Icon(
+            _isSearching ? Icons.close : Icons.search,
+            color: Colors.white,
+          ),
+          onPressed: _toggleSearch,
         ),
         IconButton(
-          icon: const Icon(Icons.add, color: Colors.white),
-          onPressed: () {
-            setState(() {
-              if (_fontSize < 24) _fontSize += 2;
-            });
-          },
+          icon: const Icon(Icons.share, color: Colors.white),
+          onPressed: _showShareOptions,
         ),
+        if (_sermon!.audio != null && _sermon!.audio!.isNotEmpty)
+          IconButton(
+            icon: Icon(_getPlayIcon(audioProvider), color: Colors.white),
+            onPressed: _handlePlayPause,
+          ),
       ],
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_sermon!.image != null)
-              // Center(
-              //   child: Image.memory(_sermon!.image!, fit: BoxFit.cover),
-              // ),
-            const SizedBox(height: 16),
-            ...?_sermon!.verses?.map((verse) => Padding(
-                  padding: const EdgeInsets.only(bottom: 0, top: 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 0,
-                    children: [
-                      if (verse.title != null)
-                        Text(
-                          verse.title!,
-                          style: TextStyle(
-                            fontSize: _fontSize + 2,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      Row(
+      body: Column(
+        children: [
+          if (_isSearching)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: i18n.tr('button.search'),
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                ),
+                onChanged: _onSearchChanged,
+              ),
+            ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    _sermon!.title,
+                    textAlign: TextAlign.center,
+
+                    style: TextStyle(
+                      fontSize: themeProvider.customFont.fontSize + 2,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: themeProvider.customFont.fontFamily,
+                      fontStyle: themeProvider.customFont.fontStyle,
+                    ),
+                  ),
+                  if (_sermon != null && _sermon!.number != 9)
+                    displayImage(context, _sermon!),
+
+                  const SizedBox(height: 8),
+                  ...?_sermon!.verses?.map((verse) {
+                    final verseNumber = verse.number;
+                    final verseContent = verse.content;
+                    final verseTitle = verse.title;
+                    List<ParsedReference>? concordances = verse.concordances;
+                    final fullContent = '$verseNumber $verseContent';
+                    final hasMatch =
+                        _searchQuery.isNotEmpty &&
+                        fullContent.toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        );
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Html(
-                              data: '${verse.number} ${verse.content}',
-                              style: {
-                                "body": Style(
-                                  fontSize: FontSize(_fontSize),
-                                  margin: Margins.zero,
-                                  padding: HtmlPaddings.zero,
-                                )
-                              },
+                          if (verseTitle != null && verseTitle.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Text(
+                                verseTitle,
+                                style: TextStyle(
+                                  fontSize:
+                                      themeProvider.customFont.fontSize + 2,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily:
+                                      themeProvider.customFont.fontFamily,
+                                  fontStyle: themeProvider.customFont.fontStyle,
+                                  backgroundColor:
+                                      hasMatch && _searchQuery.isNotEmpty
+                                      ? Colors.yellow.withOpacity(0.3)
+                                      : null,
+                                ),
+                              ),
                             ),
+
+                          Html(
+                            data: _searchQuery.isEmpty
+                                ? '<b>$verseNumber</b> ${_normalizeLineBreaks(verseContent)}'
+                                : '<b>${_highlightText(verseNumber.toString(), _searchQuery)}</b> ${_highlightText(_normalizeLineBreaks(verseContent), _searchQuery)}',
+                            style: {
+                              "body": Style(
+                                fontSize: FontSize(
+                                  themeProvider.customFont.fontSize,
+                                ),
+                                fontFamily: themeProvider.customFont.fontFamily,
+                                fontStyle:
+                                    themeProvider.customFont.fontStyle ==
+                                        FontStyle.italic
+                                    ? flutter_html.FontStyle.italic
+                                    : flutter_html.FontStyle.normal,
+                                margin: Margins.zero,
+                                padding: HtmlPaddings.zero,
+                              ),
+                              "b": Style(fontWeight: FontWeight.bold),
+                              "p": Style(margin: Margins.only(bottom: 8)),
+                            },
+                          ),
+                          ConcordanceWidget(
+                            concordances: verse.concordances,
+                            currentSermonNumber: _sermon!.number,
                           ),
                         ],
                       ),
-                      // if (verse!.concordances!.isNotEmpty)
-                      //   Wrap(
-                      //     spacing: 6,
-                      //     children: verse.concordances.map((c) {
-                      //       return Chip(
-                      //         label: Text(c.label),
-                      //         backgroundColor: Colors.blue[50],
-                      //       );
-                      //     }).toList(),
-                      //   ),
+                    );
+                  }),
 
-                    ],
-                  ),
-                )),
-          ],
-        ),
+                  if (_sermon!.similarSermon!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        _sermon!.similarSermon!,
+                        style: TextStyle(
+                          fontSize: themeProvider.customFont.fontSize + 2,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: themeProvider.customFont.fontFamily,
+                          fontStyle: themeProvider.customFont.fontStyle,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  if (_sermon != null && _sermon!.number == 9)
+                    displayImage(context, _sermon!),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -48,7 +48,7 @@ class SettingsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(i18n.tr('settings.font_size') + ": ${themeProvider.customFont.fontSize.toInt()}"),
+                Text("${i18n.tr('settings.font_size')}: ${themeProvider.customFont.fontSize.toInt()}"),
                 Slider(
                   min: 10,
                   max: 24,

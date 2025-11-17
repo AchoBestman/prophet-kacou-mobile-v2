@@ -24,7 +24,6 @@ class Sermon {
   final bool isActive;
   ImageSermon? image;
   List<Verse>? verses;
-  List<Concordance>? concordances;
 
   Sermon({
     required this.id,
@@ -48,7 +47,6 @@ class Sermon {
     required this.isActive,
     this.image,
     this.verses,
-    this.concordances,
   });
 
   factory Sermon.fromMap(Map<String, dynamic> map) {

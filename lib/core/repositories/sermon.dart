@@ -1,8 +1,13 @@
+import 'dart:developer';
+
 import 'package:prophet_kacou/core/database/db_manager.dart';
 import 'package:prophet_kacou/core/models/concordance.dart';
 import 'package:prophet_kacou/core/models/image_sermon.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/models/verse.dart';
+import 'dart:typed_data';
+
+import 'package:prophet_kacou/core/utils/formatters.dart';
 
 class SermonRepository {
   final DBManager _dbManager = DBManager();
@@ -10,7 +15,7 @@ class SermonRepository {
   /// 🔹 Récupérer tous les sermons actifs avec filtres
   Future<List<Sermon>> findAll({
     bool isActive = true,
-    String lang ='',
+    String lang = '',
     String? searchQuery,
     int? number,
     String? chapter,
@@ -36,18 +41,6 @@ class SermonRepository {
       where.add('"number" = ?');
       args.add(number);
     }
-    // if (chapter != null && chapter.isNotEmpty) {
-    //   where.add('"chapter" LIKE ?');
-    //   args.add('%$chapter%');
-    // }
-    // if (title != null && title.isNotEmpty) {
-    //   where.add('"title" LIKE ?');
-    //   args.add('%$title%');
-    // }
-    // if (subTitle != null && subTitle.isNotEmpty) {
-    //   where.add('"sub_title" LIKE ?');
-    //   args.add('%$subTitle%');
-    // }
 
     final whereClause = where.isNotEmpty ? 'WHERE ${where.join(' AND ')}' : '';
     final results = await db.rawQuery(
@@ -61,37 +54,86 @@ class SermonRepository {
   /// 🔹 Récupérer un sermon par ID avec toutes ses relations
   Future<Sermon?> findById(int id, String lang) async {
     final db = await _dbManager.openLanguageDB(lang);
+    final commonDb = await _dbManager.openCommonDB();
 
     // Sermon principal
-    final sermonResult =
-        await db.rawQuery('SELECT * FROM sermons WHERE id = ?', [id]);
-    if (sermonResult.isEmpty) return null;
+    final sermonResult = await db.query(
+      'sermons',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
 
+    if (sermonResult.isEmpty) return null;
     final sermon = Sermon.fromMap(sermonResult.first);
 
-    // Image associée
+    // Image associée - Lecture BLOB avec rawQuery et conversion manuelle
     if (sermon.cover != null) {
-      final imageResult = await db.rawQuery(
-        'SELECT * FROM image_sermons WHERE name = ? LIMIT 1',
-        [sermon.cover],
-      );
-      if (imageResult.isNotEmpty) {
-        sermon.image = ImageSermon.fromMap(imageResult.first);
+      try {
+        // 1. Essai dans commonDb
+        var rows = await commonDb.rawQuery(
+          'SELECT id, description, name, link, apply_for_all_langue, hex(file) as hexFile FROM image_sermons WHERE name = ? LIMIT 1',
+          [sermon.cover],
+        );
+
+        // 2. Sinon essayer dans db,
+        if (rows.isEmpty) {
+          rows = await db.rawQuery(
+            'SELECT id, description, name, link, apply_for_all_langue, hex(file) as hexFile FROM image_sermons WHERE name = ? LIMIT 1',
+            [sermon.cover],
+          );
+        }
+
+        if (rows.isNotEmpty) {
+          final row = Map<String, dynamic>.from(rows.first);
+
+          Uint8List? blob;
+
+          final f = row['hexFile'];
+          if (f is Uint8List) {
+            blob = f;
+          } else if (f is List) {
+            blob = Uint8List.fromList(List<int>.from(f));
+          } else if (f is String) {
+            blob = decodeHexToBytes(f);
+          }
+
+          row['file'] = blob;
+          sermon.image = ImageSermon.fromMap(row);
+        }
+      } catch (e) {
+        log('Erreur BLOB: $e');
       }
     }
 
     // Versets
-    final verseResults = await db.rawQuery(
-      'SELECT * FROM verses WHERE sermon_id = ? ORDER BY "number" ASC',
-      [sermon.id],
+    final verseResults = await db.query(
+      'verses',
+      where: 'sermon_id = ?',
+      whereArgs: [sermon.id],
+      orderBy: '"number" ASC',
     );
     sermon.verses = verseResults.map((v) => Verse.fromMap(v)).toList();
 
     // Concordances
-    final concordanceResults = await db.rawQuery('SELECT * FROM concordances');
-    sermon.concordances =
-        concordanceResults.map((c) => Concordance.fromMap(c)).toList();
+    final concordanceResults = await db.query(
+      'concordances',
+      where: 'num_pred = ?',
+      whereArgs: [sermon.number],
+    );
 
+    // Lier les concordances aux versets
+    for (final verse in sermon.verses!) {
+      final verseConcordance = concordanceResults.firstWhere(
+        (c) => c['num_verset'] == verse.number,
+        orElse: () => <String, Object?>{}, // retourne une Map vide si aucune correspondance
+      );
+
+      if (verseConcordance.isNotEmpty) {
+        final concordance = Concordance.fromMap(verseConcordance);
+        verse.concordance = concordance;
+        verse.concordances = parseConcordance(concordance.concordance);
+      }
+    }
     return sermon;
   }
 }

@@ -48,19 +48,8 @@ class AudioPlayerWidget extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(_getRepeatIcon(provider.repeatMode)),
-                  onPressed: provider.toggleRepeatMode,
-                  iconSize: 25,
-                  color: pkpOcean,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => _showStopConfirmation(context, provider),
-                  iconSize: 25,
-                  color: pkpOcean,
-                ),
                 _buildInfoButton(context, provider),
+
                 if (provider.currentAudio!.localFullPath?.existsSync() == true)
                   IconButton(
                     icon: const Icon(Icons.share),
@@ -69,11 +58,18 @@ class AudioPlayerWidget extends StatelessWidget {
                     },
                     iconSize: 20,
                     color: pkpOcean,
+                    constraints:
+                        const BoxConstraints(), // enlève les marges internes
+                    padding: EdgeInsets.zero,
                   ),
+
                 IconButton(
                   icon: const Icon(Icons.keyboard_arrow_down),
                   onPressed: provider.minimizePlayer,
-                  iconSize: 30,
+                  iconSize: 40,
+                  constraints:
+                      const BoxConstraints(), // enlève les marges internes
+                  padding: EdgeInsets.zero,
                   color: pkpOcean,
                 ),
               ],
@@ -116,26 +112,34 @@ class AudioPlayerWidget extends StatelessWidget {
                   constraints:
                       const BoxConstraints(), // enlève les marges internes
                   padding: EdgeInsets.zero,
+                  icon: Icon(_getRepeatIcon(provider.repeatMode)),
+                  onPressed: provider.toggleRepeatMode,
+                  iconSize: 25,
+                  color: pkpOcean,
+                ),
+                IconButton(
+                  constraints:
+                      const BoxConstraints(), // enlève les marges internes
+                  padding: EdgeInsets.zero,
                   icon: const Icon(Icons.skip_previous),
                   onPressed: provider.playPrevious,
                   iconSize: 32,
                   color: pkpOcean,
                 ),
-                const SizedBox(width: 16),
+                //const SizedBox(width: 16),
                 IconButton(
                   constraints:
                       const BoxConstraints(), // enlève les marges internes
                   padding: EdgeInsets.zero,
                   icon: Icon(
                     provider.isPlaying ? Icons.pause_circle : Icons.play_circle,
-                     
                   ),
                   onPressed: provider.togglePlayPause,
                   iconSize: 48,
-                 
+
                   color: pkpOcean,
                 ),
-                const SizedBox(width: 16),
+                //const SizedBox(width: 16),
                 IconButton(
                   constraints:
                       const BoxConstraints(), // enlève les marges internes
@@ -143,6 +147,13 @@ class AudioPlayerWidget extends StatelessWidget {
                   icon: const Icon(Icons.skip_next),
                   onPressed: () => provider.playNext(),
                   iconSize: 32,
+                  color: pkpOcean,
+                ),
+
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => _showStopConfirmation(context, provider),
+                  iconSize: 25,
                   color: pkpOcean,
                 ),
               ],
@@ -216,12 +227,12 @@ class AudioPlayerWidget extends StatelessWidget {
             MaterialPageRoute(builder: (_) => AudioDetailPage(audio: audio)),
           );
         },
-        iconSize: 20,
+        iconSize: 25,
         color: pkpOcean,
       );
     }
 
-    if (audio.albumId == null && !audio.title.toUpperCase().contains("KACOU")) {
+    if (audio.albumId == null && !audio.title.toUpperCase().contains("Kacou")) {
       if (currentRoute == SermonDetailPage.routeName) {
         return const SizedBox.shrink();
       }
@@ -236,7 +247,7 @@ class AudioPlayerWidget extends StatelessWidget {
             ),
           );
         },
-        iconSize: 20,
+        iconSize: 25,
         color: pkpOcean,
       );
     }
