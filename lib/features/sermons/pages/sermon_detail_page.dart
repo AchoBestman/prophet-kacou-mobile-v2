@@ -3,27 +3,21 @@ import 'dart:ui' as flutter_html;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
-import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
-import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
-import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
 import 'package:prophet_kacou/shared/widgets/display_concordance.dart';
 import 'package:prophet_kacou/shared/widgets/display_image.dart';
+import 'package:prophet_kacou/shared/widgets/pdf_widget.dart';
 import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
 import 'package:prophet_kacou/shared/widgets/verse_links_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:pdf/pdf.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 
 class SermonDetailPage extends StatefulWidget {
   final int sermonId;
@@ -67,6 +61,20 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     }
   }
 
+  // Méthode pour générer le PDF
+  Future<void> _generatePdf(dynamic sermon) async {
+    if(mounted){
+      generateSermonPdf(context, sermon as Sermon);
+    }
+  }
+
+  // Méthode pour générer l'EPUB (à implémenter)
+  Future<void> _generateEpub(dynamic sermon) async {
+    // Implémentation future
+    if (mounted) {
+      generateSermonEpub(context, sermon as Sermon);
+    }
+  }
 
   String _normalizeLineBreaks(String html) {
     // Remplace plusieurs <br> consécutifs par un seul

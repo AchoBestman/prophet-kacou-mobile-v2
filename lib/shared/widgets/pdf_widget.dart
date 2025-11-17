@@ -11,7 +11,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'package:slugify/slugify.dart';
 
-Future<void> generatePdf(BuildContext context,  Sermon? sermon) async {
+Future<void> generateSermonPdf(BuildContext context,  Sermon? sermon) async {
     if (sermon == null) return;
 
     try {
