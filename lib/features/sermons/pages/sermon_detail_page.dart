@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
@@ -15,6 +16,7 @@ import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
 import 'package:prophet_kacou/shared/widgets/display_concordance.dart';
 import 'package:prophet_kacou/shared/widgets/display_image.dart';
+import 'package:prophet_kacou/shared/widgets/verse_links_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
@@ -37,6 +39,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   String _searchQuery = '';
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  final Map<int, bool> _downloadedSermons = {}; // Track downloaded sermons
+  
 
   @override
   void initState() {
@@ -50,6 +54,14 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     super.dispose();
   }
 
+  Future<void> _checkDownloadedSermons(sermon) async {
+    if (sermon.audio != null) {
+        final file = await localSermonPath(sermon, i18n.lang);
+        _downloadedSermons[sermon.id] = await file.exists();
+      }
+    if (mounted) setState(() {});
+  }
+
   Future<void> _loadSermon() async {
     try {
       final sermon = await _repository.findById(widget.sermonId, i18n.lang);
@@ -57,9 +69,43 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
         _sermon = sermon;
         _isLoading = false;
       });
+      // Check which sermons are already downloaded
+      await _checkDownloadedSermons(sermon);
     } catch (e) {
       log('Erreur lors du chargement du sermon : $e');
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _downloadSermon(Sermon sermon) async {
+    if (sermon.audio == null) return;
+
+    try {
+      final localFullPath = await localSermonPath(sermon, i18n.lang);
+
+      if (!mounted) return;
+
+      final downloadProvider = Provider.of<DownloadHistoryProvider>(
+        context,
+        listen: false,
+      );
+
+      await downloadProvider.startDownload(
+        id: sermonIdInDownloadProviderFormatter(sermon),
+        title: sermonTitleFormatter(sermon),
+        audioUrl: sermon.audio!,
+        filePath: localFullPath,
+        albumTitle: sermon.subTitle,
+        albumId: null,
+      );
+
+      if (!mounted) return;
+    } catch (e) {
+      if (!mounted) return;
+      NotificactionService.showErrorMessage(
+        context,
+        'Erreur de téléchargement: $e',
+      );
     }
   }
 
@@ -287,6 +333,17 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final audioProvider = Provider.of<AudioPlayerProvider>(context);
+    final downloadProvider = Provider.of<DownloadHistoryProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final downloadId = sermonIdInDownloadProviderFormatter(_sermon!);
+    final downloadHistory = downloadProvider.history
+            .where((d) => d.id == downloadId)
+            .firstOrNull;
+    final isDownloading = downloadHistory?.isInProgress ?? false;
+
+    final isDownloaded = _downloadedSermons[_sermon!.id] ?? false;
 
     if (_isLoading) {
       return MainLayout(
@@ -320,6 +377,38 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
           IconButton(
             icon: Icon(_getPlayIcon(audioProvider), color: Colors.white),
             onPressed: _handlePlayPause,
+          ),
+
+        const SizedBox(width: 4),
+        if (_sermon!.audio != null)
+          InkWell(
+            onTap: isDownloading ? null : () => _downloadSermon(_sermon!),
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: isDownloading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: (downloadHistory?.percent ?? 0) / 100,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDark ? Colors.lightBlue : Colors.blue,
+                        ),
+                        backgroundColor: Colors.grey.shade300,
+                      ),
+                    )
+                  : Icon(
+                      isDownloaded
+                          ? Icons.download_for_offline
+                          : Icons.download_rounded,
+                      color: isDownloaded
+                          ? Colors.orange
+                          : (isDark ? Colors.lightBlue : Colors.blue),
+                      size: 20,
+                    ),
+            ),
           ),
       ],
       body: Column(
@@ -364,9 +453,12 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   const SizedBox(height: 8),
                   ...?_sermon!.verses?.map((verse) {
                     final verseNumber = verse.number;
+
                     final verseContent = verse.content;
                     final verseTitle = verse.title;
-                    List<ParsedReference>? concordances = verse.concordances;
+                    final List<ParsedReference>? concordances =
+                        verse.concordances;
+                    final List<dynamic>? verseLinks = verse.verseLinks;
                     final fullContent = '$verseNumber $verseContent';
                     final hasMatch =
                         _searchQuery.isNotEmpty &&
@@ -422,8 +514,13 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                             },
                           ),
                           ConcordanceWidget(
-                            concordances: verse.concordances,
+                            concordances: concordances,
                             currentSermonNumber: _sermon!.number,
+                          ),
+
+                          VerseLinksWidget(
+                            verseLinks: verseLinks,
+                            sermon: _sermon!,
                           ),
                         ],
                       ),
