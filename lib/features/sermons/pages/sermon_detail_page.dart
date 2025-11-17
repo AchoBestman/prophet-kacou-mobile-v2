@@ -4,6 +4,7 @@ import 'dart:ui' as flutter_html;
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
@@ -16,6 +17,7 @@ import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
 import 'package:prophet_kacou/shared/widgets/display_concordance.dart';
 import 'package:prophet_kacou/shared/widgets/display_image.dart';
+import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
 import 'package:prophet_kacou/shared/widgets/verse_links_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -39,8 +41,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   String _searchQuery = '';
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
-  final Map<int, bool> _downloadedSermons = {}; // Track downloaded sermons
-  
 
   @override
   void initState() {
@@ -54,14 +54,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     super.dispose();
   }
 
-  Future<void> _checkDownloadedSermons(sermon) async {
-    if (sermon.audio != null) {
-        final file = await localSermonPath(sermon, i18n.lang);
-        _downloadedSermons[sermon.id] = await file.exists();
-      }
-    if (mounted) setState(() {});
-  }
-
   Future<void> _loadSermon() async {
     try {
       final sermon = await _repository.findById(widget.sermonId, i18n.lang);
@@ -69,42 +61,100 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
         _sermon = sermon;
         _isLoading = false;
       });
-      // Check which sermons are already downloaded
-      await _checkDownloadedSermons(sermon);
     } catch (e) {
       log('Erreur lors du chargement du sermon : $e');
       setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _downloadSermon(Sermon sermon) async {
-    if (sermon.audio == null) return;
+  // Méthode pour générer le PDF
+  Future<void> _generatePdf(dynamic sermon) async {
+    if (sermon == null || sermon is! Sermon) return;
 
     try {
-      final localFullPath = await localSermonPath(sermon, i18n.lang);
+      final pdf = pw.Document();
 
-      if (!mounted) return;
-
-      final downloadProvider = Provider.of<DownloadHistoryProvider>(
-        context,
-        listen: false,
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  sermon.title,
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              ...?sermon.verses?.map((verse) {
+                return pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 12),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      if (verse.title != null)
+                        pw.Text(
+                          verse.title!,
+                          style: pw.TextStyle(
+                            fontSize: 18,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      pw.RichText(
+                        text: pw.TextSpan(
+                          children: [
+                            pw.TextSpan(
+                              text: '${verse.number} ',
+                              style: pw.TextStyle(
+                                fontSize: 14,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                            pw.TextSpan(
+                              text: verse.content.replaceAll(
+                                RegExp(r'<[^>]*>'),
+                                '',
+                              ),
+                              style: const pw.TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ];
+          },
+        ),
       );
 
-      await downloadProvider.startDownload(
-        id: sermonIdInDownloadProviderFormatter(sermon),
-        title: sermonTitleFormatter(sermon),
-        audioUrl: sermon.audio!,
-        filePath: localFullPath,
-        albumTitle: sermon.subTitle,
-        albumId: null,
-      );
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/sermon_${sermon.id}.pdf');
+      await file.writeAsBytes(await pdf.save());
 
-      if (!mounted) return;
+      await Share.shareXFiles([XFile(file.path)], text: sermon.title);
     } catch (e) {
-      if (!mounted) return;
-      NotificactionService.showErrorMessage(
+      if (mounted) {
+        NotificactionService.showErrorMessage(
+          context,
+          'Erreur lors de la génération du PDF: $e',
+        );
+      }
+    }
+  }
+
+  // Méthode pour générer l'EPUB (à implémenter)
+  Future<void> _generateEpub(dynamic sermon) async {
+    // Implémentation future
+    if (mounted) {
+      NotificactionService.showSuccessMessage(
         context,
-        'Erreur de téléchargement: $e',
+        'Génération EPUB en cours de développement',
       );
     }
   }
@@ -151,161 +201,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     return parts.join('');
   }
 
-  Future<void> _shareAsPdf() async {
-    try {
-      final pdf = pw.Document();
-
-      pdf.addPage(
-        pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
-          build: (pw.Context context) {
-            return [
-              pw.Header(
-                level: 0,
-                child: pw.Text(
-                  _sermon!.title,
-                  style: pw.TextStyle(
-                    fontSize: 24,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-              ),
-              pw.SizedBox(height: 20),
-              ...?_sermon!.verses?.map((verse) {
-                return pw.Padding(
-                  padding: const pw.EdgeInsets.only(bottom: 12),
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      if (verse.title != null)
-                        pw.Text(
-                          verse.title!,
-                          style: pw.TextStyle(
-                            fontSize: 18,
-                            fontWeight: pw.FontWeight.bold,
-                          ),
-                        ),
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: '${verse.number} ',
-                              style: pw.TextStyle(
-                                fontSize: 14,
-                                fontWeight: pw.FontWeight.bold,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: verse.content.replaceAll(
-                                RegExp(r'<[^>]*>'),
-                                '',
-                              ),
-                              style: const pw.TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ];
-          },
-        ),
-      );
-
-      final output = await getTemporaryDirectory();
-      final file = File('${output.path}/sermon_${_sermon!.id}.pdf');
-      await file.writeAsBytes(await pdf.save());
-
-      await Share.shareXFiles([XFile(file.path)], text: _sermon!.title);
-    } catch (e) {
-      if (mounted) {
-        NotificactionService.showErrorMessage(
-          context,
-          'Erreur lors de la génération du PDF: $e',
-        );
-      }
-    }
-  }
-
-  Future<void> _shareAsEpub() async {
-    try {
-      NotificactionService.showSuccessMessage(
-        context,
-        'Génération EPUB en cours de développement',
-      );
-    } catch (e) {
-      if (mounted) {
-        NotificactionService.showErrorMessage(
-          context,
-          'Erreur lors de la génération EPUB: $e',
-        );
-      }
-    }
-  }
-
-  void _showShareOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: const Text('Partager en PDF'),
-              onTap: () {
-                Navigator.pop(context);
-                _shareAsPdf();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.book, color: Colors.blue),
-              title: const Text('Partager en EPUB'),
-              onTap: () {
-                Navigator.pop(context);
-                _shareAsEpub();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _handlePlayPause() async {
-    if (_sermon?.audio == null) return;
-
-    final audioProvider = Provider.of<AudioPlayerProvider>(
-      context,
-      listen: false,
-    );
-
-    // Si c'est déjà le sermon en cours, basculer play/pause
-    if (audioProvider.currentAudioId == widget.sermonId) {
-      audioProvider.togglePlayPause();
-      return;
-    }
-
-    // Sinon, charger et lire le nouveau sermon
-    final sermon = _sermon as Sermon;
-    final localFullPath = await localSermonPath(sermon, i18n.lang);
-
-    final audioItem = AudioItem(
-      id: sermon.id,
-      title: sermonTitleFormatter(sermon),
-      audioUrl: sermon.audio!,
-      albumId: null,
-      fileOriginalName: sermonTitleFormatter(sermon),
-      localFullPath: localFullPath,
-    );
-
-    if (context.mounted) {
-      audioProvider.setAudio(context, audioItem, autoPlay: true);
-    }
-  }
-
   void _toggleSearch() {
     setState(() {
       _isSearching = !_isSearching;
@@ -320,30 +215,9 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     setState(() => _searchQuery = value);
   }
 
-  IconData _getPlayIcon(AudioPlayerProvider audioProvider) {
-    if (audioProvider.currentAudioId == widget.sermonId) {
-      return audioProvider.isPlaying
-          ? Icons.pause_circle
-          : Icons.play_circle_outline;
-    }
-    return Icons.play_arrow;
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final audioProvider = Provider.of<AudioPlayerProvider>(context);
-    final downloadProvider = Provider.of<DownloadHistoryProvider>(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final downloadId = sermonIdInDownloadProviderFormatter(_sermon!);
-    final downloadHistory = downloadProvider.history
-            .where((d) => d.id == downloadId)
-            .firstOrNull;
-    final isDownloading = downloadHistory?.isInProgress ?? false;
-
-    final isDownloaded = _downloadedSermons[_sermon!.id] ?? false;
 
     if (_isLoading) {
       return MainLayout(
@@ -369,46 +243,47 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
           ),
           onPressed: _toggleSearch,
         ),
-        IconButton(
-          icon: const Icon(Icons.share, color: Colors.white),
-          onPressed: _showShareOptions,
-        ),
-        if (_sermon!.audio != null && _sermon!.audio!.isNotEmpty)
-          IconButton(
-            icon: Icon(_getPlayIcon(audioProvider), color: Colors.white),
-            onPressed: _handlePlayPause,
-          ),
 
-        const SizedBox(width: 4),
-        if (_sermon!.audio != null)
-          InkWell(
-            onTap: isDownloading ? null : () => _downloadSermon(_sermon!),
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: isDownloading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        value: (downloadHistory?.percent ?? 0) / 100,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? Colors.lightBlue : Colors.blue,
-                        ),
-                        backgroundColor: Colors.grey.shade300,
-                      ),
-                    )
-                  : Icon(
-                      isDownloaded
-                          ? Icons.download_for_offline
-                          : Icons.download_rounded,
-                      color: isDownloaded
-                          ? Colors.orange
-                          : (isDark ? Colors.lightBlue : Colors.blue),
-                      size: 20,
-                    ),
-            ),
+        if (_sermon!.audio != null && _sermon!.audio!.isNotEmpty)
+          FutureBuilder<File>(
+            future: localSermonPath(_sermon!, i18n.lang),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const SizedBox.shrink();
+              }
+
+              final audioItem = AudioItem(
+                id: _sermon!.id,
+                title: sermonTitleFormatter(_sermon!),
+                audioUrl: _sermon!.audio!,
+                albumId: null,
+                fileOriginalName: sermonTitleFormatter(_sermon!),
+                localFullPath: snapshot.data!,
+              );
+
+              return PlayDownloadShareButton(
+                data: audioItem,
+                type: AudioFolder.sermons,
+                extension: FileExtension.mp3,
+                sourceData: _sermon, // Passer le sermon pour le partage
+                onGeneratePdf: _generatePdf,
+                onGenerateEpub: _generateEpub,
+                config: const ButtonConfig(
+                  showPlay: true,
+                  showDownload: true,
+                  showShare: true,
+                  iconSize: 24.0,
+                  spacing: 4.0,
+                  defaultDarkColor: Colors.white,
+                  defaultLigthColor: Colors.white,
+                  order: [
+                    ButtonType.play, // ✅ Play en premier
+                    ButtonType.download, // ✅ Download en deuxième
+                    ButtonType.share, // ✅ Partage en dernier
+                  ],
+                ),
+              );
+            },
           ),
       ],
       body: Column(

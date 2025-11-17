@@ -19,6 +19,8 @@ class ButtonConfig {
   final List<ButtonType> order;
   final double iconSize;
   final double spacing;
+  final Color defaultDarkColor;
+  final Color defaultLigthColor;
 
   const ButtonConfig({
     this.showPlay = true,
@@ -27,6 +29,8 @@ class ButtonConfig {
     this.order = const [ButtonType.play, ButtonType.download, ButtonType.share],
     this.iconSize = 24.0,
     this.spacing = 4.0,
+    this.defaultDarkColor=Colors.lightBlue,
+    this.defaultLigthColor=Colors.blue
   });
 }
 
@@ -56,6 +60,8 @@ class PlayDownloadShareButton extends StatefulWidget {
 
 class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
   bool _isDownloaded = false;
+  final int size = 4;
+  final int borderRadius = 20;
 
   @override
   void initState() {
@@ -174,12 +180,12 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
 
     return InkWell(
       onTap: _playAudio,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(double.parse(borderRadius.toString())),
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: EdgeInsets.all(double.parse(size.toString())),
         child: Icon(
           isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
-          color: isCurrentAudio ? Colors.orange : Colors.blue,
+          color: isCurrentAudio ? Colors.orange : (isDark ? widget.config.defaultDarkColor : widget.config.defaultLigthColor),
           size: widget.config.iconSize,
         ),
       ),
@@ -194,16 +200,16 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     if (!widget.config.showDownload || widget.data.audioUrl.isEmpty) {
       return const SizedBox.shrink();
     }
-
+    
     return InkWell(
       onTap: isDownloading ? null : _downloadAudio,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(double.parse(borderRadius.toString())),
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: EdgeInsets.all(double.parse(size.toString())),
         child: isDownloading
             ? SizedBox(
-                width: widget.config.iconSize - 4,
-                height: widget.config.iconSize - 4,
+                width: widget.config.iconSize - size,
+                height: widget.config.iconSize - size,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   value: downloadProgress,
@@ -219,8 +225,8 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                     : Icons.download_rounded,
                 color: _isDownloaded
                     ? Colors.orange
-                    : (isDark ? Colors.lightBlue : Colors.blue),
-                size: widget.config.iconSize - 4,
+                    : (isDark ? widget.config.defaultDarkColor : widget.config.defaultLigthColor),
+                size: widget.config.iconSize - size,
               ),
       ),
     );
@@ -234,13 +240,13 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
 
     return InkWell(
       onTap: _showShareOptions,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(double.parse(borderRadius.toString())),
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
+        padding: EdgeInsets.all(double.parse(size.toString())),
         child: Icon(
           Icons.share,
-          color: isDark ? Colors.lightBlue : Colors.blue,
-          size: widget.config.iconSize - 4,
+          color: isDark ? widget.config.defaultDarkColor : widget.config.defaultLigthColor,
+          size: widget.config.iconSize - size,
         ),
       ),
     );
