@@ -243,7 +243,7 @@ class AudioPlayerWidget extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => SermonDetailPage(sermonId: audio.id),
+              builder: (_) => SermonDetailPage(sermonNumber: audio.id),
             ),
           );
         },

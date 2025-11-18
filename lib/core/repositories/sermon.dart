@@ -52,15 +52,15 @@ class SermonRepository {
   }
 
   /// 🔹 Récupérer un sermon par ID avec toutes ses relations
-  Future<Sermon?> findById(int id, String lang) async {
+  Future<Sermon?> findByNumber(int number, String lang) async {
     final db = await _dbManager.openLanguageDB(lang);
     final commonDb = await _dbManager.openCommonDB();
 
     // Sermon principal
     final sermonResult = await db.query(
       'sermons',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: '"number" = ?',
+      whereArgs: [number],
     );
 
     if (sermonResult.isEmpty) return null;

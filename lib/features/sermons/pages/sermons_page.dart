@@ -6,17 +6,14 @@ import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
-import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
-import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
-import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
+import 'package:prophet_kacou/features/sermons/widgets/read_passage_widget.dart'; // ✅ Import ajouté
 import 'package:prophet_kacou/features/settings/pages/update_button.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 import 'package:prophet_kacou/shared/widgets/pdf_widget.dart';
 import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
-import 'package:provider/provider.dart';
 
 class SermonsPage extends StatefulWidget {
   const SermonsPage({super.key});
@@ -101,7 +98,7 @@ class _SermonsPageState extends State<SermonsPage>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => SermonDetailPage(sermonId: sermon.id),
+            builder: (_) => SermonDetailPage(sermonNumber: sermon.number),
           ),
         );
       },
@@ -265,10 +262,7 @@ class _SermonsPageState extends State<SermonsPage>
                                 },
                               ),
                       ),
-                      Container(
-                        alignment: Alignment.center,
-                        child: const Text("No passage selected yet."),
-                      ),
+                      const ReadPassageWidget(), // ✅ Widget intégré
                     ],
                   ),
                 ),

@@ -24,18 +24,12 @@ class _ConcordanceWidgetState extends State<ConcordanceWidget> {
       _selectedConcordance = '${c.sermonNumber}-${c.verseNumber}';
     });
 
-    if (c.sermonNumber == widget.currentSermonNumber) {
-      // Même sermon, scroll vers le verset
-      // TODO: Ajouter ScrollController pour scroller vers le verset
-    } else {
-      // Autre sermon : ouvrir SermonDetailPage
-      Navigator.push(
+    Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => SermonDetailPage(sermonId: c.sermonNumber),
+          builder: (_) => SermonDetailPage(sermonNumber: c.sermonNumber, verseNumber: c.verseNumber),
         ),
       );
-    }
   }
 
   @override

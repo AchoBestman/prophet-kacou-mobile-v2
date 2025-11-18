@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'dart:ui' as flutter_html;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
@@ -20,9 +19,15 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 
 class SermonDetailPage extends StatefulWidget {
-  final int sermonId;
+  final int sermonNumber;
+  final int? verseNumber; // ✅ Nouveau paramètre optionnel
   static const routeName = '/sermon_detail';
-  const SermonDetailPage({super.key, required this.sermonId});
+  
+  const SermonDetailPage({
+    super.key, 
+    required this.sermonNumber,
+    this.verseNumber, // ✅ Paramètre optionnel
+  });
 
   @override
   State<SermonDetailPage> createState() => _SermonDetailPageState();
@@ -35,6 +40,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   String _searchQuery = '';
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController(); // ✅ Contrôleur de scroll
+  final Map<int, GlobalKey> _verseKeys = {}; // ✅ Clés pour chaque verset
 
   @override
   void initState() {
@@ -45,20 +52,43 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose(); // ✅ Dispose du contrôleur
     super.dispose();
   }
 
   Future<void> _loadSermon() async {
     try {
-      final sermon = await _repository.findById(widget.sermonId, i18n.lang);
+      final sermon = await _repository.findByNumber(widget.sermonNumber, i18n.lang);
       setState(() {
         _sermon = sermon;
         _isLoading = false;
       });
+      
+      // ✅ Scroll vers le verset si spécifié
+      if (widget.verseNumber != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToVerse(widget.verseNumber!);
+        });
+      }
     } catch (e) {
       log('Erreur lors du chargement du sermon : $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  // ✅ Nouvelle méthode pour scroller vers le verset
+  void _scrollToVerse(int verseNumber) {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      final key = _verseKeys[verseNumber];
+      if (key?.currentContext != null) {
+        Scrollable.ensureVisible(
+          key!.currentContext!,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+          alignment: 0.15, // Position du verset sur l'écran
+        );
+      }
+    });
   }
 
   // Méthode pour générer le PDF
@@ -92,29 +122,23 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
 
   String _highlightText(String text, String query) {
     if (query.isEmpty) return text;
-
     final lowerText = text.toLowerCase();
     final lowerQuery = query.toLowerCase();
-
     if (!lowerText.contains(lowerQuery)) return text;
-
     final parts = <String>[];
     int start = 0;
-
     while (true) {
       final index = lowerText.indexOf(lowerQuery, start);
       if (index == -1) {
         parts.add(text.substring(start));
         break;
       }
-
       parts.add(text.substring(start, index));
       parts.add(
         '<mark style="background-color: #FFA726; color: black;">${text.substring(index, index + query.length)}</mark>',
       );
       start = index + query.length;
     }
-
     return parts.join('');
   }
 
@@ -135,7 +159,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     if (_isLoading) {
       return MainLayout(
         title: 'Sermon',
@@ -160,7 +185,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
           ),
           onPressed: _toggleSearch,
         ),
-
         if (_sermon!.audio != null && _sermon!.audio!.isNotEmpty)
           FutureBuilder<File>(
             future: localSermonPath(_sermon!, i18n.lang),
@@ -182,7 +206,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                 data: audioItem,
                 type: AudioFolder.sermons,
                 extension: FileExtension.mp3,
-                sourceData: _sermon, // Passer le sermon pour le partage
+                sourceData: _sermon,
                 onGeneratePdf: _generatePdf,
                 onGenerateEpub: _generateEpub,
                 config: const ButtonConfig(
@@ -194,9 +218,9 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   defaultDarkColor: Colors.white,
                   defaultLigthColor: Colors.white,
                   order: [
-                    ButtonType.play, // ✅ Play en premier
-                    ButtonType.download, // ✅ Download en deuxième
-                    ButtonType.share, // ✅ Partage en dernier
+                    ButtonType.play,
+                    ButtonType.download,
+                    ButtonType.share,
                   ],
                 ),
               );
@@ -224,6 +248,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
             ),
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController, // ✅ Contrôleur ajouté
               padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -231,7 +256,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   Text(
                     _sermon!.title,
                     textAlign: TextAlign.center,
-
                     style: TextStyle(
                       fontSize: themeProvider.customFont.fontSize + 2,
                       fontWeight: FontWeight.bold,
@@ -241,25 +265,38 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   ),
                   if (_sermon != null && _sermon!.number != 9)
                     displayImage(context, _sermon!),
-
                   const SizedBox(height: 8),
                   ...?_sermon!.verses?.map((verse) {
                     final verseNumber = verse.number;
-
                     final verseContent = verse.content;
                     final verseTitle = verse.title;
-                    final List<ParsedReference>? concordances =
-                        verse.concordances;
+                    final List<ParsedReference>? concordances = verse.concordances;
                     final List<dynamic>? verseLinks = verse.verseLinks;
                     final fullContent = '$verseNumber $verseContent';
-                    final hasMatch =
-                        _searchQuery.isNotEmpty &&
-                        fullContent.toLowerCase().contains(
-                          _searchQuery.toLowerCase(),
-                        );
+                    
+                    final hasMatch = _searchQuery.isNotEmpty &&
+                        fullContent.toLowerCase().contains(_searchQuery.toLowerCase());
+                    
+                    // ✅ Identifier le verset ciblé
+                    final isTargetVerse = widget.verseNumber == verseNumber;
+                    
+                    // ✅ Créer une clé pour ce verset
+                    if (!_verseKeys.containsKey(verseNumber)) {
+                      _verseKeys[verseNumber] = GlobalKey();
+                    }
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                    return Container(
+                      key: isTargetVerse ? _verseKeys[verseNumber] : null, // ✅ Clé assignée
+                      decoration: BoxDecoration(
+                        color: isTargetVerse
+                            ? (isDark 
+                                ? Colors.blue.withOpacity(0.2) 
+                                : Colors.blue.withOpacity(0.1))
+                            : null,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -269,33 +306,25 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                               child: Text(
                                 verseTitle,
                                 style: TextStyle(
-                                  fontSize:
-                                      themeProvider.customFont.fontSize + 2,
+                                  fontSize: themeProvider.customFont.fontSize + 2,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily:
-                                      themeProvider.customFont.fontFamily,
+                                  fontFamily: themeProvider.customFont.fontFamily,
                                   fontStyle: themeProvider.customFont.fontStyle,
-                                  backgroundColor:
-                                      hasMatch && _searchQuery.isNotEmpty
+                                  backgroundColor: hasMatch && _searchQuery.isNotEmpty
                                       ? Colors.yellow.withOpacity(0.3)
                                       : null,
                                 ),
                               ),
                             ),
-
                           Html(
                             data: _searchQuery.isEmpty
                                 ? '<b>$verseNumber</b> ${_normalizeLineBreaks(verseContent)}'
                                 : '<b>${_highlightText(verseNumber.toString(), _searchQuery)}</b> ${_highlightText(_normalizeLineBreaks(verseContent), _searchQuery)}',
                             style: {
                               "body": Style(
-                                fontSize: FontSize(
-                                  themeProvider.customFont.fontSize,
-                                ),
+                                fontSize: FontSize(themeProvider.customFont.fontSize),
                                 fontFamily: themeProvider.customFont.fontFamily,
-                                fontStyle:
-                                    themeProvider.customFont.fontStyle ==
-                                        FontStyle.italic
+                                fontStyle: themeProvider.customFont.fontStyle == FontStyle.italic
                                     ? flutter_html.FontStyle.italic
                                     : flutter_html.FontStyle.normal,
                                 margin: Margins.zero,
@@ -309,7 +338,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                             concordances: concordances,
                             currentSermonNumber: _sermon!.number,
                           ),
-
                           VerseLinksWidget(
                             verseLinks: verseLinks,
                             sermon: _sermon!,
@@ -318,7 +346,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                       ),
                     );
                   }),
-
                   if (_sermon!.similarSermon!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
