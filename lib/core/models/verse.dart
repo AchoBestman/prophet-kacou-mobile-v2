@@ -54,4 +54,19 @@ class Verse {
       verseLinks: parsedLinks,
     );
   }
+
+
+}
+
+class VerseLink {
+  final String url;
+  final String type;
+  final String? content;
+  final String? fileName;
+
+  VerseLink.fromMap(Map<String, dynamic> map)
+      : url = map["url"],
+        type = map["type"],
+        content = map["content"],
+        fileName = map["fileName"];
 }

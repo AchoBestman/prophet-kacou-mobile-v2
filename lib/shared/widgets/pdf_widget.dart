@@ -47,6 +47,7 @@ Future<void> generateSermonPdf(BuildContext context,  Sermon? sermon) async {
                             fontWeight: pw.FontWeight.bold,
                           ),
                         ),
+                        
                       pw.RichText(
                         text: pw.TextSpan(
                           children: [

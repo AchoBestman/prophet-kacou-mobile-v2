@@ -174,7 +174,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                 title: sermonTitleFormatter(_sermon!),
                 audioUrl: _sermon!.audio!,
                 albumId: null,
-                fileOriginalName: sermonTitleFormatter(_sermon!),
+                fileOriginalName: null,
                 localFullPath: snapshot.data!,
               );
 

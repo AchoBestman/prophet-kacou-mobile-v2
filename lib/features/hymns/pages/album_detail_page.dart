@@ -123,7 +123,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
       title: song.title,
       audioUrl: song.audio,
       albumId: widget.album.id,
-      fileOriginalName: song.title,
+      fileOriginalName: null,
       localFullPath: localFullPath,
       content: song.content
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
@@ -6,16 +7,13 @@ import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:provider/provider.dart';
 
-enum ButtonType {
-  play,
-  download,
-  share,
-}
+enum ButtonType { play, download, share, open }
 
 class ButtonConfig {
   final bool showPlay;
   final bool showDownload;
   final bool showShare;
+  final bool showOpen;
   final List<ButtonType> order;
   final double iconSize;
   final double spacing;
@@ -26,11 +24,12 @@ class ButtonConfig {
     this.showPlay = true,
     this.showDownload = true,
     this.showShare = true,
+    this.showOpen = false,
     this.order = const [ButtonType.play, ButtonType.download, ButtonType.share],
     this.iconSize = 24.0,
     this.spacing = 4.0,
-    this.defaultDarkColor=Colors.lightBlue,
-    this.defaultLigthColor=Colors.blue
+    this.defaultDarkColor = Colors.lightBlue,
+    this.defaultLigthColor = Colors.blue,
   });
 }
 
@@ -42,6 +41,7 @@ class PlayDownloadShareButton extends StatefulWidget {
   final Function(dynamic)? onGeneratePdf;
   final Function(dynamic)? onGenerateEpub;
   final ButtonConfig config;
+  final VoidCallback? onClose;
 
   const PlayDownloadShareButton({
     super.key,
@@ -52,10 +52,12 @@ class PlayDownloadShareButton extends StatefulWidget {
     this.onGeneratePdf,
     this.onGenerateEpub,
     this.config = const ButtonConfig(),
+    this.onClose,
   });
 
   @override
-  State<PlayDownloadShareButton> createState() => _PlayDownloadShareButtonState();
+  State<PlayDownloadShareButton> createState() =>
+      _PlayDownloadShareButtonState();
 }
 
 class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
@@ -95,6 +97,27 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     }
   }
 
+  void _shareAudio() async {
+    final audioProvider = Provider.of<AudioPlayerProvider>(
+      context,
+      listen: false,
+    );
+
+    audioProvider.shareAudio(widget.data);
+  }
+
+  Future<void> _openLocalFile() async {
+    if (widget.data.localFullPath == null) return;
+
+    final file = widget.data.localFullPath!;
+    if (!await file.exists()) return;
+
+    // Ferme le modal d'abord si présent
+    widget.onClose?.call();
+
+    await OpenFilex.open(file.path);
+  }
+
   Future<void> _downloadAudio() async {
     if (widget.data.audioUrl.isEmpty) return;
 
@@ -131,7 +154,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     });
   }
 
-  void _showShareOptions() {
+  void _showShareOptions(bool isDownloaded) {
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -143,16 +166,31 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
               title: const Text('Partager en PDF'),
               onTap: () {
                 Navigator.pop(context);
+                widget.onClose?.call();
                 if (widget.onGeneratePdf != null) {
                   widget.onGeneratePdf!(widget.sourceData);
                 }
               },
             ),
+            if (isDownloaded)
+              ListTile(
+                leading: const Icon(
+                  Icons.music_note_rounded,
+                  color: Colors.red,
+                ),
+                title: const Text('Partager en Audio'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  widget.onClose?.call();
+                  _shareAudio();
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.book, color: Colors.blue),
               title: const Text('Partager en EPUB'),
               onTap: () {
                 Navigator.pop(context);
+                widget.onClose?.call();
                 if (widget.onGenerateEpub != null) {
                   widget.onGenerateEpub!(widget.sourceData);
                 } else {
@@ -169,6 +207,26 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     );
   }
 
+  Widget _buildOpenButton({required bool isDark}) {
+    if (!widget.config.showOpen) return const SizedBox.shrink();
+    if (!_isDownloaded) return const SizedBox.shrink();
+
+    return InkWell(
+      onTap: () => _openLocalFile(),
+      borderRadius: BorderRadius.circular(borderRadius.toDouble()),
+      child: Padding(
+        padding: EdgeInsets.all(size.toDouble()),
+        child: Icon(
+          Icons.open_in_new_rounded,
+          color: isDark
+              ? widget.config.defaultDarkColor
+              : widget.config.defaultLigthColor,
+          size: widget.config.iconSize - size,
+        ),
+      ),
+    );
+  }
+
   Widget _buildPlayButton({
     required bool isCurrentAudio,
     required bool isPlaying,
@@ -179,13 +237,22 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     }
 
     return InkWell(
-      onTap: _playAudio,
-      borderRadius: BorderRadius.circular(double.parse(borderRadius.toString())),
+      onTap: () {
+        _playAudio();
+        widget.onClose?.call();
+      },
+      borderRadius: BorderRadius.circular(
+        double.parse(borderRadius.toString()),
+      ),
       child: Padding(
         padding: EdgeInsets.all(double.parse(size.toString())),
         child: Icon(
           isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
-          color: isCurrentAudio ? Colors.orange : (isDark ? widget.config.defaultDarkColor : widget.config.defaultLigthColor),
+          color: isCurrentAudio
+              ? Colors.orange
+              : (isDark
+                    ? widget.config.defaultDarkColor
+                    : widget.config.defaultLigthColor),
           size: widget.config.iconSize,
         ),
       ),
@@ -200,10 +267,17 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     if (!widget.config.showDownload || widget.data.audioUrl.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     return InkWell(
-      onTap: isDownloading ? null : _downloadAudio,
-      borderRadius: BorderRadius.circular(double.parse(borderRadius.toString())),
+      onTap: isDownloading
+          ? null
+          : () {
+              _downloadAudio();
+              widget.onClose?.call();
+            },
+      borderRadius: BorderRadius.circular(
+        double.parse(borderRadius.toString()),
+      ),
       child: Padding(
         padding: EdgeInsets.all(double.parse(size.toString())),
         child: isDownloading
@@ -225,27 +299,33 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                     : Icons.download_rounded,
                 color: _isDownloaded
                     ? Colors.orange
-                    : (isDark ? widget.config.defaultDarkColor : widget.config.defaultLigthColor),
+                    : (isDark
+                          ? widget.config.defaultDarkColor
+                          : widget.config.defaultLigthColor),
                 size: widget.config.iconSize - size,
               ),
       ),
     );
   }
 
-  Widget _buildShareButton({required bool isDark}) {
+  Widget _buildShareButton({required bool isDark, required bool isDownloaded}) {
     if (!widget.config.showShare ||
         (widget.onGeneratePdf == null && widget.onGenerateEpub == null)) {
       return const SizedBox.shrink();
     }
 
     return InkWell(
-      onTap: _showShareOptions,
-      borderRadius: BorderRadius.circular(double.parse(borderRadius.toString())),
+      onTap: () => _showShareOptions(isDownloaded),
+      borderRadius: BorderRadius.circular(
+        double.parse(borderRadius.toString()),
+      ),
       child: Padding(
         padding: EdgeInsets.all(double.parse(size.toString())),
         child: Icon(
           Icons.share,
-          color: isDark ? widget.config.defaultDarkColor : widget.config.defaultLigthColor,
+          color: isDark
+              ? widget.config.defaultDarkColor
+              : widget.config.defaultLigthColor,
           size: widget.config.iconSize - size,
         ),
       ),
@@ -267,8 +347,9 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
             .where((d) => d.id == downloadId)
             .firstOrNull;
         final isDownloading = downloadHistory?.isInProgress ?? false;
-        final downloadProgress =
-            isDownloading ? (downloadHistory?.percent ?? 0) / 100 : null;
+        final downloadProgress = isDownloading
+            ? (downloadHistory?.percent ?? 0) / 100
+            : null;
 
         // Listen for download completion
         if (downloadHistory?.isCompleted == true && !_isDownloaded) {
@@ -277,25 +358,34 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
 
         // Construire les boutons dans l'ordre spécifié
         final buttons = <Widget>[];
-        
+
         for (var buttonType in widget.config.order) {
           switch (buttonType) {
+            case ButtonType.open:
+              buttons.add(_buildOpenButton(isDark: isDark));
+              break;
             case ButtonType.play:
-              buttons.add(_buildPlayButton(
-                isCurrentAudio: isCurrentAudio,
-                isPlaying: isPlaying,
-                isDark: isDark,
-              ));
+              buttons.add(
+                _buildPlayButton(
+                  isCurrentAudio: isCurrentAudio,
+                  isPlaying: isPlaying,
+                  isDark: isDark,
+                ),
+              );
               break;
             case ButtonType.download:
-              buttons.add(_buildDownloadButton(
-                isDownloading: isDownloading,
-                downloadProgress: downloadProgress,
-                isDark: isDark,
-              ));
+              buttons.add(
+                _buildDownloadButton(
+                  isDownloading: isDownloading,
+                  downloadProgress: downloadProgress,
+                  isDark: isDark,
+                ),
+              );
               break;
             case ButtonType.share:
-              buttons.add(_buildShareButton(isDark: isDark));
+              buttons.add(
+                _buildShareButton(isDark: isDark, isDownloaded: _isDownloaded),
+              );
               break;
           }
         }

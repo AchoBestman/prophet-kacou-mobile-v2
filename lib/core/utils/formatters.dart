@@ -106,6 +106,18 @@ Future<File> localSermonPath(Sermon sermon, initial) async {
   return file;
 }
 
+Future<File> localOtherPath(String title, String initial, FileExtension extension) async {
+  final fullPath = await DownloadUtils.createPaths(
+    initial,
+    AudioFolder.others,
+    title,
+    extension,
+  );
+  final file = File(fullPath);
+
+  return file;
+}
+
 Future<File> localSongPath(Song song, initial) async {
   final fullPath = await DownloadUtils.createPaths(
     initial,

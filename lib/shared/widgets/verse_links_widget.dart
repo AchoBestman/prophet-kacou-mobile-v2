@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/app/themes/app_theme.dart';
+import 'package:prophet_kacou/core/models/audio_item.dart';
+import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
-import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
+import 'package:prophet_kacou/core/models/verse.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
-import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
+import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
 import 'package:provider/provider.dart';
 
 class VerseLinksWidget extends StatefulWidget {
@@ -21,64 +26,102 @@ class VerseLinksWidget extends StatefulWidget {
 }
 
 class _VerseLinksWidgetState extends State<VerseLinksWidget> {
-  Map<String, double> _progress = {};
+  void _showModalBottom() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: widget.verseLinks!.asMap().entries.map((entry) {
+            final link = VerseLink.fromMap(entry.value);
 
+            String type = link.type;
+            String title = link.fileName ?? link.content ?? 'file';
+            String url = link.url;
 
-  Future<void> _downloadSermon(Sermon sermon) async {
-    if (sermon.audio == null) return;
+            FileExtension extension = type == 'audio'
+                ? FileExtension.mp3
+                : type == 'video'
+                ? FileExtension.mp4
+                : FileExtension.pdf;
 
-    try {
-      final localFullPath = await localSermonPath(sermon, i18n.lang);
+            final index = entry.key;
+            final suffix = widget.verseLinks!.length > 1
+                ? '(${index + 1})'
+                : '';
 
-      if (!mounted) return;
+            final icon =
+                (extension == FileExtension.pdf ||
+                    extension == FileExtension.doc)
+                ? Icons.picture_as_pdf
+                : type == 'audio'
+                ? Icons.music_note_rounded
+                : Icons.video_camera_back;
 
-      final downloadProvider = Provider.of<DownloadHistoryProvider>(
-        context,
-        listen: false,
-      );
+            final text =
+                (extension == FileExtension.pdf ||
+                    extension == FileExtension.doc)
+                ? "Le document"
+                : type == 'audio'
+                ? "L'audio"
+                : "La vidéo";
 
-      await downloadProvider.startDownload(
-        id: sermonIdInDownloadProviderFormatter(sermon),
-        title: sermonTitleFormatter(sermon),
-        audioUrl: sermon.audio!,
-        filePath: localFullPath,
-        albumTitle: sermon.subTitle,
-        albumId: null,
-      );
+            final bool openLink =
+                (extension == FileExtension.pdf ||
+                    extension == FileExtension.doc ||
+                    type == "video")
+                ? true
+                : false;
+            final playAudio = extension == FileExtension.mp3;
 
-      if (!mounted) return;
-    } catch (e) {
-      if (!mounted) return;
-      NotificactionService.showErrorMessage(
-        context,
-        'Erreur de téléchargement: $e',
-      );
-    }
-  }
+            final displayTitle = '$title $suffix';
 
+            return FutureBuilder<File>(
+              future: localOtherPath(displayTitle, i18n.lang, extension),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox.shrink();
+                }
 
-  Future<void> _downloadLink(dynamic link) async {
-    if (link.url == null || link.url!.isEmpty) return;
+                final audioItem = AudioItem(
+                  id: index + 1,
+                  title: title,
+                  audioUrl: url,
+                  albumId: null,
+                  fileOriginalName: displayTitle,
+                  localFullPath: snapshot.data!,
+                );
 
-    String title = link.fileName ?? link.content ?? 'file';
-    var _sermon = widget.sermon;
-    //_sermon.title = title;
-
-    final extension = link.type == 'audio'
-        ? 'mp3'
-        : link.type == 'video'
-            ? 'mp4'
-            : 'pdf';
-
-    try {
-      await _downloadSermon(_sermon);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur téléchargement: $e')),
-        );
-      }
-    }
+                return ListTile(
+                  leading: Icon(icon, color: Colors.red),
+                  title: Text(text),
+                  trailing: PlayDownloadShareButton(
+                    data: audioItem,
+                    type: AudioFolder.others,
+                    extension: extension,
+                    onClose: () => Navigator.pop(context),
+                    config: ButtonConfig(
+                      showPlay: playAudio,
+                      showDownload: true,
+                      showShare: false,
+                      showOpen: openLink,
+                      iconSize: 24.0,
+                      spacing: 4.0,
+                      order: openLink
+                          ? [ButtonType.open, ButtonType.download]
+                          : [ButtonType.play, ButtonType.download],
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -87,42 +130,30 @@ class _VerseLinksWidgetState extends State<VerseLinksWidget> {
       return const SizedBox.shrink();
     }
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: widget.verseLinks!.asMap().entries.map((entry) {
-        final index = entry.key;
-        final link = entry.value;
-        final title = link.fileName ?? link.content ?? 'file';
-        final progress = _progress[title] ?? 0.0;
-        final suffix =
-            widget.verseLinks!.length > 1 ? '(${index + 1})' : '';
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[100],
-                foregroundColor: Colors.blue[800],
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                textStyle: const TextStyle(fontSize: 12),
-              ),
-              onPressed: () => _downloadLink(link),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('${link.content ?? ''} $suffix'),
-                  if (progress > 0 && progress < 100) ...[
-                    const SizedBox(width: 6),
-                    Text('${progress.toStringAsFixed(0)}%'),
-                  ],
-                ],
-              ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: ListTile(
+            visualDensity: VisualDensity(vertical: -4),
+            contentPadding: EdgeInsets.zero,
+            textColor: Colors.blue,
+            titleTextStyle: TextStyle(
+              fontSize: themeProvider.customFont.fontSize + 2,
+              fontWeight: FontWeight.bold,
+              fontFamily: themeProvider.customFont.fontFamily,
+              fontStyle: FontStyle.italic,
             ),
-          ],
-        );
-      }).toList(),
+            title: const Text("Voir fichier associé"),
+            onTap: _showModalBottom,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -70,6 +70,7 @@ class DownloadHistoryProvider extends ChangeNotifier {
     required File filePath,
     String? albumTitle,
     int? albumId,
+    String? fileOriginalName,
   }) async {
     // Vérifier si le téléchargement existe déjà
     final existingIndex = _history.indexWhere((h) => h.id == id);

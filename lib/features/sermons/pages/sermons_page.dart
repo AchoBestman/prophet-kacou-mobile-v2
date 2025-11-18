@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
@@ -12,6 +14,7 @@ import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
 import 'package:prophet_kacou/features/settings/pages/update_button.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
+import 'package:prophet_kacou/shared/widgets/pdf_widget.dart';
 import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
 import 'package:provider/provider.dart';
 
@@ -77,6 +80,21 @@ class _SermonsPageState extends State<SermonsPage>
     _loadSermons();
   }
 
+  // Méthode pour générer le PDF
+  Future<void> _generatePdf(dynamic sermon) async {
+    if(mounted){
+      generateSermonPdf(context, sermon as Sermon);
+    }
+  }
+
+  // Méthode pour générer l'EPUB (à implémenter)
+  Future<void> _generateEpub(dynamic sermon) async {
+    // Implémentation future
+    if (mounted) {
+      generateSermonEpub(context, sermon as Sermon);
+    }
+  }
+  
   Widget _buildSermonCard(Sermon sermon, bool isDark) {
     return GestureDetector(
       onTap: () {
@@ -145,7 +163,7 @@ class _SermonsPageState extends State<SermonsPage>
                           title: sermonTitleFormatter(sermon),
                           audioUrl: sermon.audio!,
                           albumId: null,
-                          fileOriginalName: sermonTitleFormatter(sermon),
+                          fileOriginalName: null,
                           localFullPath: snapshot.data!,
                         );
 
@@ -162,8 +180,6 @@ class _SermonsPageState extends State<SermonsPage>
                             showShare: true,
                             iconSize: 24.0,
                             spacing: 4.0,
-                            defaultDarkColor: Colors.white,
-                            defaultLigthColor: Colors.white,
                             order: [
                               ButtonType.play, // ✅ Play en premier
                               ButtonType.download, // ✅ Download en deuxième
@@ -264,16 +280,6 @@ class _SermonsPageState extends State<SermonsPage>
     );
   }
 
-  double _calculateAverageProgress(DownloadHistoryProvider provider) {
-    final inProgress = provider.inProgressDownloads;
-    if (inProgress.isEmpty) return 0.0;
-
-    double totalProgress = 0.0;
-    for (var download in inProgress) {
-      totalProgress += download.percent;
-    }
-    return totalProgress / inProgress.length / 100.0;
-  }
 }
 
 /// 🔍 Délégué pour la recherche
