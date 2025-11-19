@@ -269,7 +269,16 @@ class MainLayout extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon, color: theme.iconTheme.color),
+      //dense: true, // réduit la hauteur
+    visualDensity: const VisualDensity(
+      horizontal: -2,
+      vertical: -2,
+    ), // réduit l’espace interne
+    //minLeadingWidth: 0, // enlève le gros padding du leading
+    //horizontalTitleGap: 8, // réduit l’espace entre icône et texte
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+    // padding réduit
+      leading: Icon(icon, color: theme.iconTheme.color, size: theme.iconTheme.size),
       title: Text(
         title,
         style: TextStyle(color: theme.textTheme.bodyLarge?.color),

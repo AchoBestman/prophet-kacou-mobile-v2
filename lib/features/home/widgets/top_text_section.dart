@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/app/device_config.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 
 class TopTextSection extends StatelessWidget {
@@ -6,10 +7,19 @@ class TopTextSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Déterminer le type d'écran
+    final DeviceType deviceType = getDeviceType(screenWidth, screenHeight);
+    
+    // Configuration selon le type d'écran
+    final config = getConfig(deviceType);
+    
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 45,
-        right: 100,
+      padding: EdgeInsets.only(
+        top: config.imageTopTitleMargin,
+        right: 85,
       ), // ajoute un padding gauche si nécessaire
       child: Column(
         crossAxisAlignment:
@@ -24,7 +34,7 @@ class TopTextSection extends StatelessWidget {
             ),
             textAlign: TextAlign.left, // 👈 texte aligné à gauche
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 0),
           Text(
             i18n.tr('home.second_image_title'),
             style: const TextStyle(
@@ -35,7 +45,7 @@ class TopTextSection extends StatelessWidget {
             ),
             textAlign: TextAlign.left,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 0),
           Text(
             i18n.tr('home.third_image_title'),
             style: const TextStyle(

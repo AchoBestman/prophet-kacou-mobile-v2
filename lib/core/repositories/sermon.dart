@@ -51,6 +51,32 @@ class SermonRepository {
     return results.map((r) => Sermon.fromMap(r)).toList();
   }
 
+
+   /// 🔹 Récupérer tous les sermons actifs avec filtres
+  Future<List<Verse>> findAllVerses({
+    String lang = '',
+    String? searchQuery,
+    String orderBy = '"number" ASC',
+  }) async {
+    final db = await _dbManager.openLanguageDB(lang);
+    final where = <String>[];
+    final args = <dynamic>[];
+
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      where.add('(title LIKE ? OR content LIKE ?)');
+      args.add('%$searchQuery%');
+      args.add('%$searchQuery%');
+    }
+
+    final whereClause = where.isNotEmpty ? 'WHERE ${where.join(' AND ')}' : '';
+    final results = await db.rawQuery(
+      'SELECT * FROM verses $whereClause ORDER BY $orderBy',
+      args,
+    );
+
+    return results.map((r) => Verse.fromMap(r)).toList();
+  }
+
   /// 🔹 Récupérer un sermon par ID avec toutes ses relations
   Future<Sermon?> findByNumber(int number, String lang) async {
     final db = await _dbManager.openLanguageDB(lang);

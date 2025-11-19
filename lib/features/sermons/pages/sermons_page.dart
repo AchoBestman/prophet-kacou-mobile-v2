@@ -9,6 +9,7 @@ import 'package:prophet_kacou/core/repositories/sermon.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
 import 'package:prophet_kacou/features/sermons/widgets/read_passage_widget.dart'; // ✅ Import ajouté
+import 'package:prophet_kacou/features/sermons/widgets/search_passage_widget.dart';
 import 'package:prophet_kacou/features/settings/pages/update_button.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
@@ -31,6 +32,12 @@ class _SermonsPageState extends State<SermonsPage>
 
   List<Sermon> sermonsList = [];
   bool isLoading = true;
+
+  // ✅ Clé pour accéder au widget SearchPassageWidget
+  final GlobalKey<SearchPassageWidgetState> _searchPassageKey = GlobalKey();
+
+  // ✅ Variable pour stocker la recherche de passage
+  String _passageSearchQuery = '';
 
   @override
   void initState() {
@@ -72,14 +79,14 @@ class _SermonsPageState extends State<SermonsPage>
 
   void _onSearchChanged(String query) {
     setState(() {
-      searchQuery = query;
+      _passageSearchQuery = query;
     });
-    _loadSermons();
+    _searchPassageKey.currentState?.setSearchQuery(query);
   }
 
   // Méthode pour générer le PDF
   Future<void> _generatePdf(dynamic sermon) async {
-    if(mounted){
+    if (mounted) {
       generateSermonPdf(context, sermon as Sermon);
     }
   }
@@ -91,7 +98,7 @@ class _SermonsPageState extends State<SermonsPage>
       generateSermonEpub(context, sermon as Sermon);
     }
   }
-  
+
   Widget _buildSermonCard(Sermon sermon, bool isDark) {
     return GestureDetector(
       onTap: () {
@@ -105,39 +112,20 @@ class _SermonsPageState extends State<SermonsPage>
       child: Card(
         color: isDark ? pkpDark : pkpSand,
         margin: const EdgeInsets.symmetric(vertical: 1),
+        elevation: 1,
+        shape: const RoundedRectangleBorder(),
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 Ligne du haut : Chapter et Publication Date
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    sermon.chapter,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: (isDark ? Colors.lightBlue : Colors.blue),
-                    ),
-                  ),
-                  if (sermon.publicationDate != null)
-                    Text(
-                      sermon.publicationDate!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.lightBlue : Colors.blue,
-                      ),
-                    ),
-                ],
-              ),
-
-              // 🔹 Titre du sermon
               Text(
-                sermon.title,
+                "${sermon.chapter}: ${sermon.title}",
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 15.8,
                   color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontWeight: FontWeight.w600,
+                  fontStyle: FontStyle.normal
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -145,8 +133,16 @@ class _SermonsPageState extends State<SermonsPage>
 
               // 🔹 Boutons en bas à droite
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  if (sermon.publicationDate != null)
+                    Text(
+                      sermon.publicationDate!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? pkpOcean : pkpIndigo,
+                      ),
+                    ),
                   if (sermon.audio != null)
                     FutureBuilder<File>(
                       future: localSermonPath(sermon, i18n.lang),
@@ -168,7 +164,8 @@ class _SermonsPageState extends State<SermonsPage>
                           data: audioItem,
                           type: AudioFolder.sermons,
                           extension: FileExtension.mp3,
-                          sourceData:sermon, // Passer le sermon pour le partage
+                          sourceData:
+                              sermon, // Passer le sermon pour le partage
                           onGeneratePdf: _generatePdf,
                           onGenerateEpub: _generateEpub,
                           config: const ButtonConfig(
@@ -177,6 +174,8 @@ class _SermonsPageState extends State<SermonsPage>
                             showShare: true,
                             iconSize: 24.0,
                             spacing: 4.0,
+                            //defaultDarkColor: pkpOcean,
+                            //defaultLigthColor: pkpIndigo,
                             order: [
                               ButtonType.play, // ✅ Play en premier
                               ButtonType.download, // ✅ Download en deuxième
@@ -204,7 +203,7 @@ class _SermonsPageState extends State<SermonsPage>
       body: Stack(
         children: [
           MainLayout(
-            title: i18n.tr("home.sermons"),
+            title: i18n.tr("home.sermon"),
             actions: [
               // 🔍 Recherche
               IconButton(
@@ -263,6 +262,10 @@ class _SermonsPageState extends State<SermonsPage>
                               ),
                       ),
                       const ReadPassageWidget(), // ✅ Widget intégré
+                      // SearchPassageWidget(
+                      //   key: _searchPassageKey,
+                      //   initialSearchQuery: _passageSearchQuery,
+                      // ),
                     ],
                   ),
                 ),
@@ -273,7 +276,6 @@ class _SermonsPageState extends State<SermonsPage>
       ),
     );
   }
-
 }
 
 /// 🔍 Délégué pour la recherche

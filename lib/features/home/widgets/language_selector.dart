@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/i18n/langue_model.dart';
+import 'package:share_plus/share_plus.dart';
 
 class LanguageSelector extends StatelessWidget {
   const LanguageSelector({super.key});
@@ -12,6 +13,12 @@ class LanguageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final languages = LanguageData.homeLanguages();
     final languageProvider = Provider.of<LanguageProvider>(context);
+
+    Future<void> shareLink() async {
+      await Share.shareUri(
+        Uri.https('philippekacou.org')
+      );
+    }
 
     // Afficher un loader pendant l'initialisation
     if (!languageProvider.isInitialized) {
@@ -23,7 +30,7 @@ class LanguageSelector extends StatelessWidget {
       children: [
         Container(
           color: Colors.white,
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 0),
           child: Column(
             children: [
               Text(
@@ -31,14 +38,14 @@ class LanguageSelector extends StatelessWidget {
                 style: TextStyle(
                   color: pkpOcean,
                   fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                  fontSize: 13,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 1),
               Wrap(
                 spacing: 4,
-                runSpacing: 4,
+                runSpacing: 3,
                 alignment: WrapAlignment.start,
                 children: languages.map((item) {
                   final isSelected =
@@ -49,23 +56,23 @@ class LanguageSelector extends StatelessWidget {
                       await languageProvider.changeLanguage(item);
                       if (context.mounted) {
                         Future.microtask(() {
-                          if(item.icon =="langues"){
+                          if (item.icon == "langues") {
                             Navigator.pushReplacementNamed(context, '/langues');
-                            return ;
+                            return;
                           }
-                          if(item.icon =="share"){
-                            //share app
-                          }
-                          else{
+                          if (item.icon == "share") {
+                            shareLink();
+                          } else {
                             Navigator.pushReplacementNamed(context, '/sermons');
                           }
-                          
                         });
                       }
                     },
                     child: Container(
-                      width: item.icon !="langues" && item.icon !="share" ? 65 : 75,
-                      height: 45,
+                      width: item.icon != "langues" && item.icon != "share"
+                          ? 60
+                          : 70,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: isSelected
                             ? pkpIndigo.withOpacity(0.1)
@@ -90,21 +97,24 @@ class LanguageSelector extends StatelessWidget {
                           borderRadius: BorderRadius.circular(2),
                           child: Image.asset(
                             item.icon,
-                            width: 56,
-                            height: 36,
+                            width: 53,
+                            height: 33,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                width: 70,
-                                height: 36,
+                                width: 65,
+                                height: 33,
                                 color: const Color.fromARGB(255, 3, 42, 70),
                                 child: Center(
                                   child: Text(
-                                    item.icon !="langues" && item.icon !="share" ? item.name.substring(0, 2) : item.name,
+                                    item.icon != "langues" &&
+                                            item.icon != "share"
+                                        ? item.name.substring(0, 2)
+                                        : item.name,
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
-                                      overflow: TextOverflow.ellipsis
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),

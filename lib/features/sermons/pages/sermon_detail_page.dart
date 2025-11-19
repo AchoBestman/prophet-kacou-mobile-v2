@@ -106,20 +106,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     }
   }
 
-  String _normalizeLineBreaks(String html) {
-    // Remplace plusieurs <br> consécutifs par un seul
-    String normalized = html.replaceAll(
-      RegExp(r'(<br\s*\/?>){2,}', caseSensitive: false),
-      '<br>',
-    );
-    // Remplace plusieurs </p><p> consécutifs par un seul
-    normalized = normalized.replaceAll(
-      RegExp(r'(<\/p>\s*<p>){2,}', caseSensitive: false),
-      '</p><p>',
-    );
-    return normalized;
-  }
-
   String _highlightText(String text, String query) {
     if (query.isEmpty) return text;
     final lowerText = text.toLowerCase();
@@ -214,7 +200,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   showDownload: true,
                   showShare: true,
                   iconSize: 24.0,
-                  spacing: 4.0,
+                  spacing: 6.0,
                   defaultDarkColor: Colors.white,
                   defaultLigthColor: Colors.white,
                   order: [
@@ -226,6 +212,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
               );
             },
           ),
+          SizedBox.fromSize(size: Size(12, 0))
       ],
       body: Column(
         children: [
@@ -249,7 +236,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollController, // ✅ Contrôleur ajouté
-              padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+              padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -263,6 +250,17 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                       fontStyle: themeProvider.customFont.fontStyle,
                     ),
                   ),
+                  if (_sermon != null && _sermon!.subTitle != null)
+                    Text(
+                      "${_sermon!.subTitle}",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: themeProvider.customFont.fontSize - 1,
+                        fontWeight: FontWeight.w300,
+                        fontFamily: themeProvider.customFont.fontFamily,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   if (_sermon != null && _sermon!.number != 9)
                     displayImage(context, _sermon!),
                   const SizedBox(height: 8),
@@ -295,8 +293,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                             : null,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(0),
+                      margin: const EdgeInsets.only(bottom: 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -318,8 +316,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                             ),
                           Html(
                             data: _searchQuery.isEmpty
-                                ? '<b>$verseNumber</b> ${_normalizeLineBreaks(verseContent)}'
-                                : '<b>${_highlightText(verseNumber.toString(), _searchQuery)}</b> ${_highlightText(_normalizeLineBreaks(verseContent), _searchQuery)}',
+                                ? '<b>$verseNumber</b> ${normalizeLineBreaks(verseContent)}'
+                                : '<b>${_highlightText(verseNumber.toString(), _searchQuery)}</b> ${_highlightText(normalizeLineBreaks(verseContent), _searchQuery)}',
                             style: {
                               "body": Style(
                                 fontSize: FontSize(themeProvider.customFont.fontSize),
@@ -328,7 +326,9 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                                     ? flutter_html.FontStyle.italic
                                     : flutter_html.FontStyle.normal,
                                 margin: Margins.zero,
+                                fontWeight: FontWeight.w400,
                                 padding: HtmlPaddings.zero,
+                                textAlign: TextAlign.justify
                               ),
                               "b": Style(fontWeight: FontWeight.bold),
                               "p": Style(margin: Margins.only(bottom: 8)),
@@ -348,7 +348,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   }),
                   if (_sermon!.similarSermon!.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.only(bottom: 6,),
                       child: Text(
                         _sermon!.similarSermon!,
                         style: TextStyle(

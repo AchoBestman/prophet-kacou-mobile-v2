@@ -43,7 +43,7 @@ Future<void> generateSermonPdf(BuildContext context, Sermon? sermon) async {
             pw.Header(
               level: 0,
               child: pw.Text(
-                sermon.title,
+                "${sermon.chapter}: ${sermon.title}",
                 style: pw.TextStyle(
                   font: fontBold,
                   fontSize: 26,
@@ -52,6 +52,22 @@ Future<void> generateSermonPdf(BuildContext context, Sermon? sermon) async {
               ),
             ),
           );
+
+          if (sermon.subTitle != null) {
+            content.add(
+              pw.Center(
+                child: pw.Text(
+                  "${sermon.subTitle}",
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(
+                    fontSize: 14,
+                    fontWeight: pw.FontWeight.normal,
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+              ),
+            );
+          }
 
           content.add(pw.SizedBox(height: 16));
 
@@ -164,7 +180,7 @@ Future<void> generateSermonPdf(BuildContext context, Sermon? sermon) async {
     final file = File('${output.path}/$slug.pdf');
     await file.writeAsBytes(await pdf.save());
 
-    await Share.shareXFiles([XFile(file.path)], text: sermon.title);
+    await Share.shareXFiles([XFile(file.path)], text: "${sermon.chapter}: ${sermon.title}", subject: "${sermon.subTitle}");
   } catch (e) {
     if (context.mounted) {
       print('Erreur lors de la génération du PDF: $e');

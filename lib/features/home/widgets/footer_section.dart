@@ -21,13 +21,13 @@ class FooterSection extends StatelessWidget {
       color: pkpIndigo, // ta couleur principale
       alignment: Alignment.center,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           const Text(
             'mat25v6.msg@gmail.com',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
             ),
           ),
           TextButton(
@@ -35,7 +35,7 @@ class FooterSection extends StatelessWidget {
               'https://www.iubenda.com/privacy-policy/84576984',
             ),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
               minimumSize: const Size(0, 0),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(
@@ -50,7 +50,7 @@ class FooterSection extends StatelessWidget {
               i18n.tr('home.confidentiality_clause'),
               style: const TextStyle(
                 color: Color(0xFFFFAB40),
-                fontSize: 16,
+                fontSize: 14,
                 decoration: TextDecoration.none,
               ),
             ),

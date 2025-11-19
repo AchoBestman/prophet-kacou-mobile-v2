@@ -1,9 +1,11 @@
 #Start the iOS Simulator with the following command:
-
 open -a Simulator
 
-sips -z 3000 2000 assets/images/1080X564.png --out assets/images/2000X3000.png
+#build apk for android
+flutter build apk --release
 
+#resize image
+sips -z 3000 2000 assets/images/1080X564.png --out assets/images/2000X3000.png
 sips -z 600 1080 assets/images/logo-pkacou3.jpeg --out assets/images/logo-pkacou3-1080×600.png
 
 emplacement des bases de donnees
@@ -28,12 +30,9 @@ xcrun simctl list devices
 aikpeachile@AIKPEs-MacBook-Pro prophet_kacou % 
 
 5. Lancer Flutter sur un simulateur spécifique
-flutter run -d "iPhone SE (3rd generation)"
 
-# Lancer sur iPhone SE
-flutter run -d "iPhone SE"
-
-xcrun simctl boot "iPad Air"
-flutter run -d "iPad Air 13-inch (M3)"
+xcrun simctl boot "2D2E044F-7865-4EF9-9073-F43E37B699A9"
+flutter run -d "2D2E044F-7865-4EF9-9073-F43E37B699A9"
 
 xcrun simctl boot "iPhone SE"
+flutter run -d "iPhone SE"

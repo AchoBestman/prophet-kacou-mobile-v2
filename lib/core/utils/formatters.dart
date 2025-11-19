@@ -144,3 +144,17 @@ int extractNumberValueFromAudioFormattedId(String key) {
 Uint8List decodeHexToBytes(String hexString) {
   return Uint8List.fromList(hex.decode(hexString));
 }
+
+  String normalizeLineBreaks(String html) {
+    // Remplace plusieurs <br> consécutifs par un seul
+    String normalized = html.replaceAll(
+      RegExp(r'(<br\s*\/?>){2,}', caseSensitive: false),
+      '<br>',
+    );
+    // Remplace plusieurs </p><p> consécutifs par un seul
+    normalized = normalized.replaceAll(
+      RegExp(r'(<\/p>\s*<p>){2,}', caseSensitive: false),
+      '</p><p>',
+    );
+    return normalized;
+  }

@@ -1,10 +1,15 @@
 // lib/features/biographies/pages/biographies_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:prophet_kacou/app/themes/app_theme.dart';
+import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/biography.dart';
 import 'package:prophet_kacou/core/repositories/biography.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
+import 'package:provider/provider.dart';
+import 'dart:ui' as flutter_html;
 
 class BiographiesPage extends StatefulWidget {
   const BiographiesPage({super.key});
@@ -34,7 +39,7 @@ class _BiographiesPageState extends State<BiographiesPage> {
 
       final currentLang = i18n.lang;
       final biography = await _repository.findBy(currentLang);
-      
+
       setState(() {
         _biography = biography;
         _isLoading = false;
@@ -58,32 +63,32 @@ class _BiographiesPageState extends State<BiographiesPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Erreur: $_error',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : _biography == null
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          i18n.tr('biography.not_available'),
-                          style: const TextStyle(fontSize: 18),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  : _buildBiographyContent(headingColor),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Erreur: $_error',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : _biography == null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  i18n.tr('biography.not_available'),
+                  style: const TextStyle(fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : _buildBiographyContent(headingColor, isDark),
     );
   }
 
-  Widget _buildBiographyContent(Color headingColor) {
+  Widget _buildBiographyContent(Color headingColor, bool isDark) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
@@ -99,11 +104,11 @@ class _BiographiesPageState extends State<BiographiesPage> {
                       child: _buildImage(),
                     ),
                   ),
-                  _buildHtmlContent(headingColor),
+                  _buildHtmlContent(headingColor, isDark),
                 ],
               );
             }
-            
+
             // Desktop: utiliser Wrap pour simuler le text wrapping
             return Wrap(
               alignment: WrapAlignment.start,
@@ -115,9 +120,11 @@ class _BiographiesPageState extends State<BiographiesPage> {
                 ),
                 ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: constraints.maxWidth - 216, // Largeur totale - (200 + 16)
+                    maxWidth:
+                        constraints.maxWidth -
+                        216, // Largeur totale - (200 + 16)
                   ),
-                  child: _buildHtmlContent(headingColor),
+                  child: _buildHtmlContent(headingColor, isDark),
                 ),
               ],
             );
@@ -138,43 +145,94 @@ class _BiographiesPageState extends State<BiographiesPage> {
           width: 200,
           height: 200,
           color: Colors.grey[300],
-          child: const Icon(
-            Icons.person,
-            size: 100,
-            color: Colors.grey,
-          ),
+          child: const Icon(Icons.person, size: 100, color: Colors.grey),
         );
       },
     );
   }
 
-  Widget _buildHtmlContent(Color headingColor) {
+  Widget _buildHtmlContent(Color headingColor, bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Html(
-      data: _biography!.description,
+      data: normalizeLineBreaks(_biography!.description),
+      
       style: {
+        "*": Style.fromTextStyle(TextStyle()), // reset global
         "body": Style(
-          fontSize: FontSize(16),
-          textAlign: TextAlign.justify,
+          fontSize: FontSize(themeProvider.customFont.fontSize),
+          fontFamily: themeProvider.customFont.fontFamily,
+          fontStyle: themeProvider.customFont.fontStyle == FontStyle.italic
+              ? flutter_html.FontStyle.italic
+              : flutter_html.FontStyle.normal,
           margin: Margins.zero,
+          fontWeight: FontWeight.w400,
           padding: HtmlPaddings.zero,
+          textAlign: TextAlign.left,
         ),
         "h1": Style(
-          color: headingColor,
-          fontSize: FontSize(22),
+          fontSize: FontSize(themeProvider.customFont.fontSize + 8),
+          fontFamily: themeProvider.customFont.fontFamily,
+          fontStyle: themeProvider.customFont.fontStyle == FontStyle.italic
+              ? flutter_html.FontStyle.italic
+              : flutter_html.FontStyle.normal,
           fontWeight: FontWeight.bold,
-          margin: Margins.only(bottom: 8, top: 8),
+          margin: Margins.only(bottom: 4, top: 4),
+          textAlign: TextAlign.left,
+          color: isDark? Colors.white : pkpIndigo,
         ),
         "h2": Style(
-          color: headingColor,
-          fontSize: FontSize(22),
+          fontSize: FontSize(themeProvider.customFont.fontSize + 6),
+          fontFamily: themeProvider.customFont.fontFamily,
+          fontStyle: themeProvider.customFont.fontStyle == FontStyle.italic
+              ? flutter_html.FontStyle.italic
+              : flutter_html.FontStyle.normal,
           fontWeight: FontWeight.bold,
-          margin: Margins.only(bottom: 8, top: 8),
+          margin: Margins.only(bottom: 4, top: 4),
+          textAlign: TextAlign.left,
+          color: isDark? Colors.white : pkpIndigo,
+        ),
+        "h3": Style(
+          fontSize: FontSize(themeProvider.customFont.fontSize + 4),
+          fontFamily: themeProvider.customFont.fontFamily,
+          fontStyle: themeProvider.customFont.fontStyle == FontStyle.italic
+              ? flutter_html.FontStyle.italic
+              : flutter_html.FontStyle.normal,
+          fontWeight: FontWeight.bold,
+          margin: Margins.only(bottom: 10, top: 10),
+          textAlign: TextAlign.start,
+          letterSpacing: 1,
+          color: isDark? Colors.white : pkpIndigo,
         ),
         "p": Style(
+          textAlign: TextAlign.start,
+          margin: Margins.only(bottom: 0, top: 0),
+          color: isDark? Colors.white : pkpDark,
+        ),
+        "span": Style(
+          textAlign: TextAlign.start,
+          margin: Margins.only(bottom: 0, top: 0),
+          color: isDark? Colors.white : pkpDark,
+        ),
+        "i": Style(
+          margin: Margins.only(bottom: 0, top: 0),
+          color: isDark? Colors.white : pkpIndigo,
+        ),
+        "a": Style(
           textAlign: TextAlign.justify,
-          margin: Margins.only(bottom: 12),
+          margin: Margins.only(bottom: 0, top: 0),
+          color: isDark? Colors.white : pkpOcean,
+        ),
+        "b": Style(
+          fontWeight: FontWeight.bold, 
+          color: isDark? Colors.white : pkpDark,
+          ),
+        "strong": Style(
+          fontWeight: FontWeight.bold, 
+          color: isDark? Colors.white : pkpIndigo
         ),
       },
     );
   }
+
 }

@@ -90,14 +90,14 @@ class LanguageData {
       icon: 'assets/images/drapeau/sa.jpg',
       translation: 'ar',
     ),
-    LanguageData(
-      id: 9,
-      name: 'فارسی',
-      lang: 'ir-fa',
-      countryFip: 'ir',
-      icon: 'assets/images/drapeau/ir.jpg',
-      translation: 'fa',
-    ),
+    // LanguageData(
+    //   id: 9,
+    //   name: 'فارسی',
+    //   lang: 'ir-fa',
+    //   countryFip: 'ir',
+    //   icon: 'assets/images/drapeau/ir.jpg',
+    //   translation: 'fa',
+    // ),
     // LanguageData(
     //   id: 9,
     //   name: 'Deutsch',
