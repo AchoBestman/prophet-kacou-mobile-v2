@@ -171,7 +171,6 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
           ),
           onPressed: _toggleSearch,
         ),
-        if (_sermon!.audio != null && _sermon!.audio!.isNotEmpty)
           FutureBuilder<File>(
             future: localSermonPath(_sermon!, i18n.lang),
             builder: (context, snapshot) {
