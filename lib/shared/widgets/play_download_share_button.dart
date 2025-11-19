@@ -161,6 +161,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if(widget.data.content != null)
             ListTile(
               leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
               title: const Text('Partager en PDF'),
@@ -185,6 +186,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                   _shareAudio();
                 },
               ),
+            if(widget.data.content != null && widget.data.albumId == null)
             ListTile(
               leading: const Icon(Icons.book, color: Colors.blue),
               title: const Text('Partager en EPUB'),
@@ -383,9 +385,11 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
               );
               break;
             case ButtonType.share:
-              buttons.add(
-                _buildShareButton(isDark: isDark, isDownloaded: _isDownloaded),
-              );
+              if(widget.data.content != null || downloadHistory?.isCompleted == true){
+                  buttons.add(
+                  _buildShareButton(isDark: isDark, isDownloaded: _isDownloaded),
+                );
+              }
               break;
           }
         }

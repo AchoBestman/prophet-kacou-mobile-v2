@@ -14,6 +14,7 @@ import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
+import 'package:prophet_kacou/shared/widgets/song_pdf_widget.dart';
 import 'package:provider/provider.dart';
 
 class AlbumDetailPage extends StatefulWidget {
@@ -106,16 +107,12 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
   // Méthode pour générer le PDF
   Future<void> _generatePdf(dynamic sermon) async {
     if (mounted) {
-      //generateSermonPdf(context, sermon as Sermon);
+      generateSongPdf(context, sermon as Song);
     }
   }
 
   // Méthode pour générer l'EPUB (à implémenter)
   Future<void> _generateEpub(dynamic sermon) async {
-    // Implémentation future
-    if (mounted) {
-      //generateSermonEpub(context, sermon as Sermon);
-    }
   }
 
   Widget _buildSongCard(Song song, int index, bool isDark) {
@@ -134,12 +131,12 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
             child: Row(
               children: [
-                Icon(
-                  Icons.music_note_rounded,
-                  color: isCurrentSong ? Colors.orange : Colors.deepPurple,
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
+                // Icon(
+                //   Icons.music_note_rounded,
+                //   color: isCurrentSong ? Colors.orange : Colors.deepPurple,
+                //   size: 22,
+                // ),
+                // const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     '${index + 1} - ${song.title}',
@@ -165,6 +162,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                       albumId: null,
                       fileOriginalName: null,
                       localFullPath: snapshot.data!,
+                      content: song.content
                     );
 
                     return PlayDownloadShareButton(
@@ -179,9 +177,8 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                         showDownload: true,
                         showShare: true,
                         iconSize: 24.0,
-                        spacing: 6.0,
-                        defaultDarkColor: Colors.white,
-                        defaultLigthColor: Colors.white,
+                        spacing: 4.0,
+                        
                         order: [
                           ButtonType.play,
                           ButtonType.download,
@@ -191,7 +188,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                     );
                   },
                 ),
-                SizedBox.fromSize(size: Size(12, 0)),
+                SizedBox.fromSize(size: Size(2, 0)),
               ],
             ),
           ),

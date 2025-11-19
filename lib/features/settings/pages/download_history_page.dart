@@ -1,9 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
+import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/download_history.dart';
+import 'package:prophet_kacou/core/models/play_mode.dart';
+import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:prophet_kacou/core/models/song.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
+import 'package:prophet_kacou/shared/widgets/pdf_widget.dart';
+import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -18,7 +27,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  
+
   String _searchQuery = '';
   bool _isSearching = false;
   bool _isAscending = true;
@@ -58,7 +67,8 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
     var filtered = downloads.where((d) {
       if (_searchQuery.isEmpty) return true;
       return d.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (d.albumTitle?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+          (d.albumTitle?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+              false);
     }).toList();
 
     filtered.sort((a, b) {
@@ -148,7 +158,6 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                     ),
                   ),
                 ),
-                
               ],
             ),
           ),
@@ -184,10 +193,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                 const SizedBox(height: 16),
                 Text(
                   'Aucun téléchargement en cours',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -222,10 +228,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                 const SizedBox(height: 16),
                 Text(
                   'Aucun téléchargement terminé',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -255,6 +258,33 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
   ) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
+    // Méthode pour générer le PDF
+    Future<void> generatePdf(dynamic download) async {
+      if (mounted) {
+        if (download.albumId != null) {
+        } else {
+          generateSermonPdf(context, download as Sermon);
+        }
+      }
+    }
+
+    // Méthode pour générer l'EPUB (à implémenter)
+    Future<void> generateEpub(dynamic download) async {
+      // Implémentation future
+      if (mounted) {
+        if (download.albumId != null) {
+        } else {
+          generateSermonEpub(context, download as Sermon);
+        }
+      }
+    }
+
+    // Méthode pour générer l'EPUB (à implémenter)
+    Future<File> localFilePath(DownloadHistory download) async {
+      // Implémentation future
+      return download.filePath;
+    }
+
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
@@ -264,7 +294,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
         side: BorderSide(color: Colors.black12, width: 0.5),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(4.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -274,17 +304,17 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                   download.isCompleted
                       ? Icons.check_circle_rounded
                       : download.isFailed
-                          ? Icons.error_rounded
-                          : download.isCancelled
-                              ? Icons.cancel_rounded
-                              : Icons.downloading_rounded,
+                      ? Icons.error_rounded
+                      : download.isCancelled
+                      ? Icons.cancel_rounded
+                      : Icons.downloading_rounded,
                   color: download.isCompleted
                       ? Colors.green
                       : download.isFailed
-                          ? Colors.red
-                          : download.isCancelled
-                              ? Colors.orange
-                              : Colors.blue,
+                      ? Colors.red
+                      : download.isCancelled
+                      ? Colors.orange
+                      : Colors.blue,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -318,15 +348,56 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                     tooltip: 'Annuler',
                   )
                 else
-                  IconButton(
-                    icon: const Icon(Icons.delete_rounded),
-                    color: Colors.grey,
-                    onPressed: () => provider.deleteFromHistory(download.id),
-                    tooltip: 'Supprimer',
+                  Row(
+                    children: [
+                      FutureBuilder<File>(
+                        future: localFilePath(download),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final audioItem = AudioItem(
+                            id: int.parse(download.id),
+                            title: download.title,
+                            audioUrl: download.audioUrl,
+                            albumId: null,
+                            fileOriginalName: null,
+                            localFullPath: snapshot.data!,
+                            content: download.title
+                          );
+
+                          return PlayDownloadShareButton(
+                            data: audioItem,
+                            type: download.albumId != null
+                                ? AudioFolder.hymns
+                                : AudioFolder.sermons,
+                            extension: FileExtension.mp3,
+                            onGeneratePdf: generatePdf,
+                            onGenerateEpub: generateEpub,
+                            config: const ButtonConfig(
+                              showPlay: true,
+                              showDownload: true,
+                              showShare: true,
+                              iconSize: 24.0,
+                              spacing: 6.0,
+                              order: [ButtonType.play, ButtonType.share],
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_rounded),
+                        color: Colors.grey,
+                        onPressed: () =>
+                            provider.deleteFromHistory(download.id),
+                        tooltip: 'Supprimer',
+                      ),
+                    ],
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 0),
             if (download.isInProgress)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,17 +442,14 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                   ),
                 ],
               ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 0),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (download.completedAt != null)
                   Text(
                     'Téléchargé le: ${dateFormat.format(download.completedAt!)}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                   ),
               ],
             ),
@@ -390,10 +458,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   'Erreur: ${download.error}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.red,
-                  ),
+                  style: const TextStyle(fontSize: 10, color: Colors.red),
                 ),
               ),
           ],

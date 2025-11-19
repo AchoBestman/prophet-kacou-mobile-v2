@@ -185,6 +185,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                 albumId: null,
                 fileOriginalName: null,
                 localFullPath: snapshot.data!,
+                content: _sermon!.title // just to make share pdf available
               );
 
               return PlayDownloadShareButton(
