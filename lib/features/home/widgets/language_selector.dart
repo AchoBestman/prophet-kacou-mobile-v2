@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/app/device_config.dart';
 import 'package:prophet_kacou/i18n/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
@@ -13,6 +14,16 @@ class LanguageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final languages = LanguageData.homeLanguages();
     final languageProvider = Provider.of<LanguageProvider>(context);
+    final config = getConfig(context);
+    
+    final double flagDefaultSize = config.flagDefaultSize;
+    final double flagSpacing = config.flagSpacing;
+    final double flagRunSpacing= config.flagRunSpacing;
+    final double flagIconWidth= flagDefaultSize + 27;
+    final double textIconWidth= flagDefaultSize + 37;
+    final double flagIconHeight= flagDefaultSize + 7;
+    final double flagImagewidth =  flagDefaultSize + 20;
+    final double flagImageHeight= flagDefaultSize;
 
     Future<void> shareLink() async {
       await Share.shareUri(
@@ -44,8 +55,8 @@ class LanguageSelector extends StatelessWidget {
               ),
               const SizedBox(height: 1),
               Wrap(
-                spacing: 4,
-                runSpacing: 3,
+                spacing: flagSpacing,
+                runSpacing: flagRunSpacing,
                 alignment: WrapAlignment.start,
                 children: languages.map((item) {
                   final isSelected =
@@ -70,23 +81,23 @@ class LanguageSelector extends StatelessWidget {
                     },
                     child: Container(
                       width: item.icon != "langues" && item.icon != "share"
-                          ? 60
-                          : 70,
-                      height: 40,
+                          ? flagIconWidth
+                          : textIconWidth,
+                      height: flagIconHeight,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? pkpIndigo.withOpacity(0.1)
+                            ? pkpIndigo.withValues(alpha: 0.1)
                             : Colors.white,
                         border: Border.all(
                           color: isSelected
                               ? pkpIndigo
-                              : pkpIndigo.withOpacity(0.5),
+                              : pkpIndigo.withValues(alpha: 0.5),
                           width: isSelected ? 0 : 1,
                         ),
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: Colors.grey.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -97,8 +108,8 @@ class LanguageSelector extends StatelessWidget {
                           borderRadius: BorderRadius.circular(2),
                           child: Image.asset(
                             item.icon,
-                            width: 53,
-                            height: 33,
+                            width: flagImagewidth,
+                            height: flagImageHeight,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(

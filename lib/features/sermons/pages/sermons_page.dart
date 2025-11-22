@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,16 +6,19 @@ import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
+import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
+import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
-import 'package:prophet_kacou/features/sermons/widgets/read_passage_widget.dart'; // ✅ Import ajouté
+import 'package:prophet_kacou/features/sermons/widgets/read_passage_widget.dart';
 import 'package:prophet_kacou/features/sermons/widgets/search_passage_widget.dart';
 import 'package:prophet_kacou/features/settings/pages/update_button.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 import 'package:prophet_kacou/shared/widgets/pdf_widget.dart';
 import 'package:prophet_kacou/shared/widgets/play_download_share_button.dart';
+import 'package:provider/provider.dart';
 
 class SermonsPage extends StatefulWidget {
   const SermonsPage({super.key});
@@ -24,26 +28,30 @@ class SermonsPage extends StatefulWidget {
 }
 
 class _SermonsPageState extends State<SermonsPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   bool ascending = true;
   String searchQuery = '';
   late TabController _tabController;
   final SermonRepository repository = SermonRepository();
 
   List<Sermon> sermonsList = [];
-  bool isLoading = true;
+  bool isLoading = false; // ✅ Changé à false par défaut
+  bool isInitialLoad = true; // ✅ Nouveau flag pour le premier chargement
 
-  // ✅ Clé pour accéder au widget SearchPassageWidget
-  final GlobalKey<SearchPassageWidgetState> _searchPassageKey = GlobalKey();
+  String lastSearchQuery = '';
 
-  // ✅ Variable pour stocker la recherche de passage
-  String _passageSearchQuery = '';
+  @override
+  bool get wantKeepAlive => true; // ✅ Garder l'état de la page en vie
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadSermons();
+
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSermons();
+    });
   }
 
   @override
@@ -53,7 +61,11 @@ class _SermonsPageState extends State<SermonsPage>
   }
 
   Future<void> _loadSermons() async {
-    setState(() => isLoading = true);
+    // ✅ Ne montrer le loading que si c'est le premier chargement
+    if (isInitialLoad) {
+      setState(() => isLoading = true);
+    }
+
     try {
       final result = await repository.findAll(
         lang: i18n.lang,
@@ -61,12 +73,20 @@ class _SermonsPageState extends State<SermonsPage>
         orderBy: 'number ${ascending ? "ASC" : "DESC"}',
       );
 
-      setState(() {
-        sermonsList = result;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          sermonsList = result;
+          isLoading = false;
+          isInitialLoad = false;
+        });
+      }
     } catch (e) {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          isInitialLoad = false;
+        });
+      }
     }
   }
 
@@ -79,124 +99,225 @@ class _SermonsPageState extends State<SermonsPage>
 
   void _onSearchChanged(String query) {
     setState(() {
-      _passageSearchQuery = query;
+      lastSearchQuery = query;
     });
-    _searchPassageKey.currentState?.setSearchQuery(query);
   }
 
-  // Méthode pour générer le PDF
   Future<void> _generatePdf(dynamic sermon) async {
     if (mounted) {
       generateSermonPdf(context, sermon as Sermon);
     }
   }
 
-  // Méthode pour générer l'EPUB (à implémenter)
   Future<void> _generateEpub(dynamic sermon) async {
-    // Implémentation future
     if (mounted) {
       generateSermonEpub(context, sermon as Sermon);
     }
   }
 
   Widget _buildSermonCard(Sermon sermon, bool isDark) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SermonDetailPage(sermonNumber: sermon.number),
+    return Consumer2<AudioPlayerProvider, DownloadHistoryProvider>(
+      builder: (context, audioProvider, downloadProvider, child) {
+        final isCurrentSermon = audioProvider.currentAudioId == sermon.number;
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SermonDetailPage(sermonNumber: sermon.number),
+              ),
+            );
+          },
+          child: Card(
+            color: isDark ? pkpDark : pkpSand,
+            margin: const EdgeInsets.symmetric(vertical: 1),
+            elevation: 1,
+            shape: const RoundedRectangleBorder(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${sermon.chapter}: ${sermon.title}",
+                    style: TextStyle(
+                      fontSize: 15.8,
+                      //color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.normal,
+                      color: isCurrentSermon
+                          ? Colors.orange
+                          : Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(
+                    mainAxisAlignment: sermon.publicationDate != null
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.end,
+                    children: [
+                      if (sermon.publicationDate != null)
+                        Text(
+                          sermon.publicationDate!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? pkpOcean : pkpIndigo,
+                          ),
+                        ),
+
+                      FutureBuilder<File>(
+                        future: localSermonPath(sermon, i18n.lang),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final audioItem = AudioItem(
+                            id: sermon.number,
+                            title: sermonTitleFormatter(sermon),
+                            audioUrl: sermon.audio!,
+                            albumId: null,
+                            fileOriginalName: null,
+                            localFullPath: snapshot.data!,
+                            content: sermon.title,
+                          );
+
+                          return PlayDownloadShareButton(
+                            data: audioItem,
+                            type: AudioFolder.sermons,
+                            extension: FileExtension.mp3,
+                            sourceData: sermon,
+                            onGeneratePdf: _generatePdf,
+                            onGenerateEpub: _generateEpub,
+                            config: const ButtonConfig(
+                              showPlay: true,
+                              showDownload: true,
+                              showShare: true,
+                              iconSize: 24.0,
+                              spacing: 4.0,
+                              mode: DisplayMode.menu,
+                              order: [
+                                ButtonType.play,
+                                ButtonType.download,
+                                ButtonType.share,
+                                ButtonType.delete,
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
-      child: Card(
-        color: isDark ? pkpDark : pkpSand,
-        margin: const EdgeInsets.symmetric(vertical: 1),
-        elevation: 1,
-        shape: const RoundedRectangleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "${sermon.chapter}: ${sermon.title}",
-                style: TextStyle(
-                  fontSize: 15.8,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  fontWeight: FontWeight.w600,
-                  fontStyle: FontStyle.normal
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildSermonsList(bool isDark) {
+    // ✅ Si c'est le premier chargement ET qu'on est en train de charger, afficher le loader
+    if (isInitialLoad && isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // ✅ Si pas de sermons (après chargement), afficher un message
+    if (sermonsList.isEmpty && !isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.library_books_outlined,
+              size: 64,
+              color: isDark ? Colors.grey[700] : Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              searchQuery.isEmpty ? 'No sermons available' : 'No sermons found',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
-
-              // 🔹 Boutons en bas à droite
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (sermon.publicationDate != null)
-                    Text(
-                      sermon.publicationDate!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? pkpOcean : pkpIndigo,
-                      ),
-                    ),
-                  if (sermon.audio != null)
-                    FutureBuilder<File>(
-                      future: localSermonPath(sermon, i18n.lang),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const SizedBox.shrink();
-                        }
-
-                        final audioItem = AudioItem(
-                          id: sermon.id,
-                          title: sermonTitleFormatter(sermon),
-                          audioUrl: sermon.audio!,
-                          albumId: null,
-                          fileOriginalName: null,
-                          localFullPath: snapshot.data!,
-                          content: sermon.title // just to make share pdf available
-                        );
-
-                        return PlayDownloadShareButton(
-                          data: audioItem,
-                          type: AudioFolder.sermons,
-                          extension: FileExtension.mp3,
-                          sourceData:
-                              sermon, // Passer le sermon pour le partage
-                          onGeneratePdf: _generatePdf,
-                          onGenerateEpub: _generateEpub,
-                          config: const ButtonConfig(
-                            showPlay: true,
-                            showDownload: true,
-                            showShare: true,
-                            iconSize: 24.0,
-                            spacing: 4.0,
-                            //defaultDarkColor: pkpOcean,
-                            //defaultLigthColor: pkpIndigo,
-                            order: [
-                              ButtonType.play, // ✅ Play en premier
-                              ButtonType.download, // ✅ Download en deuxième
-                              ButtonType.share, // ✅ Partage en dernier
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      );
+    }
+
+    // ✅ Afficher la liste avec un indicateur de chargement en haut si on recharge
+    return RefreshIndicator(
+      onRefresh: _loadSermons,
+      child: Stack(
+        children: [
+          ListView.builder(
+            padding: EdgeInsets.only(top: isLoading && !isInitialLoad ? 48 : 0),
+            itemCount: sermonsList.length,
+            itemBuilder: (context, index) {
+              final sermon = sermonsList[index];
+              return _buildSermonCard(sermon, isDark);
+            },
+          ),
+          // ✅ Petit indicateur de chargement en haut pendant les rechargements
+          if (isLoading && !isInitialLoad)
+            Positioned(
+              top: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isDark ? Colors.lightBlue : Colors.blue,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Loading...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey[300] : Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // ✅ Important pour AutomaticKeepAliveClientMixin
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -206,20 +327,18 @@ class _SermonsPageState extends State<SermonsPage>
           MainLayout(
             title: i18n.tr("home.sermon"),
             actions: [
-              // 🔍 Recherche
               IconButton(
                 icon: const Icon(Icons.search, color: Colors.white),
                 onPressed: () async {
                   final query = await showSearch<String>(
                     context: context,
-                    delegate: SermonSearchDelegate(onSearch: _onSearchChanged),
+                    delegate: SermonSearchDelegate(onSearch: _onSearchChanged, initialQuery: lastSearchQuery),
                   );
                   if (query != null) {
                     _onSearchChanged(query);
                   }
                 },
               ),
-              // 🔽 Tri
               IconButton(
                 icon: Icon(
                   ascending ? Icons.arrow_downward : Icons.arrow_upward,
@@ -249,24 +368,8 @@ class _SermonsPageState extends State<SermonsPage>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      RefreshIndicator(
-                        onRefresh: _loadSermons,
-                        child: isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : ListView.builder(
-                                padding: const EdgeInsets.all(0),
-                                itemCount: sermonsList.length,
-                                itemBuilder: (context, index) {
-                                  final sermon = sermonsList[index];
-                                  return _buildSermonCard(sermon, isDark);
-                                },
-                              ),
-                      ),
-                      const ReadPassageWidget(), // ✅ Widget intégré
-                      // SearchPassageWidget(
-                      //   key: _searchPassageKey,
-                      //   initialSearchQuery: _passageSearchQuery,
-                      // ),
+                      _buildSermonsList(isDark),
+                      const ReadPassageWidget(),
                     ],
                   ),
                 ),
@@ -282,33 +385,60 @@ class _SermonsPageState extends State<SermonsPage>
 /// 🔍 Délégué pour la recherche
 class SermonSearchDelegate extends SearchDelegate<String> {
   final Function(String) onSearch;
+  final String initialQuery;
+  Timer? _debounce;
 
-  SermonSearchDelegate({required this.onSearch});
+  SermonSearchDelegate({
+    required this.onSearch,
+    required this.initialQuery,
+  }) {
+    query = initialQuery ; // Injecter l’ancienne recherche
+  }
 
-  @override
-  List<Widget>? buildActions(BuildContext context) => [
-    IconButton(
-      icon: const Icon(Icons.clear),
-      onPressed: () {
-        query = '';
-        onSearch(query);
-      },
-    ),
-  ];
+  void _onQueryChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-  @override
-  Widget? buildLeading(BuildContext context) => IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () => close(context, ''),
-  );
-
-  @override
-  Widget buildResults(BuildContext context) {
-    onSearch(query);
-    close(context, query);
-    return Container();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      onSearch(query);
+    });
   }
 
   @override
-  Widget buildSuggestions(BuildContext context) => Container();
+  set query(String value) {
+    super.query = value;
+    _onQueryChanged();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () {
+            query = '';
+            onSearch(query);
+          },
+        ),
+      ];
+
+  @override
+  Widget? buildLeading(BuildContext context) => IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => close(context, query),
+      );
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return SearchPassageWidget(initialSearchQuery: query);
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return SearchPassageWidget(initialSearchQuery: query);
+  }
 }

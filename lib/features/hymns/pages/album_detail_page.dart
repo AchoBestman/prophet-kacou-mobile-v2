@@ -131,19 +131,19 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
             child: Row(
               children: [
-                // Icon(
-                //   Icons.music_note_rounded,
-                //   color: isCurrentSong ? Colors.orange : Colors.deepPurple,
-                //   size: 22,
-                // ),
-                // const SizedBox(width: 10),
+                Icon(
+                  Icons.music_note_rounded,
+                  color: isCurrentSong ? Colors.orange : Colors.deepPurple,
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     '${index + 1} - ${song.title}',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
-                      color: isCurrentSong ? Colors.orange : null,
+                      color: isCurrentSong ? Colors.orange : Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -159,7 +159,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                       id: song.id,
                       title: song.title,
                       audioUrl: song.audio,
-                      albumId: null,
+                      albumId: song.albumId,
                       fileOriginalName: null,
                       localFullPath: snapshot.data!,
                       content: song.content
@@ -178,11 +178,12 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                         showShare: true,
                         iconSize: 24.0,
                         spacing: 4.0,
-                        
+                        mode: DisplayMode.mix,
                         order: [
                           ButtonType.play,
                           ButtonType.download,
                           ButtonType.share,
+                          ButtonType.delete
                         ],
                       ),
                     );

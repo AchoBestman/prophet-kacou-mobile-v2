@@ -11,6 +11,7 @@ class Verse {
   final String? linkAtContent;
   final String? urlContent;
   final int sermonId;
+  final int? sermonNumber;
   final String? title;
   final List<dynamic>? verseLinks;
   List<ParsedReference>? concordances;
@@ -27,7 +28,8 @@ class Verse {
     this.title,
     this.verseLinks,
     this.concordances,
-    this.concordance
+    this.concordance,
+    this.sermonNumber
   });
 
   factory Verse.fromMap(Map<String, dynamic> map) {
@@ -43,6 +45,7 @@ class Verse {
     return Verse(
       id: map['id'],
       number: map['number'],
+      sermonNumber: map['sermonNumber'],
       content: map['content'],
       info: map['info'],
       linkAtContent: map['link_at_content'],

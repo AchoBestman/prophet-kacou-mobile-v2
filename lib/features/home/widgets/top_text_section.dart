@@ -8,18 +8,13 @@ class TopTextSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    // Déterminer le type d'écran
-    final DeviceType deviceType = getDeviceType(screenWidth, screenHeight);
-    
     // Configuration selon le type d'écran
-    final config = getConfig(deviceType);
+    final config = getConfig(context);
     
     return Padding(
       padding: EdgeInsets.only(
         top: config.imageTopTitleMargin,
-        right: 85,
+        right: 95,
       ), // ajoute un padding gauche si nécessaire
       child: Column(
         crossAxisAlignment:
@@ -50,7 +45,7 @@ class TopTextSection extends StatelessWidget {
             i18n.tr('home.third_image_title'),
             style: const TextStyle(
               color: Color(0xFFFFB300),
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.7,
             ),

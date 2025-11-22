@@ -106,6 +106,7 @@ class _PhotosPageState extends State<PhotosPage> {
 
     return MainLayout(
       title: i18n.tr('home.photos'),
+      isHomePage: false,
       body: Column(
         children: [
           if (_isSearching)

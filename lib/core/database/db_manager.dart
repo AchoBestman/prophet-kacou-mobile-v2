@@ -62,11 +62,13 @@ class DBManager {
 
   /// Ouvre une base de données et la met en cache
   Future<Database> openDB(String relativePath) async {
+    
     if (_dbCache.containsKey(relativePath)) {
       return _dbCache[relativePath]!;
     }
 
     final path = await PathUtils.getDBPath(relativePath);
+    print("relativePath: $relativePath _dbCache, path $path");
     if (!await File(path).exists()) {
       throw Exception("❌ Base de données introuvable : $relativePath");
     }

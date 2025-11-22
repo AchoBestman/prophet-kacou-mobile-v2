@@ -54,28 +54,38 @@ class SermonRepository {
 
    /// 🔹 Récupérer tous les sermons actifs avec filtres
   Future<List<Verse>> findAllVerses({
-    String lang = '',
-    String? searchQuery,
-    String orderBy = '"number" ASC',
-  }) async {
-    final db = await _dbManager.openLanguageDB(lang);
-    final where = <String>[];
-    final args = <dynamic>[];
+  String lang = '',
+  String? searchQuery,
+  String orderBy = 'sermons.number ASC, verses.number ASC',
+}) async {
+  final db = await _dbManager.openLanguageDB(lang);
+  final where = <String>[];
+  final args = <dynamic>[];
 
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      where.add('(title LIKE ? OR content LIKE ?)');
-      args.add('%$searchQuery%');
-      args.add('%$searchQuery%');
-    }
-
-    final whereClause = where.isNotEmpty ? 'WHERE ${where.join(' AND ')}' : '';
-    final results = await db.rawQuery(
-      'SELECT * FROM verses $whereClause ORDER BY $orderBy',
-      args,
-    );
-
-    return results.map((r) => Verse.fromMap(r)).toList();
+  if (searchQuery != null && searchQuery.isNotEmpty) {
+    where.add('(verses.title LIKE ? OR verses.content LIKE ?)');
+    args.add('%$searchQuery%');
+    args.add('%$searchQuery%');
   }
+
+  final whereClause = where.isNotEmpty ? 'WHERE ${where.join(' AND ')}' : '';
+
+  final results = await db.rawQuery(
+    '''
+    SELECT 
+      verses.*, 
+      sermons.number AS sermonNumber
+    FROM verses
+    INNER JOIN sermons ON sermons.id = verses.sermon_id
+    $whereClause
+    ORDER BY $orderBy
+    ''',
+    args,
+  );
+
+  return results.map((r) => Verse.fromMap(r)).toList();
+}
+
 
   /// 🔹 Récupérer un sermon par ID avec toutes ses relations
   Future<Sermon?> findByNumber(int number, String lang) async {

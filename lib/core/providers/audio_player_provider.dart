@@ -1,13 +1,24 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
+import 'package:prophet_kacou/core/models/sermon.dart';
+import 'package:prophet_kacou/core/models/song.dart';
+import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
+import 'package:prophet_kacou/core/repositories/song.dart';
 import 'package:prophet_kacou/core/utils/connection.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:share_plus/share_plus.dart';
 
 class AudioPlayerProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  BuildContext? _context;
+  final DownloadHistoryProvider _historyProvider = DownloadHistoryProvider();
+  final SongRepository _songRepository = SongRepository();
 
   AudioItem? _currentAudio;
   PlayMode _repeatMode = PlayMode.none;
@@ -15,6 +26,8 @@ class AudioPlayerProvider with ChangeNotifier {
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   int? _firstAudioId;
+  Sermon? _sermon;
+  Song? _song;
 
   // Getters
   AudioPlayer get audioPlayer => _audioPlayer;
@@ -59,8 +72,11 @@ class AudioPlayerProvider with ChangeNotifier {
     BuildContext context,
     AudioItem audio, {
     bool autoPlay = false,
+    String? language,
   }) async {
     try {
+      _context = context;
+
       if (!await ConnectionUtils.hasConnection() &&
           !await localFileExit(audio)) {
         if (context.mounted) ConnectionUtils.showNoConnectionMessage(context);
@@ -101,10 +117,9 @@ class AudioPlayerProvider with ChangeNotifier {
 
   Future<void> shareAudio(AudioItem audio) async {
     if (await localFileExit(audio)) {
-      await Share.shareXFiles(
-        [XFile(audio.localFullPath!.path)],
-        text: audio.title,
-      );
+      await Share.shareXFiles([
+        XFile(audio.localFullPath!.path),
+      ], text: audio.title);
     }
   }
 
@@ -170,22 +185,159 @@ class AudioPlayerProvider with ChangeNotifier {
   }
 
   Future<void> playNext({bool shouldLoop = false}) async {
-    if (_currentAudio == null) return;
+    if (_currentAudio == null || _context == null) return;
 
     try {
+      final audioId = _currentAudio!.id;
+
+      // Initialiser firstAudioId si nécessaire
+      _firstAudioId ??= audioId;
+
+      // Vérifier d'abord dans l'historique des téléchargements
+      if (_currentAudio!.fileOriginalName != null) {
+        final download = _historyProvider.getHistory(
+          audioId,
+          LookupHistooryMode.next,
+          _repeatMode == PlayMode.all ? _firstAudioId : null,
+        );
+
+        if (download != null) {
+          final audioItem = AudioItem(
+            id: extractNumberValueFromAudioFormattedId(download.id),
+            title: download.title,
+            audioUrl: download.audioUrl,
+            albumId: download.albumId,
+            fileOriginalName: null,
+            localFullPath: download.filePath,
+            content: download.title,
+          );
+          await setAudio(_context!, audioItem, autoPlay: true);
+          return;
+        }
+      }
+
+      // Sinon, chercher dans la base de données
+
+      final songMap = await _songRepository.findNextSong(
+        lang: i18n.lang,
+        id: audioId,
+        albumId: _currentAudio!.albumId,
+        firstAudioId: _repeatMode == PlayMode.all ? _firstAudioId : null,
+      );
+
+      if (songMap != null) {
+        _song = songMap['album_id'] != null ? Song.fromMap(songMap) : null;
+        _sermon = songMap['album_id'] == null ? Sermon.fromMap(songMap) : null;
+
+        final String title = _sermon != null
+            ? sermonTitleFormatter(_sermon!)
+            : _song!.title;
+        final File filePath = _sermon != null
+            ? await localSermonPath(_sermon!, i18n.lang)
+            : await localSongPath(_song!, i18n.lang);
+        final int id = _sermon != null ? _sermon!.id : _song!.id;
+        final int? albumId = _sermon != null ? null : _song!.albumId;
+        final String? audioUrl = _sermon != null ? _sermon!.audio : _song!.audio;
+        final String? content = _sermon != null ? _sermon!.title : _song!.content;
+
+        final audioItem = AudioItem(
+          id: id,
+          title: title,
+          audioUrl: audioUrl ?? "",
+          albumId: albumId,
+          fileOriginalName: null,
+          localFullPath: filePath,
+          content: content,
+        );
+
+        await setAudio(_context!, audioItem, autoPlay: true);
+      }
       debugPrint('Lecture suivante...');
     } catch (e) {
       debugPrint('Erreur playNext: $e');
+      if (_context != null && _context!.mounted) {
+        NotificactionService.showErrorMessage(
+          _context!,
+          'Erreur lors de la lecture suivante: $e',
+        );
+      }
     }
   }
 
   Future<void> playPrevious() async {
-    if (_currentAudio == null) return;
+    if (_currentAudio == null || _context == null) return;
 
     try {
+      final audioId = _currentAudio!.id;
+
+      // Vérifier d'abord dans l'historique des téléchargements
+      if (_currentAudio!.fileOriginalName != null) {
+        final download = _historyProvider.getHistory(
+          audioId,
+          LookupHistooryMode.previous,
+          null,
+        );
+
+        if (download != null) {
+          final audioItem = AudioItem(
+            id: extractNumberValueFromAudioFormattedId(download.id),
+            title: download.title,
+            audioUrl: download.audioUrl,
+            albumId: download.albumId,
+            fileOriginalName: null,
+            localFullPath: download.filePath,
+            content: download.title,
+          );
+          await setAudio(_context!, audioItem, autoPlay: true);
+          return;
+        }
+      }
+
+      // Sinon, chercher dans la base de données
+
+      final songMap = await _songRepository.findPreviousSong(
+        lang: i18n.lang,
+        id: audioId,
+        albumId: _currentAudio!.albumId,
+      );
+
+      if (songMap != null) {
+        _song = songMap['album_id'] != null ? Song.fromMap(songMap) : null;
+        _sermon = songMap['album_id'] == null ? Sermon.fromMap(songMap) : null;
+
+         final String title = _sermon != null
+            ? sermonTitleFormatter(_sermon!)
+            : _song!.title;
+        final File filePath = _sermon != null
+            ? await localSermonPath(_sermon!, i18n.lang)
+            : await localSongPath(_song!, i18n.lang);
+        final int id = _sermon != null ? _sermon!.id : _song!.id;
+        final int? albumId = _sermon != null ? null : _song!.albumId;
+        final String? audioUrl = _sermon != null ? _sermon!.audio : _song!.audio;
+        final String? content = _sermon != null ? _sermon!.title : _song!.content;
+
+        final audioItem = AudioItem(
+          id: id,
+          title: title,
+          audioUrl: audioUrl ?? "",
+          albumId: albumId,
+          fileOriginalName: null,
+          localFullPath: filePath,
+          content: content,
+        );
+
+        await setAudio(_context!, audioItem, autoPlay: true);
+      }
+
       debugPrint('Lecture précédente...');
     } catch (e) {
       debugPrint('Erreur playPrevious: $e');
+      if (_context != null && _context!.mounted) {
+        NotificactionService.showErrorMessage(
+          _context!,
+          'Erreur lors de la lecture précédente: $e',
+        );
+      }
     }
   }
 

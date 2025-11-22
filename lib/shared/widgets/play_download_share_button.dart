@@ -1,35 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
+import 'package:prophet_kacou/core/utils/alert_dialog.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:provider/provider.dart';
 
-enum ButtonType { play, download, share, open }
+enum ButtonType { play, download, share, open, delete }
+
+enum DisplayMode { full, menu, mix }
 
 class ButtonConfig {
   final bool showPlay;
   final bool showDownload;
   final bool showShare;
   final bool showOpen;
+  final bool showDelete;
+  final bool isFromHistory;
   final List<ButtonType> order;
   final double iconSize;
   final double spacing;
   final Color defaultDarkColor;
   final Color defaultLigthColor;
+  final DisplayMode mode;
+  final ButtonType? primaryButton;
 
   const ButtonConfig({
     this.showPlay = true,
+    this.isFromHistory = false,
     this.showDownload = true,
     this.showShare = true,
+    this.showDelete = true,
     this.showOpen = false,
-    this.order = const [ButtonType.play, ButtonType.download, ButtonType.share],
+    this.order = const [
+      ButtonType.play,
+      ButtonType.download,
+      ButtonType.share,
+      ButtonType.delete,
+    ],
     this.iconSize = 24.0,
     this.spacing = 4.0,
     this.defaultDarkColor = Colors.lightBlue,
     this.defaultLigthColor = Colors.blue,
+    this.mode = DisplayMode.full,
+    this.primaryButton,
   });
 }
 
@@ -37,7 +56,7 @@ class PlayDownloadShareButton extends StatefulWidget {
   final AudioItem data;
   final AudioFolder type;
   final FileExtension extension;
-  final dynamic sourceData; // Sermon ou autre objet source pour le partage
+  final dynamic sourceData;
   final Function(dynamic)? onGeneratePdf;
   final Function(dynamic)? onGenerateEpub;
   final ButtonConfig config;
@@ -65,6 +84,12 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
   final int size = 4;
   final int borderRadius = 20;
 
+  // ✅ Variables pour gérer les états de chargement
+  bool _isDeleting = false;
+  bool _isOpening = false;
+  bool _isSharing = false;
+  bool _isDownloadingManual = false;
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +105,12 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         });
       }
     }
+  }
+
+  // ✅ Méthode pour rafraîchir l'état du fichier
+  Future<void> _refreshFileStatus() async {
+    if (!mounted) return;
+    await _checkIfDownloaded();
   }
 
   void _playAudio() async {
@@ -98,28 +129,124 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
   }
 
   void _shareAudio() async {
-    final audioProvider = Provider.of<AudioPlayerProvider>(
-      context,
-      listen: false,
-    );
+    // ✅ Empêcher les clics multiples
+    if (_isSharing) return;
 
-    audioProvider.shareAudio(widget.data);
+    setState(() {
+      _isSharing = true;
+    });
+
+    try {
+      final audioProvider = Provider.of<AudioPlayerProvider>(
+        context,
+        listen: false,
+      );
+
+      await audioProvider.shareAudio(widget.data);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSharing = false;
+        });
+      }
+    }
   }
 
   Future<void> _openLocalFile() async {
+    // ✅ Empêcher les clics multiples
+    if (_isOpening) return;
     if (widget.data.localFullPath == null) return;
 
     final file = widget.data.localFullPath!;
-    if (!await file.exists()) return;
+    if (!await file.exists()) {
+      await _refreshFileStatus();
+      return;
+    }
 
-    // Ferme le modal d'abord si présent
-    widget.onClose?.call();
+    setState(() {
+      _isOpening = true;
+    });
 
-    await OpenFilex.open(file.path);
+    try {
+      widget.onClose?.call();
+      await OpenFilex.open(file.path);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOpening = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteLocalFile() async {
+    // ✅ Empêcher les clics multiples
+    if (_isDeleting) return;
+    if (widget.data.localFullPath == null) return;
+
+    final file = widget.data.localFullPath!;
+    if (!await file.exists() || !mounted) {
+      await _refreshFileStatus();
+      return;
+    }
+
+    final confirmed = await DialogUtils.confirmDialog(
+      context,
+      i18n.tr('button.confirm_action'),
+    );
+
+    if (!confirmed || !mounted) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      widget.onClose?.call();
+
+      final downloadProvider = Provider.of<DownloadHistoryProvider>(
+        context,
+        listen: false,
+      );
+
+      await downloadProvider.deleteFromHistory(widget.data.id.toString());
+
+      if (!widget.config.isFromHistory) {
+        await file.delete();
+        if (mounted) {
+          NotificactionService.showSuccessMessage(
+            context,
+            "${widget.data.title} a été supprimé avec succès!",
+          );
+        }
+      }
+
+      // ✅ Rafraîchir l'état après suppression
+      await _refreshFileStatus();
+    } catch (e) {
+      if (mounted) {
+        NotificactionService.showErrorMessage(
+          context,
+          'Erreur lors de la suppression: $e',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+      }
+    }
   }
 
   Future<void> _downloadAudio() async {
+    // ✅ Empêcher les clics multiples
+    if (_isDownloadingManual) return;
     if (widget.data.audioUrl.isEmpty) return;
+
+    setState(() {
+      _isDownloadingManual = true;
+    });
 
     try {
       if (!mounted) return;
@@ -129,8 +256,14 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         listen: false,
       );
 
+      final modelId = widget.data.albumId != null
+          ? songIdInDownloadProviderFormatter(widget.data.id)
+          : widget.data.fileOriginalName != null
+          ? "other_${widget.data.id}"
+          : sermonIdInDownloadProviderFormatter(widget.data.id);
+
       await downloadProvider.startDownload(
-        id: widget.data.id.toString(),
+        id: modelId,
         title: widget.data.title,
         audioUrl: widget.data.audioUrl,
         filePath: widget.data.localFullPath!,
@@ -145,6 +278,12 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         context,
         'Erreur de téléchargement: $e',
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDownloadingManual = false;
+        });
+      }
     }
   }
 
@@ -161,18 +300,21 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if(widget.data.content != null)
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: const Text('Partager en PDF'),
-              onTap: () {
-                Navigator.pop(context);
-                widget.onClose?.call();
-                if (widget.onGeneratePdf != null) {
-                  widget.onGeneratePdf!(widget.sourceData);
-                }
-              },
-            ),
+            if (widget.data.content != null)
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                title: const Text('Partager en PDF'),
+                enabled: !_isSharing,
+                onTap: _isSharing
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        widget.onClose?.call();
+                        if (widget.onGeneratePdf != null) {
+                          widget.onGeneratePdf!(widget.sourceData);
+                        }
+                      },
+              ),
             if (isDownloaded)
               ListTile(
                 leading: const Icon(
@@ -180,30 +322,190 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                   color: Colors.red,
                 ),
                 title: const Text('Partager en Audio'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  widget.onClose?.call();
-                  _shareAudio();
-                },
+                enabled: !_isSharing,
+                onTap: _isSharing
+                    ? null
+                    : () async {
+                        Navigator.pop(context);
+                        widget.onClose?.call();
+                        _shareAudio();
+                      },
               ),
-            if(widget.data.content != null && widget.data.albumId == null)
-            ListTile(
-              leading: const Icon(Icons.book, color: Colors.blue),
-              title: const Text('Partager en EPUB'),
-              onTap: () {
-                Navigator.pop(context);
-                widget.onClose?.call();
-                if (widget.onGenerateEpub != null) {
-                  widget.onGenerateEpub!(widget.sourceData);
-                } else {
-                  NotificactionService.showSuccessMessage(
-                    context,
-                    'Génération EPUB en cours de développement',
-                  );
-                }
-              },
-            ),
+            if (widget.data.content != null && widget.data.albumId == null)
+              ListTile(
+                leading: const Icon(Icons.book, color: Colors.blue),
+                title: const Text('Partager en EPUB'),
+                enabled: !_isSharing,
+                onTap: _isSharing
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        widget.onClose?.call();
+                        if (widget.onGenerateEpub != null) {
+                          widget.onGenerateEpub!(widget.sourceData);
+                        } else {
+                          NotificactionService.showSuccessMessage(
+                            context,
+                            'Génération EPUB en cours de développement',
+                          );
+                        }
+                      },
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showActionsMenu({
+    required bool isCurrentAudio,
+    required bool isPlaying,
+    required bool isDark,
+    required bool isDownloading,
+    required double? downloadProgress,
+    required bool isDownloaded,
+    List<ButtonType>? excludeButtons,
+  }) {
+    final buttonsToShow = widget.config.order
+        .where((btn) => excludeButtons == null || !excludeButtons.contains(btn))
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: buttonsToShow.map((buttonType) {
+            switch (buttonType) {
+              case ButtonType.open:
+                if (!widget.config.showOpen || !_isDownloaded) {
+                  return const SizedBox.shrink();
+                }
+
+                return ListTile(
+                  leading: _isOpening
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.open_in_new_rounded),
+                  title: const Text('Ouvrir le fichier'),
+                  enabled: !_isOpening,
+                  onTap: _isOpening
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _openLocalFile();
+                        },
+                );
+
+              case ButtonType.delete:
+                if (!widget.config.showDelete || !_isDownloaded) {
+                  return const SizedBox.shrink();
+                }
+                return ListTile(
+                  leading: _isDeleting
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.delete, color: Colors.red),
+                  title: const Text("Supprimer l'audio"),
+                  enabled: !_isDeleting,
+                  onTap: _isDeleting
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _deleteLocalFile();
+                        },
+                );
+
+              case ButtonType.play:
+                if (!widget.config.showPlay || widget.data.audioUrl.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return ListTile(
+                  leading: Icon(
+                    isPlaying
+                        ? Icons.pause_circle_rounded
+                        : Icons.play_circle_rounded,
+                    color: isCurrentAudio
+                        ? Colors.orange
+                        : isDownloaded
+                        ? pkpLime
+                        : null,
+                  ),
+                  title: Text(isPlaying ? 'Pause' : 'Lecture'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _playAudio();
+                    widget.onClose?.call();
+                  },
+                );
+
+              case ButtonType.download:
+                if (!widget.config.showDownload ||
+                    widget.data.audioUrl.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return ListTile(
+                  leading: Icon(
+                    _isDownloaded
+                        ? Icons.download_for_offline
+                        : Icons.download_rounded,
+                    color: _isDownloaded ? Colors.orange : null,
+                  ),
+                  title: Text(_isDownloaded ? 'Téléchargé' : 'Télécharger'),
+                  enabled: !isDownloading && !_isDownloadingManual,
+                  onTap: (isDownloading || _isDownloadingManual)
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _downloadAudio();
+                          widget.onClose?.call();
+                        },
+                  trailing: (isDownloading || _isDownloadingManual)
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            value: downloadProgress,
+                          ),
+                        )
+                      : null,
+                );
+
+              case ButtonType.share:
+                if (!widget.config.showShare ||
+                    (widget.onGeneratePdf == null &&
+                        widget.onGenerateEpub == null)) {
+                  return const SizedBox.shrink();
+                }
+                if (widget.data.content == null && !isDownloaded) {
+                  return const SizedBox.shrink();
+                }
+                return ListTile(
+                  leading: _isSharing
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.share, color: Colors.orange),
+                  title: const Text('Partager'),
+                  enabled: !_isSharing,
+                  onTap: _isSharing
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _showShareOptions(isDownloaded);
+                        },
+                );
+            }
+          }).toList(),
         ),
       ),
     );
@@ -214,17 +516,57 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     if (!_isDownloaded) return const SizedBox.shrink();
 
     return InkWell(
-      onTap: () => _openLocalFile(),
+      onTap: _isOpening ? null : () => _openLocalFile(),
       borderRadius: BorderRadius.circular(borderRadius.toDouble()),
       child: Padding(
         padding: EdgeInsets.all(size.toDouble()),
-        child: Icon(
-          Icons.open_in_new_rounded,
-          color: isDark
-              ? widget.config.defaultDarkColor
-              : widget.config.defaultLigthColor,
-          size: widget.config.iconSize - size,
-        ),
+        child: _isOpening
+            ? SizedBox(
+                width: widget.config.iconSize - size,
+                height: widget.config.iconSize - size,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isDark ? Colors.lightBlue : Colors.blue,
+                  ),
+                ),
+              )
+            : Icon(
+                Icons.open_in_new_rounded,
+                color: isDark
+                    ? widget.config.defaultDarkColor
+                    : widget.config.defaultLigthColor,
+                size: widget.config.iconSize - size,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton({required bool isDark}) {
+    if (!widget.config.showDelete) return const SizedBox.shrink();
+    if (!_isDownloaded) return const SizedBox.shrink();
+
+    return InkWell(
+      onTap: _isDeleting ? null : () => _deleteLocalFile(),
+      borderRadius: BorderRadius.circular(borderRadius.toDouble()),
+      child: Padding(
+        padding: EdgeInsets.all(size.toDouble()),
+        child: _isDeleting
+            ? SizedBox(
+                width: widget.config.iconSize - size,
+                height: widget.config.iconSize - size,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                ),
+              )
+            : Icon(
+                Icons.delete,
+                color: isDark
+                    ? widget.config.defaultDarkColor
+                    : widget.config.defaultLigthColor,
+                size: widget.config.iconSize - size,
+              ),
       ),
     );
   }
@@ -252,6 +594,8 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
           isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
           color: isCurrentAudio
               ? Colors.orange
+              : _isDownloaded
+              ? Colors.green
               : (isDark
                     ? widget.config.defaultDarkColor
                     : widget.config.defaultLigthColor),
@@ -270,8 +614,10 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
       return const SizedBox.shrink();
     }
 
+    final isLoading = isDownloading || _isDownloadingManual;
+
     return InkWell(
-      onTap: isDownloading
+      onTap: isLoading
           ? null
           : () {
               _downloadAudio();
@@ -282,7 +628,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
       ),
       child: Padding(
         padding: EdgeInsets.all(double.parse(size.toString())),
-        child: isDownloading
+        child: isLoading
             ? SizedBox(
                 width: widget.config.iconSize - size,
                 height: widget.config.iconSize - size,
@@ -317,14 +663,58 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     }
 
     return InkWell(
-      onTap: () => _showShareOptions(isDownloaded),
+      onTap: _isSharing ? null : () => _showShareOptions(isDownloaded),
       borderRadius: BorderRadius.circular(
         double.parse(borderRadius.toString()),
       ),
       child: Padding(
         padding: EdgeInsets.all(double.parse(size.toString())),
+        child: _isSharing
+            ? SizedBox(
+                width: widget.config.iconSize - size,
+                height: widget.config.iconSize - size,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isDark ? Colors.lightBlue : Colors.blue,
+                  ),
+                ),
+              )
+            : Icon(
+                Icons.share,
+                color: isDark
+                    ? widget.config.defaultDarkColor
+                    : widget.config.defaultLigthColor,
+                size: widget.config.iconSize - size,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton({
+    required bool isCurrentAudio,
+    required bool isPlaying,
+    required bool isDark,
+    required bool isDownloading,
+    required double? downloadProgress,
+    required bool isDownloaded,
+    List<ButtonType>? excludeButtons,
+  }) {
+    return InkWell(
+      onTap: () => _showActionsMenu(
+        isCurrentAudio: isCurrentAudio,
+        isPlaying: isPlaying,
+        isDark: isDark,
+        isDownloading: isDownloading,
+        downloadProgress: downloadProgress,
+        isDownloaded: isDownloaded,
+        excludeButtons: excludeButtons,
+      ),
+      borderRadius: BorderRadius.circular(borderRadius.toDouble()),
+      child: Padding(
+        padding: EdgeInsets.all(size.toDouble()),
         child: Icon(
-          Icons.share,
+          Icons.more_vert,
           color: isDark
               ? widget.config.defaultDarkColor
               : widget.config.defaultLigthColor,
@@ -353,18 +743,87 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
             ? (downloadHistory?.percent ?? 0) / 100
             : null;
 
-        // Listen for download completion
         if (downloadHistory?.isCompleted == true && !_isDownloaded) {
           Future.microtask(() => _onDownloadComplete());
         }
 
-        // Construire les boutons dans l'ordre spécifié
+        // Mode menu
+        if (widget.config.mode == DisplayMode.menu) {
+          return _buildMenuButton(
+            isCurrentAudio: isCurrentAudio,
+            isPlaying: isPlaying,
+            isDark: isDark,
+            isDownloading: isDownloading,
+            downloadProgress: downloadProgress,
+            isDownloaded: _isDownloaded,
+          );
+        }
+
+        // Mode mix
+        if (widget.config.mode == DisplayMode.mix) {
+          final primaryButton = widget.config.primaryButton ?? ButtonType.play;
+          Widget? primaryWidget;
+
+          switch (primaryButton) {
+            case ButtonType.open:
+              primaryWidget = _buildOpenButton(isDark: isDark);
+              break;
+            case ButtonType.delete:
+              primaryWidget = _buildDeleteButton(isDark: isDark);
+              break;
+            case ButtonType.play:
+              primaryWidget = _buildPlayButton(
+                isCurrentAudio: isCurrentAudio,
+                isPlaying: isPlaying,
+                isDark: isDark,
+              );
+              break;
+            case ButtonType.download:
+              primaryWidget = _buildDownloadButton(
+                isDownloading: isDownloading,
+                downloadProgress: downloadProgress,
+                isDark: isDark,
+              );
+              break;
+            case ButtonType.share:
+              if (widget.data.content != null ||
+                  downloadHistory?.isCompleted == true) {
+                primaryWidget = _buildShareButton(
+                  isDark: isDark,
+                  isDownloaded: _isDownloaded,
+                );
+              }
+              break;
+          }
+
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (primaryWidget != null) primaryWidget,
+              if (primaryWidget != null) SizedBox(width: widget.config.spacing),
+              _buildMenuButton(
+                isCurrentAudio: isCurrentAudio,
+                isPlaying: isPlaying,
+                isDark: isDark,
+                isDownloading: isDownloading,
+                downloadProgress: downloadProgress,
+                isDownloaded: _isDownloaded,
+                excludeButtons: [primaryButton],
+              ),
+            ],
+          );
+        }
+
+        // Mode full
         final buttons = <Widget>[];
 
         for (var buttonType in widget.config.order) {
           switch (buttonType) {
             case ButtonType.open:
               buttons.add(_buildOpenButton(isDark: isDark));
+              break;
+            case ButtonType.delete:
+              buttons.add(_buildDeleteButton(isDark: isDark));
               break;
             case ButtonType.play:
               buttons.add(
@@ -385,16 +844,19 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
               );
               break;
             case ButtonType.share:
-              if(widget.data.content != null || downloadHistory?.isCompleted == true){
-                  buttons.add(
-                  _buildShareButton(isDark: isDark, isDownloaded: _isDownloaded),
+              if (widget.data.content != null ||
+                  downloadHistory?.isCompleted == true) {
+                buttons.add(
+                  _buildShareButton(
+                    isDark: isDark,
+                    isDownloaded: _isDownloaded,
+                  ),
                 );
               }
               break;
           }
         }
 
-        // Ajouter l'espacement entre les boutons
         final widgetsWithSpacing = <Widget>[];
         for (int i = 0; i < buttons.length; i++) {
           widgetsWithSpacing.add(buttons[i]);

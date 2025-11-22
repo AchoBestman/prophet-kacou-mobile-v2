@@ -103,6 +103,7 @@ class _InformationsPageState extends State<InformationsPage> {
 
     return MainLayout(
       title: i18n.tr('home.informations'),
+      isHomePage: false,
       actions: [
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),

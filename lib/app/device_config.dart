@@ -1,10 +1,11 @@
+import 'package:flutter/material.dart';
 
 enum DeviceType {
-  verySmall,      // < 360px
-  iphoneSESize,   // ~375px, ratio faible
-  medium,         // 360-399px
+  verySmall, // < 360px
+  iphoneSESize, // ~375px, ratio faible
+  medium, // 360-399px
   iphonePlusSize, // >= 400px, ratio élevé (iPhone 16 Plus)
-  tablet,         // >= 600px
+  tablet, // >= 600px
 }
 
 class ResponsiveConfig {
@@ -17,6 +18,9 @@ class ResponsiveConfig {
   final double spacing;
   final double imageAlignment;
   final double imageTopTitleMargin;
+  final double flagDefaultSize;
+  final double flagSpacing;
+  final double flagRunSpacing;
 
   ResponsiveConfig({
     required this.topMargin,
@@ -27,109 +31,129 @@ class ResponsiveConfig {
     required this.referenceFontSize,
     required this.spacing,
     required this.imageAlignment,
-    required this.imageTopTitleMargin
+    required this.imageTopTitleMargin,
+    required this.flagDefaultSize,
+    required this.flagSpacing,
+    required this.flagRunSpacing,
   });
 }
 
 DeviceType getDeviceType(double width, double height) {
-    final aspectRatio = height / width;
-    
-    // Tablette (iPad, Galaxy Tab, etc.)
-    if (width >= 600) {
-      return DeviceType.tablet;
-    }
-    
-    // iPhone 16 Plus et similaires (très grands écrans)
-    // iPhone 16 Plus: 430 x 932 (ratio ~2.17)
-    if (width >= 400 && aspectRatio >= 2.1) {
-      return DeviceType.iphonePlusSize;
-    }
-    
-    // iPhone SE et petits écrans (ratio élevé, largeur petite)
-    // iPhone SE: 375 x 667 (ratio ~1.78)
-    if (width <= 380 && aspectRatio <= 1.85) {
-      return DeviceType.iphoneSESize;
-    }
-    
-    // Très petits écrans
-    if (width < 360) {
-      return DeviceType.verySmall;
-    }
-    
-    // Écrans moyens (iPhone 13/14/15 standard, etc.)
-    return DeviceType.medium;
+  final ratio = height / width;
+
+  // TABLETS
+  if (width >= 600) return DeviceType.tablet;
+
+  // LARGE PHONES (Plus, Pro Max)
+  if (width >= 410 && ratio >= 2.0) return DeviceType.iphonePlusSize;
+
+  // small
+  if (height <= 700) {
+    return DeviceType.verySmall;
   }
 
-  ResponsiveConfig getConfig(DeviceType deviceType) {
-    switch (deviceType) {
-      case DeviceType.iphonePlusSize:
-        // Configuration par défaut (iPhone 16 Plus)
-        return ResponsiveConfig(
-          topMargin: 120,
-          horizontalPadding: 10,
-          topPadding: 4,
-          borderRadius: 8,
-          textFontSize: 18,
-          referenceFontSize: 14,
-          spacing: 12,
-          imageAlignment: 1.5,
-          imageTopTitleMargin: 30
-        );
-        
-      case DeviceType.iphoneSESize:
-        // iPhone SE - ajusté proportionnellement
-        return ResponsiveConfig(
-          topMargin: 120,
-          horizontalPadding: 10,
-          topPadding: 4,
-          borderRadius: 8,
-          textFontSize: 17,
-          referenceFontSize: 14,
-          spacing: 10,
-          imageAlignment: -0.5,
-          imageTopTitleMargin: 25
-        );
-
-      case DeviceType.tablet:
-        // Tablettes - plus d'espace
-        return ResponsiveConfig(
-          topMargin: 550,
-          horizontalPadding: 100,
-          topPadding: 0,
-          borderRadius: 12,
-          textFontSize: 22,
-          referenceFontSize: 16,
-          spacing: 16,
-          imageAlignment: -0.5,
-          imageTopTitleMargin: 55
-        );
-      
-      case DeviceType.verySmall:
-        // Très petits écrans - compacté
-        return ResponsiveConfig(
-          topMargin: 80,
-          horizontalPadding: 6,
-          topPadding: 2,
-          borderRadius: 6,
-          textFontSize: 14,
-          referenceFontSize: 11,
-          spacing: 8,
-          imageAlignment: -1,
-          imageTopTitleMargin: 18
-        );
-        
-      case DeviceType.medium:
-        //valeur de mon phone et Écrans moyens - légèrement réduit par rapport à Plus
-        return ResponsiveConfig(
-          topMargin: 100,
-          horizontalPadding: 10,
-          topPadding: 4,
-          borderRadius: 8,
-          textFontSize: 17,
-          referenceFontSize: 13,
-          spacing: 12,
-          imageAlignment: 4,
-          imageTopTitleMargin: 30
-        );
-    }
+  // SE
+  if (width <= 360 || (width <= 380 && ratio <= 1.9)) {
+    return DeviceType.iphoneSESize;
   }
+
+  // Normal phones
+  return DeviceType.medium;
+}
+
+ResponsiveConfig getConfig(BuildContext context) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+  final DeviceType deviceType = getDeviceType(screenWidth, screenHeight);
+  final aspectRatio = screenHeight / screenWidth;
+  print(
+    "width: $screenWidth; height: $screenHeight; aspectRatio: $aspectRatio; deviceType: $deviceType",
+  );
+
+  switch (deviceType) {
+    case DeviceType.iphonePlusSize:
+      // Configuration par défaut (iPhone 16 Plus)
+      return ResponsiveConfig(
+        topMargin: 160,
+        horizontalPadding: 23,
+        topPadding: 4,
+        borderRadius: 8,
+        textFontSize: 18,
+        referenceFontSize: 14,
+        spacing: 12,
+        imageAlignment: 0.5,
+        imageTopTitleMargin: 30,
+        flagDefaultSize: 36,
+        flagSpacing: 8,
+        flagRunSpacing:5,
+      );
+
+    case DeviceType.iphoneSESize:
+      // iPhone SE - ajusté proportionnellement
+      return ResponsiveConfig(
+        topMargin: 100,
+        horizontalPadding: 20,
+        topPadding: 4,
+        borderRadius: 8,
+        textFontSize: 17,
+        referenceFontSize: 14,
+        spacing: 2,
+        imageAlignment: 1.7,
+        imageTopTitleMargin: 35,
+        flagDefaultSize: 33,
+        flagSpacing: 4,
+        flagRunSpacing: 4,
+      );
+
+    case DeviceType.tablet:
+      // Tablettes - plus d'espace
+      return ResponsiveConfig(
+        topMargin: 550,
+        horizontalPadding: 100,
+        topPadding: 0,
+        borderRadius: 12,
+        textFontSize: 22,
+        referenceFontSize: 16,
+        spacing: 16,
+        imageAlignment: -0.5,
+        imageTopTitleMargin: 55,
+        flagDefaultSize: 33,
+        flagSpacing: 4,
+        flagRunSpacing: 3,
+      );
+
+    case DeviceType.verySmall:
+      // Très petits écrans - compacté
+      return ResponsiveConfig(
+        topMargin: 120,
+        horizontalPadding: 20,
+        topPadding: 8,
+        borderRadius: 6,
+        textFontSize: 14,
+        referenceFontSize: 11,
+        spacing: 4,
+        imageAlignment: -0.5,
+        imageTopTitleMargin: 18,
+        flagDefaultSize: 32,
+        flagSpacing: 5,
+        flagRunSpacing: 4,
+      );
+
+    case DeviceType.medium:
+      //valeur de mon phone et Écrans moyens - légèrement réduit par rapport à Plus
+      return ResponsiveConfig(
+        topMargin:  aspectRatio > 2 ? 150 : 250,
+        horizontalPadding: 33,
+        topPadding: 6,
+        borderRadius: 8,
+        textFontSize: 17,
+        referenceFontSize: 13,
+        spacing: 4,
+        imageAlignment: 0,
+        imageTopTitleMargin: 35,
+        flagDefaultSize: 35,
+        flagSpacing: 8,
+        flagRunSpacing: 4,
+      );
+  }
+}

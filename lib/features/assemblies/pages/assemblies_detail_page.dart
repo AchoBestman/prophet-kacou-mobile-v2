@@ -5,6 +5,7 @@ import 'package:prophet_kacou/core/models/city.dart';
 import 'package:prophet_kacou/core/repositories/assembly.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
+import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
 class AssembliesDetailPage extends StatefulWidget {
   final City city;
@@ -81,14 +82,9 @@ class _AssembliesDetailPageState extends State<AssembliesDetailPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(widget.city.libelle),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return MainLayout(
+      title: widget.city.libelle,
+      isHomePage: false,
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -102,7 +98,6 @@ class _AssembliesDetailPageState extends State<AssembliesDetailPage> {
             tooltip: _isAscending ? 'A–Z' : 'Z–A',
           ),
         ],
-      ),
       body: SafeArea(
         child: Column(
           children: [

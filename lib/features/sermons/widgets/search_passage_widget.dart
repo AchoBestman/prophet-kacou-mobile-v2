@@ -1,98 +1,55 @@
-// Fichier modifié: lib/features/sermons/widgets/search_passage_widget.dart
-
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/app/themes/app_theme.dart';
+import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/verse.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
+import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
+import 'package:provider/provider.dart';
 
 class SearchPassageWidget extends StatefulWidget {
   final String? initialSearchQuery;
-  
-  const SearchPassageWidget({
-    super.key,
-    this.initialSearchQuery,
-  });
+
+  const SearchPassageWidget({super.key, this.initialSearchQuery});
 
   @override
   State<SearchPassageWidget> createState() => SearchPassageWidgetState();
 }
 
 class SearchPassageWidgetState extends State<SearchPassageWidget> {
-  final TextEditingController _searchController = TextEditingController();
   final SermonRepository _repository = SermonRepository();
-  
+
   List<Verse> _verses = [];
   bool _isLoading = false;
-  String _searchQuery = '';
-  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged);
-    
-    // Si une requête initiale est fournie, l'utiliser
-    if (widget.initialSearchQuery != null && widget.initialSearchQuery!.isNotEmpty) {
-      _searchController.text = widget.initialSearchQuery!;
-      _searchQuery = widget.initialSearchQuery!;
-      // Lancer la recherche immédiatement
-      Future.delayed(Duration.zero, () {
-        _searchVerses(widget.initialSearchQuery!);
-      });
+
+    // Si le parent envoie une recherche au démarrage
+    if (widget.initialSearchQuery?.isNotEmpty == true) {
+      _runSearch(widget.initialSearchQuery!);
     }
   }
 
   @override
-  void didUpdateWidget(SearchPassageWidget oldWidget) {
+  void didUpdateWidget(covariant SearchPassageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
-    // Si la requête initiale change, mettre à jour le champ et rechercher
-    if (widget.initialSearchQuery != oldWidget.initialSearchQuery &&
-        widget.initialSearchQuery != null &&
-        widget.initialSearchQuery!.isNotEmpty) {
-      _searchController.text = widget.initialSearchQuery!;
-      _searchQuery = widget.initialSearchQuery!;
-      _searchVerses(widget.initialSearchQuery!);
-    }
-  }
 
-  @override
-  void dispose() {
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  void _onSearchChanged() {
-    // Annuler le timer précédent s'il existe
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    final query = _searchController.text.trim();
-    
-    // Si le champ est vide, réinitialiser immédiatement
-    if (query.isEmpty) {
-      setState(() {
-        _searchQuery = '';
-        _verses = [];
-        _isLoading = false;
-      });
-      return;
-    }
-
-    // Créer un nouveau timer de 3 secondes
-    _debounce = Timer(const Duration(seconds: 3), () {
-      if (query != _searchQuery) {
+    // Le parent met à jour initialSearchQuery → relancer la recherche
+    if (widget.initialSearchQuery != oldWidget.initialSearchQuery) {
+      final query = widget.initialSearchQuery ?? '';
+      if (query.isEmpty) {
         setState(() {
-          _searchQuery = query;
+          _verses = [];
         });
-        _searchVerses(query);
+      } else {
+        _runSearch(query);
       }
-    });
+    }
   }
 
-  Future<void> _searchVerses(String query) async {
+  Future<void> _runSearch(String query) async {
     if (query.isEmpty) {
       setState(() {
         _verses = [];
@@ -101,15 +58,13 @@ class SearchPassageWidgetState extends State<SearchPassageWidget> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final results = await _repository.findAllVerses(
         lang: i18n.lang,
         searchQuery: query,
-        orderBy: 'sermon_number ASC, number ASC',
+        orderBy: '"number" ASC',
       );
 
       if (mounted) {
@@ -118,105 +73,100 @@ class SearchPassageWidgetState extends State<SearchPassageWidget> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error searching verses: $e')),
-        );
+        setState(() => _isLoading = false);
       }
     }
   }
 
-  // Méthode publique pour définir la recherche depuis l'extérieur
-  void setSearchQuery(String query) {
-    _searchController.text = query;
-    _searchQuery = query;
-    if (query.isNotEmpty) {
-      _searchVerses(query);
-    } else {
-      setState(() {
-        _verses = [];
-      });
-    }
-  }
-
-  // Méthode pour mettre en évidence le mot-clé dans le texte
   List<TextSpan> _highlightKeyword(String text, String keyword) {
-    if (keyword.isEmpty) {
-      return [TextSpan(text: text)];
-    }
+    if (keyword.isEmpty) return [TextSpan(text: text)];
 
     final List<TextSpan> spans = [];
-    final lowerText = text.toLowerCase();
-    final lowerKeyword = keyword.toLowerCase();
+    final lower = text.toLowerCase();
+    final key = keyword.toLowerCase();
+
     int start = 0;
 
     while (true) {
-      final index = lowerText.indexOf(lowerKeyword, start);
+      final index = lower.indexOf(key, start);
       if (index == -1) {
-        // Ajouter le reste du texte
-        if (start < text.length) {
-          spans.add(TextSpan(text: text.substring(start)));
-        }
+        spans.add(TextSpan(text: text.substring(start)));
         break;
       }
 
-      // Ajouter le texte avant le mot-clé
       if (index > start) {
         spans.add(TextSpan(text: text.substring(start, index)));
       }
 
-      // Ajouter le mot-clé en surbrillance
       spans.add(
         TextSpan(
-          text: text.substring(index, index + keyword.length),
+          text: text.substring(index, index + key.length),
           style: const TextStyle(
-            backgroundColor: Colors.yellow,
-            color: Colors.black,
+            //backgroundColor: Colors.yellow,
             fontWeight: FontWeight.bold,
+            color: Colors.orange,
           ),
         ),
       );
 
-      start = index + keyword.length;
+      start = index + key.length;
     }
 
     return spans;
   }
 
   Widget _buildVerseItem(Verse verse, bool isDark) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Référence du verset : Kc.sermonId:verse.number
-            Text(
-              'Kc.${verse.sermonId}:${verse.number}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: isDark ? Colors.lightBlue : Colors.blue,
+    final keyword = widget.initialSearchQuery ?? '';
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return InkWell(
+      onTap: () {
+        if (verse.sermonNumber != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SermonDetailPage(
+                sermonNumber: verse.sermonNumber as int, // 👈 important
+                verseNumber: verse.number,
               ),
             ),
-            const SizedBox(height: 8),
-            // Contenu du verset avec mise en évidence du mot-clé
-            RichText(
-              text: TextSpan(
+          );
+        }
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Kc.${verse.sermonNumber}:${verse.number}',
                 style: TextStyle(
-                  fontSize: 15,
-                  color: isDark ? Colors.white : Colors.black87,
-                  height: 1.4,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.lightBlue : pkpIndigo,
+                  fontSize: themeProvider.customFont.fontSize + 2,
+                  fontFamily: themeProvider.customFont.fontFamily,
+                  fontStyle: themeProvider.customFont.fontStyle,
                 ),
-                children: _highlightKeyword(verse.content, _searchQuery),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: themeProvider.customFont.fontSize,
+                    fontFamily: themeProvider.customFont.fontFamily,
+                    fontStyle: themeProvider.customFont.fontStyle,
+                    height: 1.4,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  children: _highlightKeyword(verse.content, keyword),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -224,62 +174,33 @@ class SearchPassageWidgetState extends State<SearchPassageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final query = widget.initialSearchQuery ?? '';
 
     return Column(
       children: [
-        // Champ de recherche
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search verses...',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchQuery = '';
-                          _verses = [];
-                        });
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
-            ),
-          ),
-        ),
-
-        // Indicateur de chargement ou résultats
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _verses.isEmpty
-                  ? Center(
-                      child: Text(
-                        _searchQuery.isEmpty
-                            ? 'Enter a keyword to search verses'
-                            : 'No verses found',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _verses.length,
-                      itemBuilder: (context, index) {
-                        return _buildVerseItem(_verses[index], isDark);
-                      },
+              ? Center(
+                  child: Text(
+                    query.isEmpty
+                        ? 'Enter a keyword to search verses'
+                        : 'No verses found',
+                    style: TextStyle(
+                      fontSize: themeProvider.customFont.fontSize,
+                      fontFamily: themeProvider.customFont.fontFamily,
+                      fontStyle: themeProvider.customFont.fontStyle,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _verses.length,
+                  itemBuilder: (_, i) => _buildVerseItem(_verses[i], isDark),
+                ),
         ),
       ],
     );

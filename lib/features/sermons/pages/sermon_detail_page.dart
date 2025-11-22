@@ -22,9 +22,9 @@ class SermonDetailPage extends StatefulWidget {
   final int sermonNumber;
   final int? verseNumber; // ✅ Nouveau paramètre optionnel
   static const routeName = '/sermon_detail';
-  
+
   const SermonDetailPage({
-    super.key, 
+    super.key,
     required this.sermonNumber,
     this.verseNumber, // ✅ Paramètre optionnel
   });
@@ -40,7 +40,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   String _searchQuery = '';
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController(); // ✅ Contrôleur de scroll
+  final ScrollController _scrollController =
+      ScrollController(); // ✅ Contrôleur de scroll
   final Map<int, GlobalKey> _verseKeys = {}; // ✅ Clés pour chaque verset
 
   @override
@@ -58,12 +59,15 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
 
   Future<void> _loadSermon() async {
     try {
-      final sermon = await _repository.findByNumber(widget.sermonNumber, i18n.lang);
+      final sermon = await _repository.findByNumber(
+        widget.sermonNumber,
+        i18n.lang,
+      );
       setState(() {
         _sermon = sermon;
         _isLoading = false;
       });
-      
+
       // ✅ Scroll vers le verset si spécifié
       if (widget.verseNumber != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -93,7 +97,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
 
   // Méthode pour générer le PDF
   Future<void> _generatePdf(dynamic sermon) async {
-    if(mounted){
+    if (mounted) {
       generateSermonPdf(context, sermon as Sermon);
     }
   }
@@ -146,9 +150,10 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     if (_isLoading) {
       return MainLayout(
+        isHomePage: false,
         title: 'Sermon',
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -157,12 +162,14 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     if (_sermon == null) {
       return MainLayout(
         title: 'Sermon',
+        isHomePage: false,
         body: const Center(child: Text('Aucun sermon trouvé')),
       );
     }
 
     return MainLayout(
       title: _sermon!.chapter,
+      isHomePage: false,
       actions: [
         IconButton(
           icon: Icon(
@@ -171,48 +178,50 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
           ),
           onPressed: _toggleSearch,
         ),
-          FutureBuilder<File>(
-            future: localSermonPath(_sermon!, i18n.lang),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const SizedBox.shrink();
-              }
+        FutureBuilder<File>(
+          future: localSermonPath(_sermon!, i18n.lang),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const SizedBox.shrink();
+            }
 
-              final audioItem = AudioItem(
-                id: _sermon!.id,
-                title: sermonTitleFormatter(_sermon!),
-                audioUrl: _sermon!.audio!,
-                albumId: null,
-                fileOriginalName: null,
-                localFullPath: snapshot.data!,
-                content: _sermon!.title // just to make share pdf available
-              );
+            final audioItem = AudioItem(
+              id: _sermon!.number,
+              title: sermonTitleFormatter(_sermon!),
+              audioUrl: _sermon!.audio!,
+              albumId: null,
+              fileOriginalName: null,
+              localFullPath: snapshot.data!,
+              content: _sermon!.title, // just to make share pdf available
+            );
 
-              return PlayDownloadShareButton(
-                data: audioItem,
-                type: AudioFolder.sermons,
-                extension: FileExtension.mp3,
-                sourceData: _sermon,
-                onGeneratePdf: _generatePdf,
-                onGenerateEpub: _generateEpub,
-                config: const ButtonConfig(
-                  showPlay: true,
-                  showDownload: true,
-                  showShare: true,
-                  iconSize: 24.0,
-                  spacing: 6.0,
-                  defaultDarkColor: Colors.white,
-                  defaultLigthColor: Colors.white,
-                  order: [
-                    ButtonType.play,
-                    ButtonType.download,
-                    ButtonType.share,
-                  ],
-                ),
-              );
-            },
-          ),
-          SizedBox.fromSize(size: Size(12, 0))
+            return PlayDownloadShareButton(
+              data: audioItem,
+              type: AudioFolder.sermons,
+              extension: FileExtension.mp3,
+              sourceData: _sermon,
+              onGeneratePdf: _generatePdf,
+              onGenerateEpub: _generateEpub,
+              config: const ButtonConfig(
+                showPlay: true,
+                showDownload: true,
+                showShare: true,
+                iconSize: 24.0,
+                spacing: 6.0,
+                defaultDarkColor: Colors.white,
+                defaultLigthColor: Colors.white,
+                mode: DisplayMode.mix,
+                order: [
+                  ButtonType.play,
+                  ButtonType.download,
+                  ButtonType.share,
+                  ButtonType.delete,
+                ],
+              ),
+            );
+          },
+        ),
+        SizedBox.fromSize(size: Size(12, 0)),
       ],
       body: Column(
         children: [
@@ -240,56 +249,74 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  if (_sermon != null &&
+                      _sermon!.image != null &&
+                      _sermon!.number != 9)
+                    displayImage(context, _sermon!),
+
                   Text(
                     _sermon!.title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: themeProvider.customFont.fontSize + 2,
+                      fontSize: themeProvider.customFont.fontSize,
                       fontWeight: FontWeight.bold,
                       fontFamily: themeProvider.customFont.fontFamily,
                       fontStyle: themeProvider.customFont.fontStyle,
                     ),
                   ),
-                  if (_sermon != null && _sermon!.subTitle != null)
-                    Text(
-                      "${_sermon!.subTitle}",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: themeProvider.customFont.fontSize - 1,
-                        fontWeight: FontWeight.w300,
-                        fontFamily: themeProvider.customFont.fontFamily,
-                        fontStyle: FontStyle.italic,
-                      ),
+                   const SizedBox(height: 8),
+                  if (_sermon != null &&
+                      _sermon!.subTitle != null &&
+                      _sermon!.subTitle!.isNotEmpty)
+                    Column(
+                      children: [
+                       
+                        Text(
+                          "${_sermon!.subTitle}",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: themeProvider.customFont.fontSize - 1,
+                            fontWeight: FontWeight.w300,
+                            fontFamily: themeProvider.customFont.fontFamily,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                         const SizedBox(height: 8),
+                      ],
                     ),
-                  if (_sermon != null && _sermon!.number != 9)
-                    displayImage(context, _sermon!),
-                  const SizedBox(height: 8),
+
                   ...?_sermon!.verses?.map((verse) {
                     final verseNumber = verse.number;
                     final verseContent = verse.content;
                     final verseTitle = verse.title;
-                    final List<ParsedReference>? concordances = verse.concordances;
+                    final List<ParsedReference>? concordances =
+                        verse.concordances;
                     final List<dynamic>? verseLinks = verse.verseLinks;
                     final fullContent = '$verseNumber $verseContent';
-                    
-                    final hasMatch = _searchQuery.isNotEmpty &&
-                        fullContent.toLowerCase().contains(_searchQuery.toLowerCase());
-                    
+
+                    final hasMatch =
+                        _searchQuery.isNotEmpty &&
+                        fullContent.toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        );
+
                     // ✅ Identifier le verset ciblé
                     final isTargetVerse = widget.verseNumber == verseNumber;
-                    
+
                     // ✅ Créer une clé pour ce verset
                     if (!_verseKeys.containsKey(verseNumber)) {
                       _verseKeys[verseNumber] = GlobalKey();
                     }
 
                     return Container(
-                      key: isTargetVerse ? _verseKeys[verseNumber] : null, // ✅ Clé assignée
+                      key: isTargetVerse
+                          ? _verseKeys[verseNumber]
+                          : null, // ✅ Clé assignée
                       decoration: BoxDecoration(
                         color: isTargetVerse
-                            ? (isDark 
-                                ? Colors.blue.withOpacity(0.2) 
-                                : Colors.blue.withOpacity(0.1))
+                            ? (isDark
+                                  ? Colors.blue.withValues(alpha: 0.2)
+                                  : Colors.blue.withValues(alpha: 0.1))
                             : null,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -304,12 +331,15 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                               child: Text(
                                 verseTitle,
                                 style: TextStyle(
-                                  fontSize: themeProvider.customFont.fontSize + 2,
+                                  fontSize:
+                                      themeProvider.customFont.fontSize + 2,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: themeProvider.customFont.fontFamily,
+                                  fontFamily:
+                                      themeProvider.customFont.fontFamily,
                                   fontStyle: themeProvider.customFont.fontStyle,
-                                  backgroundColor: hasMatch && _searchQuery.isNotEmpty
-                                      ? Colors.yellow.withOpacity(0.3)
+                                  backgroundColor:
+                                      hasMatch && _searchQuery.isNotEmpty
+                                      ? Colors.yellow.withValues(alpha: 0.3)
                                       : null,
                                 ),
                               ),
@@ -320,15 +350,19 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                                 : '<b>${_highlightText(verseNumber.toString(), _searchQuery)}</b> ${_highlightText(normalizeLineBreaks(verseContent), _searchQuery)}',
                             style: {
                               "body": Style(
-                                fontSize: FontSize(themeProvider.customFont.fontSize),
+                                fontSize: FontSize(
+                                  themeProvider.customFont.fontSize,
+                                ),
                                 fontFamily: themeProvider.customFont.fontFamily,
-                                fontStyle: themeProvider.customFont.fontStyle == FontStyle.italic
+                                fontStyle:
+                                    themeProvider.customFont.fontStyle ==
+                                        FontStyle.italic
                                     ? flutter_html.FontStyle.italic
                                     : flutter_html.FontStyle.normal,
                                 margin: Margins.zero,
                                 fontWeight: FontWeight.w400,
                                 padding: HtmlPaddings.zero,
-                                textAlign: TextAlign.justify
+                                textAlign: TextAlign.justify,
                               ),
                               "b": Style(fontWeight: FontWeight.bold),
                               "p": Style(margin: Margins.only(bottom: 8)),
@@ -346,9 +380,11 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                       ),
                     );
                   }),
-                  if (_sermon!.similarSermon!.isNotEmpty)
+                  if (_sermon != null &&
+                      _sermon!.similarSermon != null &&
+                      _sermon!.similarSermon!.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 6,),
+                      padding: const EdgeInsets.only(bottom: 6),
                       child: Text(
                         _sermon!.similarSermon!,
                         style: TextStyle(
@@ -360,7 +396,9 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                         ),
                       ),
                     ),
-                  if (_sermon != null && _sermon!.number == 9)
+                  if (_sermon != null &&
+                      _sermon!.image != null &&
+                      _sermon!.number == 9)
                     displayImage(context, _sermon!),
                 ],
               ),

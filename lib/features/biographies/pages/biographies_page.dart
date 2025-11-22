@@ -60,6 +60,7 @@ class _BiographiesPageState extends State<BiographiesPage> {
 
     return MainLayout(
       title: i18n.tr('home.biography'),
+      isHomePage: false,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

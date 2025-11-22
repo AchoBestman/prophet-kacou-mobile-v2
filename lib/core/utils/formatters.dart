@@ -90,8 +90,8 @@ String sermonTitleFormatter(Sermon sermon) {
   return "${sermon.chapter}: ${sermon.title}";
 }
 
-String sermonIdInDownloadProviderFormatter(Sermon sermon) {
-  return 'sermon_${sermon.id}';
+String sermonIdInDownloadProviderFormatter(int id) {
+  return 'sermon_$id';
 }
 
 Future<File> localSermonPath(Sermon sermon, initial) async {
@@ -130,8 +130,8 @@ Future<File> localSongPath(Song song, initial) async {
   return file;
 }
 
-String songIdInDownloadProviderFormatter(Song song) {
-  return 'song_${song.id}';
+String songIdInDownloadProviderFormatter(int id) {
+  return 'song_$id';
 }
 
 int extractNumberValueFromAudioFormattedId(String key) {

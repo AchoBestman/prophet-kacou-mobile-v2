@@ -325,6 +325,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
 
     return MainLayout(
       title: i18n.tr('home.langues'),
+      isHomePage: false,
       actions: [
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -496,7 +497,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
                         errorBuilder: (_, __, ___) => Container(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.1),
+                          ).primaryColor.withValues(alpha: 0.1),
                           child: Center(
                             child: Text(
                               langue.initial.toUpperCase(),
@@ -667,7 +668,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
                           padding: const EdgeInsets.all(8.0),
                           decoration: BoxDecoration(
                             color: isDark
-                                ? Colors.red.shade900.withOpacity(0.3)
+                                ? Colors.red.shade900.withValues(alpha: 0.3)
                                 : Colors.red.shade50,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(

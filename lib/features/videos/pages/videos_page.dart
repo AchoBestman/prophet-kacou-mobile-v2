@@ -90,6 +90,7 @@ class _VideosPageState extends State<VideosPage> {
 
     return MainLayout(
       title: i18n.tr('home.videos'),
+      isHomePage: false,
       body: Column(
         children: [
           if (_isSearching)

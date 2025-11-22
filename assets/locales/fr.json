@@ -28,7 +28,15 @@
     "photos": "Photos",
     "videos": "Vidéos",
     "others": "Autres",
-    "share": "Partager"
+    "share": "Partager",
+    "settings": "Paramétres",
+    "download_history": "Historique de téléchargements",
+    "countries": "Pays",
+    "informations": "Informations",
+    "contacts": "Contacts",
+    "contact_us": "Contactez-nous",
+    "brother": "frere",
+    "langues": "Langues"
   },
   "button": {
     "search": "Chercher",

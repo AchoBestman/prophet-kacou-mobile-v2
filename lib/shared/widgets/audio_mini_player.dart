@@ -44,15 +44,15 @@ class _MiniPlayerState extends State<MiniPlayer> with SingleTickerProviderStateM
           shape: BoxShape.circle,
           gradient: LinearGradient(
             colors: [
-              Colors.orange.withOpacity(0.9),
-              Colors.deepOrange.withOpacity(0.95),
+              Colors.orange.withValues(alpha: 0.9),
+              Colors.deepOrange.withValues(alpha: 0.95),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.orange.withOpacity(0.4),
+              color: Colors.orange.withValues(alpha: 0.4),
               blurRadius: 12,
               spreadRadius: 2,
             ),

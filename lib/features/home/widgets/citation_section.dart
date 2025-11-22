@@ -8,14 +8,8 @@ class CitationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    // Déterminer le type d'écran
-    final DeviceType deviceType = getDeviceType(screenWidth, screenHeight);
-
     // Configuration selon le type d'écran
-    final config = getConfig(deviceType);
+    final config = getConfig(context);
 
     return Container(
       margin: EdgeInsets.only(top: config.topMargin),

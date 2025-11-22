@@ -6,7 +6,6 @@ import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/download_history.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
-import 'package:prophet_kacou/core/models/song.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
@@ -84,7 +83,8 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return MainLayout(
-      title: i18n.tr('download.history_title'),
+      title: i18n.tr('home.download_history'),
+      isHomePage: false,
       actions: [
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -358,10 +358,10 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                           }
 
                           final audioItem = AudioItem(
-                            id: int.parse(download.id),
+                            id: extractNumberValueFromAudioFormattedId(download.id),
                             title: download.title,
                             audioUrl: download.audioUrl,
-                            albumId: null,
+                            albumId: download.albumId,
                             fileOriginalName: null,
                             localFullPath: snapshot.data!,
                             content: download.title
@@ -375,23 +375,19 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                             extension: FileExtension.mp3,
                             onGeneratePdf: generatePdf,
                             onGenerateEpub: generateEpub,
+                            
                             config: const ButtonConfig(
                               showPlay: true,
                               showDownload: true,
                               showShare: true,
                               iconSize: 24.0,
                               spacing: 6.0,
-                              order: [ButtonType.play, ButtonType.share],
+                              isFromHistory: true,
+                              mode: DisplayMode.mix,
+                              order: [ButtonType.play, ButtonType.share, ButtonType.delete],
                             ),
                           );
                         },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_rounded),
-                        color: Colors.grey,
-                        onPressed: () =>
-                            provider.deleteFromHistory(download.id),
-                        tooltip: 'Supprimer',
                       ),
                     ],
                   ),

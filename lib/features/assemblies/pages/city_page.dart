@@ -7,6 +7,7 @@ import 'package:prophet_kacou/core/repositories/city.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/assemblies/pages/assemblies_detail_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
+import 'package:prophet_kacou/shared/layouts/main_layout.dart';
 
 class CityPage extends StatefulWidget {
   final Country country;
@@ -137,48 +138,47 @@ class _CityPageState extends State<CityPage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.country.name,
+    return MainLayout(
+      title: widget.country.name,
+      isHomePage: false,
+      actions: [
+        IconButton(
+          icon: Icon(_isSearching ? Icons.close : Icons.search),
+          onPressed: _toggleSearch,
         ),
-
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        IconButton(
+          icon: Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward),
+          onPressed: _toggleSortOrder,
+          tooltip: _isAscending ? 'A-Z' : 'Z-A',
         ),
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: _toggleSearch,
-          ),
-          IconButton(
-            icon: Icon(
-              _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
-            ),
-            onPressed: _toggleSortOrder,
-            tooltip: _isAscending ? 'A-Z' : 'Z-A',
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: isDark ? theme.tabBarTheme.labelColor : Colors.white,
-          unselectedLabelColor: theme.tabBarTheme.unselectedLabelColor,
-          indicatorColor: isDark ? theme.tabBarTheme.labelColor : Colors.white,
-          tabs: const [
-            Tab(text: 'Assemblies'),
-            Tab(text: 'Apostle'),
-          ],
-        ),
-      ),
+      ],
       body: SafeArea(
-        child: TabBarView(
-          controller: _tabController,
+        child: Column(
           children: [
-            // Tab Assemblies
-            _buildAssembliesTab(isDark),
-            // Tab Apostle
-            _buildApostleTab(),
+            Container(
+              color: theme.scaffoldBackgroundColor,
+              child: TabBar(
+                controller: _tabController,
+                labelColor: theme.tabBarTheme.labelColor,
+                unselectedLabelColor: theme.tabBarTheme.unselectedLabelColor,
+                indicatorColor: theme.tabBarTheme.indicatorColor,
+                tabs: const [
+                  Tab(text: 'Assemblies'),
+                  Tab(text: 'Apostle'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Tab Assemblies
+                  _buildAssembliesTab(isDark),
+                  // Tab Apostle
+                  _buildApostleTab(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -294,7 +294,7 @@ class _CityPageState extends State<CityPage>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Icon(

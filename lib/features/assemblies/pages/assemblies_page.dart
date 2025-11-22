@@ -131,6 +131,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
 
     return MainLayout(
       title: i18n.tr('home.countries'),
+      isHomePage: false,
       actions: [
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -257,7 +258,7 @@ class _AssembliesPageState extends State<AssembliesPage> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                         child: Center(
                           child: Text(
                             country.sigle,

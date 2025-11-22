@@ -14,6 +14,7 @@ class AboutsPage extends StatelessWidget {
 
     return MainLayout(
       title: i18n.tr('home.contacts'),
+      isHomePage: false,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(

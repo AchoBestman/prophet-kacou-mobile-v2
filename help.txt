@@ -6,7 +6,7 @@ flutter build apk --release
 
 #resize image
 sips -z 3000 2000 assets/images/1080X564.png --out assets/images/2000X3000.png
-sips -z 600 1080 assets/images/logo-pkacou3.jpeg --out assets/images/logo-pkacou3-1080×600.png
+sips -z 1024 1024 assets/images/logo-pkacou3.jpeg --out assets/images/icon-1024x1024.png
 
 emplacement des bases de donnees
 flutter: ✅ Base copiée : /Users/aikpeachile/Library/Developer/CoreSimulator/Devices/94FC4071-B9A2-4E15-92BB-4E5502B5DF79/data/Containers/Data/Application/898CED77-C392-43DA-A7C2-A0BD38025D17/Documents/databases/en/matth25v6_en.db
@@ -31,8 +31,38 @@ aikpeachile@AIKPEs-MacBook-Pro prophet_kacou %
 
 5. Lancer Flutter sur un simulateur spécifique
 
-xcrun simctl boot "2D2E044F-7865-4EF9-9073-F43E37B699A9"
+xcrun simctl boot "iPhone 16 Pro"
 flutter run -d "2D2E044F-7865-4EF9-9073-F43E37B699A9"
 
 xcrun simctl boot "iPhone SE"
 flutter run -d "iPhone SE"
+
+
+# 1. Installer les dépendances
+flutter pub get
+
+# 2. Générer le splash screen natif
+dart run flutter_native_splash:create
+
+# 3. Générer les icônes de l'application
+dart run flutter_launcher_icons
+
+# 4. Nettoyer et reconstruire
+flutter clean
+flutter pub get
+
+# 5. Lancer l'application
+flutter run
+
+# Si vous rencontrez des problèmes, essayez :
+# Pour Android
+flutter build apk
+# Ou
+flutter build appbundle
+
+# Pour iOS (sur Mac uniquement)
+flutter build ios
+
+
+je veux que tu ameliore le chargement de cette page, actuellement quand la page est appeler depuis le menu il y a un effet de retard, la page doit automatiquement afficher et s'il y a des chargements de donnees il faut que cela se fait en arrierer plan pour ameliorer l'experience utilisateur
+

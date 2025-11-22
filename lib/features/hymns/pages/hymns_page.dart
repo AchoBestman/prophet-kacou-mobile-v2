@@ -164,6 +164,7 @@ class _HymnsPageState extends State<HymnsPage> {
 
     return MainLayout(
       title: i18n.tr('home.hymns'),
+      isHomePage: false,
       actions: [
         IconButton(
           icon: Icon(_isSearching ? Icons.close : Icons.search),

@@ -77,4 +77,20 @@ class LangueRepository {
 
     return Langue.fromMap(results.first);
   }
+
+  Future<Langue?> findByInitial(String initial, String updated_at) async {
+    final db = await _dbManager.openCommonDB();
+    final List<Map<String, dynamic>> results = await db.query(
+      'langue_last_updateds',
+      where: 'langue = ?',
+      whereArgs: [initial],
+      limit: 1,
+    );
+
+    if (results.isEmpty) return null;
+
+    return Langue.fromMap(results.first);
+  }
+
 }
+

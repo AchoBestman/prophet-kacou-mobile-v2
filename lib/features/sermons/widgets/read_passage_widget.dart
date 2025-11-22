@@ -21,6 +21,13 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _sermonController.text = "1"; // 👈 valeur par défaut
+    _verseController.text = "";  // 👈 verset optionnel
+  }
+
+  @override
   void dispose() {
     _sermonController.dispose();
     _verseController.dispose();
@@ -151,9 +158,11 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -229,6 +238,7 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
     required bool isDark,
     required bool isRequired,
   }) {
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.grey[50],
@@ -237,7 +247,6 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
       ),
       child: Row(
         children: [
-          
           // Champ texte
           Expanded(
             child: TextField(
@@ -266,10 +275,7 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
 
           // Bouton decrement
           IconButton(
-            icon: Icon(
-              Icons.remove,
-              color: isDark ? Colors.white : pkpIndigo,
-            ),
+            icon: Icon(Icons.remove, color: isDark ? Colors.white : pkpIndigo),
             onPressed: () {
               int value = int.tryParse(controller.text) ?? 0;
               if (value > 0) {
@@ -280,10 +286,7 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
 
           // Bouton increment
           IconButton(
-            icon: Icon(
-              Icons.add,
-              color: isDark ? Colors.white : pkpIndigo,
-            ),
+            icon: Icon(Icons.add, color: isDark ? Colors.white : pkpIndigo),
             onPressed: () {
               int value = int.tryParse(controller.text) ?? 0;
               controller.text = (value + 1).toString();

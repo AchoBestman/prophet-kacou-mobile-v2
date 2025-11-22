@@ -25,12 +25,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Écouter les changements de thème
     final themeProvider = Provider.of<ThemeProvider>(context);
-
+    
     return AnimatedTheme(
       data: themeProvider.lightTheme,
-      duration: const Duration(milliseconds: 400), // ⏱️ durée de la transition
+      duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOut,
       child: MaterialApp(
         title: 'Prophet Kacou',
@@ -40,18 +39,55 @@ class HomePage extends StatelessWidget {
         themeMode: themeProvider.themeMode,
         home: const LandingPage(),
         initialRoute: '/',
-        routes: {
-          '/sermons': (context) => const SermonsPage(),
-          '/biographies': (context) => const BiographiesPage(),
-          '/photos': (context) => const PhotosPage(),
-          '/videos': (context) => const VideosPage(),
-          '/hymns': (context) => const HymnsPage(),
-          '/assemblies': (context) => const AssembliesPage(),
-          '/informations': (context) => const InformationsPage(),
-          '/langues': (context) => const LanguagesPage(),
-          '/settings': (context) => const SettingsPage(),
-          '/abouts': (context) => const AboutsPage(),
-          '/downloads': (context) => const DownloadHistoryPage(),
+        // Utiliser onGenerateRoute pour mieux contrôler la navigation
+        onGenerateRoute: (settings) {
+          WidgetBuilder builder;
+          
+          switch (settings.name) {
+            case '/':
+              builder = (context) => const LandingPage();
+              break;
+            case '/sermons':
+              builder = (context) => const SermonsPage();
+              break;
+            case '/biographies':
+              builder = (context) => const BiographiesPage();
+              break;
+            case '/photos':
+              builder = (context) => const PhotosPage();
+              break;
+            case '/videos':
+              builder = (context) => const VideosPage();
+              break;
+            case '/hymns':
+              builder = (context) => const HymnsPage();
+              break;
+            case '/assemblies':
+              builder = (context) => const AssembliesPage();
+              break;
+            case '/informations':
+              builder = (context) => const InformationsPage();
+              break;
+            case '/langues':
+              builder = (context) => const LanguagesPage();
+              break;
+            case '/settings':
+              builder = (context) => const SettingsPage();
+              break;
+            case '/abouts':
+              builder = (context) => const AboutsPage();
+              break;
+            case '/downloads':
+              builder = (context) => const DownloadHistoryPage();
+              break;
+            default:
+              builder = (context) => const LandingPage();
+          }
+          
+          return MaterialPageRoute(
+            builder: builder,
+            settings: settings,
+          );
         },
       ),
     );
@@ -63,26 +99,34 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Consumer écoute les changements du LanguageProvider
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        // Ces valeurs se mettront à jour quand la langue change
         final title = i18n.tr('home.title');
         final version = "v.1.0.0";
         final titleAndVersion = "$title - $version";
-
-        return Scaffold(
-          extendBody: true,
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: pkpIndigo,
-            title: AppBarSection(title: titleAndVersion),
-          ),
-          body: SafeArea(
-            bottom: true,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [LanguageSelector(), BodySection(), FooterSection()],
+        
+        return PopScope(
+          // Empêcher le retour arrière sur la page d'accueil
+          canPop: false,
+          child: Scaffold(
+            extendBody: true,
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              backgroundColor: pkpIndigo,
+              title: AppBarSection(title: titleAndVersion),
+              // Masquer le bouton retour
+              automaticallyImplyLeading: false,
+            ),
+            body: SafeArea(
+              bottom: true,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  LanguageSelector(),
+                  BodySection(),
+                  FooterSection(),
+                ],
+              ),
             ),
           ),
         );

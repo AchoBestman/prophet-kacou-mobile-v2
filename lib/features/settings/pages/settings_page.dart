@@ -15,6 +15,7 @@ class SettingsPage extends StatelessWidget {
 
     return MainLayout(
       title: i18n.tr('home.settings'),
+      isHomePage: false,
       body: ListView(
         children: [
           // ================== SECTION POLICE ==================

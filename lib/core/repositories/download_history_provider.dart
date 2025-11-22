@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/constants/app_strings.dart';
 import 'package:prophet_kacou/core/models/download_progress.dart';
 import 'package:prophet_kacou/core/models/download_history.dart';
 import 'package:prophet_kacou/core/services/download_manager.dart';
+import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+enum LookupHistooryMode {next, previous}
 
 class DownloadHistoryProvider extends ChangeNotifier {
 
   final DownloadManager _downloadManager = DownloadManager();
   final Map<String, StreamSubscription> _subscriptions = {};
+
 
   List<DownloadHistory> _history = [];
   List<DownloadHistory> get history => _history;
@@ -60,6 +65,26 @@ class DownloadHistoryProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Erreur lors de la sauvegarde de l\'historique: $e');
     }
+  }
+  // find an item in history
+  DownloadHistory? getHistory (int id, LookupHistooryMode mode, int? firstAudioId){
+   
+   if (_history.isEmpty) return null;
+   final index = _history.indexWhere((h) => extractNumberValueFromAudioFormattedId(h.id) == id);
+   if (index == -1) return null;
+
+    final findIndex = mode == LookupHistooryMode.next
+        ? Math.min(index + 1, history.length - 1)
+        : Math.max(index - 1, 0);
+
+    final response = history[findIndex];
+
+    if(firstAudioId != null){
+      final index = _history.indexWhere((h) => extractNumberValueFromAudioFormattedId(h.id) == firstAudioId);
+      return history[index];
+    }
+
+    return response;
   }
 
   // Démarrer un nouveau téléchargement

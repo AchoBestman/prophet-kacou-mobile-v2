@@ -48,7 +48,7 @@ class DownloadFloatingButton extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.orange.withOpacity(0.5),
+                        color: Colors.orange.withValues(alpha: 0.5),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -119,7 +119,7 @@ class _CircularProgressPainter extends CustomPainter {
 
     // Cercle de fond
     final bgPaint = Paint()
-      ..color = color.withOpacity(0.2)
+      ..color = color.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4;
 
