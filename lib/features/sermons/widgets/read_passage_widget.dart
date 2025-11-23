@@ -24,7 +24,7 @@ class _ReadPassageWidgetState extends State<ReadPassageWidget> {
   void initState() {
     super.initState();
     _sermonController.text = "1"; // 👈 valeur par défaut
-    _verseController.text = "";  // 👈 verset optionnel
+    _verseController.text = "1";  // 👈 verset optionnel
   }
 
   @override

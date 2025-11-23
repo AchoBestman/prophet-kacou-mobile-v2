@@ -93,7 +93,7 @@ flutter_native_splash:
   # Image au centre (votre icône)
   # Taille recommandée: 1152x1152 pixels (3x de 384x384)
   # ou minimum 512x512 pixels
-  image: assets/icons/icon-1152x1152.png
+  image: assets/icons/icon2-512x512.png
 
   # Configuration Android (versions < 12)
   android: true
@@ -103,16 +103,16 @@ flutter_native_splash:
     # Image pour Android 12+ (doit être plus petite)
     # Taille recommandée: 288x288 pixels (zone de sécurité)
     # Maximum: 432x432 pixels
-    image: assets/icons/icon-432x432.png
+    image: assets/icons/icon2-512x512.png
 
     # Couleur de fond pour Android 12+
     color: "#FFFFFF"
 
-  # Configuration iOS
+    # Configuration iOS
   ios: true
-  # Image pour iOS (optionnel, si différente)
-  # Taille recommandée: 1152x1152 pixels
-  image_ios: assets/icons/icon-1152x1152.png
+    # Image pour iOS (optionnel, si différente)
+    # Taille recommandée: 1152x1152 pixels
+  image_ios: assets/icons/icon2-512x512.png
 
   # Couleur de fond iOS (si différente d'Android)
   # color_ios: "#FFFFFF"
@@ -133,7 +133,7 @@ flutter_launcher_icons:
   ios: true
 
   # Image principale (taille recommandée: 1024x1024 pixels minimum)
-  image_path: "assets/icons/icon-1024x1024.png"
+  image_path: "assets/icons/icon2-512x512.png"
 
   # Configuration Android - Icône adaptative
   adaptive_icon_background: "#FFFFFF"
