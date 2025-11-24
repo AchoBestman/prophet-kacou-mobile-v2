@@ -1,4 +1,5 @@
 // lib/app/core/database/db_manager.dart
+import 'dart:developer';
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:prophet_kacou/core/constants/app_strings.dart';
@@ -32,12 +33,17 @@ class DBManager {
 
   /// Supprimer une base de donnees
   static Future<bool> deleteDatabase(String initial) async {
-    final file = await PathUtils.getDBPath(languePath(initial));
-
-    if (!await File(file).exists()) {
-      await File(file).delete();
-      return true;
+    try {
+      final file = await PathUtils.getDBPath(languePath(initial));
+      if (await File(file).exists()) {
+        await File(file).delete();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log(e.toString());
     }
+
     return false;
   }
 
@@ -62,13 +68,12 @@ class DBManager {
 
   /// Ouvre une base de données et la met en cache
   Future<Database> openDB(String relativePath) async {
-    
     if (_dbCache.containsKey(relativePath)) {
       return _dbCache[relativePath]!;
     }
 
     final path = await PathUtils.getDBPath(relativePath);
-    print("relativePath: $relativePath _dbCache, path $path");
+
     if (!await File(path).exists()) {
       throw Exception("❌ Base de données introuvable : $relativePath");
     }

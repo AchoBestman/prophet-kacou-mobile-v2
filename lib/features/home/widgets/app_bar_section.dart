@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/core/utils/langues.dart';
+import 'package:prophet_kacou/core/utils/path_utils.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 
 class AppBarSection extends StatelessWidget {
@@ -21,8 +25,13 @@ class AppBarSection extends StatelessWidget {
           ),
         ),
         ElevatedButton.icon(
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/sermons');
+          onPressed: () async {
+            final file = await PathUtils.getDBPath(languePath(i18n.lang));
+            if (await File(file).exists() && context.mounted) {
+              Navigator.pushReplacementNamed(context, '/sermons');
+            } else if(context.mounted) {
+              Navigator.pushReplacementNamed(context, '/langues');
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
@@ -33,10 +42,13 @@ class AppBarSection extends StatelessWidget {
             minimumSize: const Size(0, 0),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
+              borderRadius: BorderRadius.circular(6),
+            ),
           ),
-          label: Text(i18n.tr('home.sermon'), style: const TextStyle(fontSize: 12)),
+          label: Text(
+            i18n.tr('home.sermon'),
+            style: const TextStyle(fontSize: 12),
+          ),
         ),
       ],
     );

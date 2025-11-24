@@ -12,10 +12,23 @@ class AppStrings {
 
   static const downloadHistory = "download_history";
 
+  // Database last update key
+  static const String dbLastUpdateKey = "langues_last_updates";
+
+  // Database available update key
+  static const String dbAvailableUpdateKey = "langues_available_updates";
+
+  // Total database available update key
+  static const String totalDbAvailableUpdateKey = "total_langues_to_update";
+
+  //check if update langue request is pending
+  static const String updateIsPending = "update_is_pending";
+
   // Dossiers internes
   static const databasesDirName = 'databases';
   static const downloadDirName = 'Philippekacou';
   static const dbName = 'matth25v6';
+  static const commonDbName = 'common';
   static const apiUrl = "https://api.philippekacou.org/api";
 
 

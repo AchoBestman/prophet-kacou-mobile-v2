@@ -40,7 +40,10 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
   @override
   void initState() {
     super.initState();
-    _loadSongs();
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSongs();
+    });
   }
 
 

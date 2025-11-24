@@ -23,6 +23,6 @@ String languePath(String locale) {
   return '${extractCountryCode(locale)}/${AppStrings.dbName}_${extractLangueCode(locale)}.db';
 }
 
-String commonPath(String locale) {
+String commonPath() {
   return 'common/common.db';
 }

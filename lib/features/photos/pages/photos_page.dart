@@ -31,7 +31,11 @@ class _PhotosPageState extends State<PhotosPage> {
   @override
   void initState() {
     super.initState();
-    _loadPhotos();
+    
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPhotos();
+    });
   }
 
   Future<void> _loadPhotos({bool refresh = false}) async {

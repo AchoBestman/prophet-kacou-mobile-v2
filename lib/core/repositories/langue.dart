@@ -1,5 +1,6 @@
 // lib/core/repositories/langue_repository.dart
 import 'package:prophet_kacou/core/database/db_manager.dart';
+import 'package:prophet_kacou/core/models/app_data_update.dart';
 import 'package:prophet_kacou/core/models/langue.dart';
 import 'package:prophet_kacou/core/models/paginated_result.dart';
 import 'package:sqflite/sqflite.dart';
@@ -32,8 +33,9 @@ class LangueRepository {
       whereArgs.add('%${initial.trim()}%');
     }
 
-    final whereClause =
-        whereConditions.isNotEmpty ? whereConditions.join(' AND ') : '';
+    final whereClause = whereConditions.isNotEmpty
+        ? whereConditions.join(' AND ')
+        : '';
 
     // Compter le total
     final countResult = await db.rawQuery(
@@ -78,19 +80,30 @@ class LangueRepository {
     return Langue.fromMap(results.first);
   }
 
-  Future<Langue?> findByInitial(String initial, String updated_at) async {
-    final db = await _dbManager.openCommonDB();
-    final List<Map<String, dynamic>> results = await db.query(
-      'langue_last_updateds',
-      where: 'langue = ?',
-      whereArgs: [initial],
-      limit: 1,
-    );
+  // Fonction findLangueLastUpdate
+  Future<AppDataUpdate?> findLangueLastUpdate(
+    String lang,
+    String updateLangue,
+  ) async {
+    try {
+      final db = await _dbManager.openCommonDB();
 
-    if (results.isEmpty) return null;
+      final List<Map<String, dynamic>> results = await db.query(
+        'langue_last_updateds',
+        columns: ['updated_at', 'langue'],
+        where: 'langue = ?',
+        whereArgs: [updateLangue],
+        limit: 1,
+      );
 
-    return Langue.fromMap(results.first);
+      if (results.isEmpty) return null;
+
+      AppDataUpdate result =  AppDataUpdate.fromJson(results.first);
+      return result;
+    } catch (e) {
+      print(e);
+    }
+
+    return null;
   }
-
 }
-

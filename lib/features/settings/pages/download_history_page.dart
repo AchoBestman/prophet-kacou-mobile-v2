@@ -363,6 +363,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                             audioUrl: download.audioUrl,
                             albumId: download.albumId,
                             fileOriginalName: null,
+                            videoLink: null,
                             localFullPath: snapshot.data!,
                             content: download.title
                           );

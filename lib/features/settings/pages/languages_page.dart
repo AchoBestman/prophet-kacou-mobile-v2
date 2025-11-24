@@ -8,6 +8,7 @@ import 'package:prophet_kacou/core/models/langue.dart';
 import 'package:prophet_kacou/core/repositories/langue.dart';
 import 'package:prophet_kacou/core/services/download_manager.dart';
 import 'package:prophet_kacou/core/utils/alert_dialog.dart';
+import 'package:prophet_kacou/core/utils/app_data_updates.dart';
 import 'package:prophet_kacou/core/utils/connection.dart';
 import 'package:prophet_kacou/core/utils/download_utils.dart';
 import 'package:prophet_kacou/core/utils/langues.dart';
@@ -36,6 +37,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
   final Map<String, StreamSubscription> _downloadSubscriptions = {};
   final Map<String, DownloadProgress> _downloadProgresses = {};
   final DownloadManager _downloadManager = DownloadManager();
+  final DBManager _dbManager = DBManager();
   final Set<String> _preparingDownloads = {};
   List<dynamic> _updates = [];
 
@@ -47,14 +49,19 @@ class _LanguagesPageState extends State<LanguagesPage> {
 
   int _currentPage = 1;
   int _totalCount = 0;
-  final int _perPage = 20;
+  final int _perPage = 200;
   bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
-    _loadLangues();
     _scrollController.addListener(_onScroll);
+
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLangues();
+      availableServerLanguesUpdates("en-en");
+    });
   }
 
   void _onScroll() {
@@ -92,6 +99,9 @@ class _LanguagesPageState extends State<LanguagesPage> {
         if (!mounted) return;
         setState(() {
           langue.isDownloaded = true;
+
+          updateLangueLastUpdate(langue.currentUpdate);
+          _refreshDbUpdates();
           _downloadProgresses.remove(langue.initial);
           _sortLangues();
         });
@@ -227,6 +237,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
       // Vérifier l'état de téléchargement AVANT le tri
       for (var langue in newLangues) {
         langue.isDownloaded = await DBManager.dbExists(langue.initial);
+        langue.currentUpdate = await dbHasNewUpdate(langue.initial);
       }
 
       setState(() {
@@ -267,8 +278,9 @@ class _LanguagesPageState extends State<LanguagesPage> {
     final confirm = await _showDeleteConfirmation(langue);
 
     if (confirm) {
-      await DBManager.deleteDatabase(langue.initial);
-
+      final bool isDelete = await DBManager.deleteDatabase(langue.initial);
+      if(!isDelete) return;
+      _dbManager.closeAll();
       setState(() {
         // Marquer comme non téléchargée
         langue.isDownloaded = false;
@@ -277,6 +289,8 @@ class _LanguagesPageState extends State<LanguagesPage> {
         _sortLangues();
       });
     }
+
+    return ;
   }
 
   void _toggleSearch() {
@@ -434,7 +448,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
     final isDownloading =
         progress != null && progress.status == DownloadStatus.downloading;
     final isPreparing = _preparingDownloads.contains(langue.initial);
-    final containsLangue = _updates.any((u) => u['langue'] == langue.initial);
+    final containsLangue = _updates.any((u) => u == langue.initial);
 
     return Card(
       margin: EdgeInsets.zero,

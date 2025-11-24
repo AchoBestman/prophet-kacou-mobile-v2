@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/app/themes/app_theme.dart';
+import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
@@ -26,11 +27,14 @@ class VerseLinksWidget extends StatefulWidget {
 }
 
 class _VerseLinksWidgetState extends State<VerseLinksWidget> {
-  void _showModalBottom() {
+  
+  void _showModalBottom(bool isDark) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? null : pkpSand,
       builder: (context) => SafeArea(
         child: ListView(
+          
           shrinkWrap: true,
           children: widget.verseLinks!.asMap().entries.map((entry) {
             final link = VerseLink.fromMap(entry.value);
@@ -131,6 +135,8 @@ class _VerseLinksWidgetState extends State<VerseLinksWidget> {
     }
 
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -149,8 +155,8 @@ class _VerseLinksWidgetState extends State<VerseLinksWidget> {
               fontFamily: themeProvider.customFont.fontFamily,
               fontStyle: FontStyle.italic,
             ),
-            title: const Text("Voir fichier associé"),
-            onTap: _showModalBottom,
+            title: const Text("Voir le fichier associé"),
+            onTap: ()=> _showModalBottom(isDark),
           ),
         ),
       ],

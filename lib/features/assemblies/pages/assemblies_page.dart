@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/core/models/country.dart';
 import 'package:prophet_kacou/core/repositories/country.dart';
+import 'package:prophet_kacou/core/utils/app_data_updates.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/assemblies/pages/city_page.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
@@ -34,8 +35,13 @@ class _AssembliesPageState extends State<AssembliesPage> {
   @override
   void initState() {
     super.initState();
-    _loadCountries();
+
     _scrollController.addListener(_onScroll);
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCountries();
+      availableServerLanguesUpdates("en-en");
+    });
   }
 
   @override

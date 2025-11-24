@@ -28,10 +28,10 @@ class MainLayout extends StatelessWidget {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final String countryCode = i18n.countryCode;
-
-    return WillPopScope(
+  
+    return PopScope(
       // Empêcher le retour arrière sur la page d'accueil
-      onWillPop: () async => !isHomePage,
+      canPop: !isHomePage,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: pkpIndigo,

@@ -41,8 +41,12 @@ class _CityPageState extends State<CityPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadCities();
     _scrollController.addListener(_onScroll);
+
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCities();
+    });
   }
 
   @override

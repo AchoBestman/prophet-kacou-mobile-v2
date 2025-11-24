@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -27,9 +28,9 @@ class DownloadUtils {
 
     final cleanFileName = cleanAndSlugifyFileName(fileName, extension.label);
 
-    final fullPath = subFolder == AudioFolder.hymns 
-          ? '${downloadsDir.path}/${subFolder.label}/$cleanFileName.${extension.label}' 
-          : '${downloadsDir.path}/${subFolder.label}/${extractLangueCode(initial)}/${extractLangueCode(initial)}/$cleanFileName.${extension.label}';
+    final fullPath = subFolder == AudioFolder.hymns
+        ? '${downloadsDir.path}/${subFolder.label}/$cleanFileName.${extension.label}'
+        : '${downloadsDir.path}/${subFolder.label}/${extractLangueCode(initial)}/${extractLangueCode(initial)}/$cleanFileName.${extension.label}';
 
     final directory = Directory(fullPath).parent;
     if (!await directory.exists()) await directory.create(recursive: true);
@@ -38,14 +39,21 @@ class DownloadUtils {
   }
 
   /// Obtenir le lien de téléchargement
-  static Future<String?> getDownloadUrl(BuildContext context, String initial) async {
+  static Future<String?> getDownloadUrl(
+    BuildContext? context,
+    String initial,
+  ) async {
     try {
-      final response = await Dio().get('${AppStrings.apiUrl}/$initial/download-url');
+      final response = await Dio().get(
+        '${AppStrings.apiUrl}/$initial/download-url',
+      );
       if (response.statusCode == 200 && response.data != null) {
         return response.data['download_url'];
       }
     } catch (e) {
-      if (context.mounted) NotificactionService.showErrorMessage(context, 'Erreur: $e');
+      if (context != null && context.mounted) {
+        NotificactionService.showErrorMessage(context, 'Erreur: $e');
+      }
     }
     return null;
   }
@@ -55,7 +63,7 @@ class DownloadUtils {
     BuildContext context,
     String initial,
     File filePath,
-    String ? url, {
+    String? url, {
     required void Function(DownloadProgress) onProgress,
     required void Function() onCompleted,
     required void Function(String error) onError,
@@ -65,10 +73,10 @@ class DownloadUtils {
       return;
     }
 
-    dynamic downloadUrl =  await getDownloadUrl(context, initial);
-    dynamic appDir =  await PathUtils.getDatabaseRootDir();
+    dynamic downloadUrl = await getDownloadUrl(context, initial);
+    dynamic appDir = await PathUtils.getDatabaseRootDir();
 
-    if(url != null){
+    if (url != null) {
       downloadUrl = url;
       appDir = await PathUtils.getDownloadDir();
     }
@@ -76,7 +84,9 @@ class DownloadUtils {
 
     final fullPath = File('${appDir.path}/${filePath.path}');
 
-    final subscription = _downloadManager.progressStream(initial).listen((progress) {
+    final subscription = _downloadManager.progressStream(initial).listen((
+      progress,
+    ) {
       switch (progress.status) {
         case DownloadStatus.completed:
           onCompleted();
@@ -106,6 +116,30 @@ class DownloadUtils {
       subscription.cancel();
       _subscriptions.remove(initial);
       if (!e.toString().contains("Cancelled")) onError('Erreur: $e');
+    }
+  }
+
+  /// Démarrer un téléchargement de la langue common
+  static Future<void> startDownloadCommonDB() async {
+    if (!await ConnectionUtils.hasConnection()) {
+      return;
+    }
+
+    try {
+      String filePath = commonPath();
+      dynamic downloadUrl = await getDownloadUrl(null, AppStrings.commonDbName);
+      dynamic appDir = await PathUtils.getDatabaseRootDir();
+
+      if (downloadUrl == null) return;
+
+      final fullPath = File('${appDir.path}/${File(filePath).path}');
+      await _downloadManager.download(
+        id: AppStrings.commonDbName,
+        url: downloadUrl,
+        fileFullPath: fullPath,
+      );
+    } catch (e) {
+      log('Erreur: $e');
     }
   }
 

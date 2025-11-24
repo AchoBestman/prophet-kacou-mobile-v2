@@ -30,7 +30,10 @@ class _VideosPageState extends State<VideosPage> {
   @override
   void initState() {
     super.initState();
-    _loadVideos();
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadVideos();
+    });
   }
 
   Future<void> _loadVideos({bool refresh = false}) async {

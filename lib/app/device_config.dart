@@ -84,7 +84,7 @@ ResponsiveConfig getConfig(BuildContext context) {
         imageAlignment: 0.5,
         imageTopTitleMargin: 30,
         flagDefaultSize: 36,
-        flagSpacing: 8,
+        flagSpacing: 12,
         flagRunSpacing:5,
       );
 
@@ -142,15 +142,15 @@ ResponsiveConfig getConfig(BuildContext context) {
     case DeviceType.medium:
       //valeur de mon phone et Écrans moyens - légèrement réduit par rapport à Plus
       return ResponsiveConfig(
-        topMargin:  aspectRatio > 2 ? 150 : 250,
+        topMargin:  130,
         horizontalPadding: 33,
-        topPadding: 6,
+        topPadding: 4,
         borderRadius: 8,
         textFontSize: 17,
         referenceFontSize: 13,
         spacing: 4,
         imageAlignment: 0,
-        imageTopTitleMargin: 35,
+        imageTopTitleMargin: 30,
         flagDefaultSize: 35,
         flagSpacing: 8,
         flagRunSpacing: 4,

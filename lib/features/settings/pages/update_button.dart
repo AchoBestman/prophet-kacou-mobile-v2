@@ -2,6 +2,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/services/api_service.dart';
+import 'package:prophet_kacou/core/utils/app_data_updates.dart';
 import 'package:prophet_kacou/core/utils/connection.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/features/settings/pages/languages_page.dart';
@@ -12,7 +13,6 @@ class UpdateButton extends StatefulWidget {
 
   /// ⚡ Callback pour remonter les mises à jour récupérées
   final void Function(List<dynamic> updates)? onUpdatesReceived;
-
   const UpdateButton({
     super.key,
     this.isOnLanguagesPage = false,
@@ -38,7 +38,18 @@ class UpdateButtonState extends State<UpdateButton> {
     setState(() => _isChecking = true);
 
     try {
-      final updates = await getDbUpdates();
+      final totalLanguages = await getTotalAppDataUpdatesAvailable();
+      final List<String> updates = [];
+
+      //Boucler sur toutes les langues disponibles
+      for (final lang in totalLanguages) {
+        final canBeUpdated = await dbHasNewUpdate(lang);
+
+        // Si une mise à jour est disponible, ajouter à la liste
+        if (canBeUpdated != null) {
+          updates.add(lang);
+        }
+      }
 
       if (mounted) {
         setState(() {

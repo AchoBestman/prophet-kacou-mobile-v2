@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/app/device_config.dart';
+import 'package:prophet_kacou/core/utils/langues.dart';
+import 'package:prophet_kacou/core/utils/path_utils.dart';
 import 'package:prophet_kacou/i18n/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
@@ -15,20 +19,18 @@ class LanguageSelector extends StatelessWidget {
     final languages = LanguageData.homeLanguages();
     final languageProvider = Provider.of<LanguageProvider>(context);
     final config = getConfig(context);
-    
+
     final double flagDefaultSize = config.flagDefaultSize;
     final double flagSpacing = config.flagSpacing;
-    final double flagRunSpacing= config.flagRunSpacing;
-    final double flagIconWidth= flagDefaultSize + 27;
-    final double textIconWidth= flagDefaultSize + 37;
-    final double flagIconHeight= flagDefaultSize + 7;
-    final double flagImagewidth =  flagDefaultSize + 20;
-    final double flagImageHeight= flagDefaultSize;
+    final double flagRunSpacing = config.flagRunSpacing;
+    final double flagIconWidth = flagDefaultSize + 27;
+    final double textIconWidth = flagDefaultSize + 37;
+    final double flagIconHeight = flagDefaultSize + 7;
+    final double flagImagewidth = flagDefaultSize + 20;
+    final double flagImageHeight = flagDefaultSize;
 
     Future<void> shareLink() async {
-      await Share.shareUri(
-        Uri.https('philippekacou.org')
-      );
+      await Share.shareUri(Uri.https('philippekacou.org'));
     }
 
     // Afficher un loader pendant l'initialisation
@@ -66,15 +68,25 @@ class LanguageSelector extends StatelessWidget {
                     onTap: () async {
                       await languageProvider.changeLanguage(item);
                       if (context.mounted) {
-                        Future.microtask(() {
+                        Future.microtask(() async {
                           if (item.icon == "langues") {
                             Navigator.pushReplacementNamed(context, '/langues');
-                            return;
+                            return true;
                           }
                           if (item.icon == "share") {
                             shareLink();
                           } else {
-                            Navigator.pushReplacementNamed(context, '/sermons');
+                            final file = await PathUtils.getDBPath(
+                              languePath(item.lang),
+                            );
+                            if (await File(file).exists()) {
+                              Navigator.pushReplacementNamed(context, '/sermons');
+                              return true;
+                            }else{
+                              Navigator.pushReplacementNamed(context, '/langues');
+                              return true;
+                            }
+                            
                           }
                         });
                       }

@@ -9,6 +9,7 @@ import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/repositories/sermon.dart';
+import 'package:prophet_kacou/core/utils/app_data_updates.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
 import 'package:prophet_kacou/features/sermons/widgets/read_passage_widget.dart';
@@ -51,6 +52,7 @@ class _SermonsPageState extends State<SermonsPage>
     // ✅ Charger les données en arrière-plan après le build initial
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSermons();
+      availableServerLanguesUpdates("en-en");
     });
   }
 
@@ -178,6 +180,7 @@ class _SermonsPageState extends State<SermonsPage>
                             title: sermonTitleFormatter(sermon),
                             audioUrl: sermon.audio!,
                             albumId: null,
+                            videoLink: sermon.video,
                             fileOriginalName: null,
                             localFullPath: snapshot.data!,
                             content: sermon.title,
@@ -194,11 +197,14 @@ class _SermonsPageState extends State<SermonsPage>
                               showPlay: true,
                               showDownload: true,
                               showShare: true,
+                              showOpen: true,
+                              sermonVideoExist: true,
                               iconSize: 24.0,
                               spacing: 4.0,
                               mode: DisplayMode.menu,
                               order: [
                                 ButtonType.play,
+                                ButtonType.open,
                                 ButtonType.download,
                                 ButtonType.share,
                                 ButtonType.delete,

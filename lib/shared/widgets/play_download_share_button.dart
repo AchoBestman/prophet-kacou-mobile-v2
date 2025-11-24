@@ -6,6 +6,7 @@ import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/core/repositories/download_history_provider.dart';
 import 'package:prophet_kacou/core/utils/alert_dialog.dart';
+import 'package:prophet_kacou/core/utils/extensions.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
@@ -21,6 +22,7 @@ class ButtonConfig {
   final bool showShare;
   final bool showOpen;
   final bool showDelete;
+  final bool sermonVideoExist;
   final bool isFromHistory;
   final List<ButtonType> order;
   final double iconSize;
@@ -37,6 +39,7 @@ class ButtonConfig {
     this.showShare = true,
     this.showDelete = true,
     this.showOpen = false,
+    this.sermonVideoExist = false,
     this.order = const [
       ButtonType.play,
       ButtonType.download,
@@ -155,6 +158,15 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
   Future<void> _openLocalFile() async {
     // ✅ Empêcher les clics multiples
     if (_isOpening) return;
+
+    if (widget.config.sermonVideoExist &&
+        widget.data.videoLink != null &&
+        widget.data.videoLink!.isNotEmpty) {
+      widget.onClose?.call();
+      final url = getYoutubeVideoUrlById(widget.data.videoLink!);
+      await openLink(url);
+    }
+
     if (widget.data.localFullPath == null) return;
 
     final file = widget.data.localFullPath!;
@@ -227,7 +239,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
       if (mounted) {
         NotificactionService.showErrorMessage(
           context,
-          'Erreur lors de la suppression: $e',
+          'Une erreur s\'est produite lors de la suppression: $e',
         );
       }
     } finally {
@@ -259,7 +271,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
       final modelId = widget.data.albumId != null
           ? songIdInDownloadProviderFormatter(widget.data.id)
           : widget.data.fileOriginalName != null
-          ? "other_${widget.data.id}"
+          ? otherIdInDownloadProviderFormatter(widget.data.id)
           : sermonIdInDownloadProviderFormatter(widget.data.id);
 
       await downloadProvider.startDownload(
@@ -276,7 +288,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
       if (!mounted) return;
       NotificactionService.showErrorMessage(
         context,
-        'Erreur de téléchargement: $e',
+        'Une erreur s\'est produite lors du téléchargement: $e',
       );
     } finally {
       if (mounted) {
@@ -293,9 +305,10 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     });
   }
 
-  void _showShareOptions(bool isDownloaded) {
+  void _showShareOptions(bool isDownloaded, bool isDark) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? null : pkpSand,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -303,7 +316,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
             if (widget.data.content != null)
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                title: const Text('Partager en PDF'),
+                title: const Text('Partager le PDF'),
                 enabled: !_isSharing,
                 onTap: _isSharing
                     ? null
@@ -321,7 +334,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                   Icons.music_note_rounded,
                   color: Colors.red,
                 ),
-                title: const Text('Partager en Audio'),
+                title: const Text('Partager l\'audio'),
                 enabled: !_isSharing,
                 onTap: _isSharing
                     ? null
@@ -334,7 +347,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
             if (widget.data.content != null && widget.data.albumId == null)
               ListTile(
                 leading: const Icon(Icons.book, color: Colors.blue),
-                title: const Text('Partager en EPUB'),
+                title: const Text('Partager l\'EPUB'),
                 enabled: !_isSharing,
                 onTap: _isSharing
                     ? null
@@ -372,13 +385,19 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
 
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? null : pkpSand,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: buttonsToShow.map((buttonType) {
             switch (buttonType) {
               case ButtonType.open:
-                if (!widget.config.showOpen || !_isDownloaded) {
+                if (!widget.config.showOpen) {
+                  return const SizedBox.shrink();
+                }
+                if (widget.config.sermonVideoExist &&
+                   ( widget.data.videoLink == null ||
+                    widget.data.videoLink!.isEmpty)) {
                   return const SizedBox.shrink();
                 }
 
@@ -389,8 +408,16 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                           height: 24,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.open_in_new_rounded),
-                  title: const Text('Ouvrir le fichier'),
+                      : Icon(
+                          widget.config.sermonVideoExist
+                              ? Icons.videocam
+                              : Icons.open_in_new_rounded,
+                        ),
+                  title: Text(
+                    widget.config.sermonVideoExist
+                        ? "Voir la video"
+                        : 'Ouvrir le fichier',
+                  ),
                   enabled: !_isOpening,
                   onTap: _isOpening
                       ? null
@@ -412,7 +439,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.delete, color: Colors.red),
-                  title: const Text("Supprimer l'audio"),
+                  title: const Text('Supprimer l\'audio'),
                   enabled: !_isDeleting,
                   onTap: _isDeleting
                       ? null
@@ -434,7 +461,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                     color: isCurrentAudio
                         ? Colors.orange
                         : isDownloaded
-                        ? pkpLime
+                        ? Colors.orange
                         : null,
                   ),
                   title: Text(isPlaying ? 'Pause' : 'Lecture'),
@@ -501,7 +528,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                       ? null
                       : () {
                           Navigator.pop(context);
-                          _showShareOptions(isDownloaded);
+                          _showShareOptions(isDownloaded, isDark);
                         },
                 );
             }
@@ -595,7 +622,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
           color: isCurrentAudio
               ? Colors.orange
               : _isDownloaded
-              ? Colors.green
+              ? Colors.orange
               : (isDark
                     ? widget.config.defaultDarkColor
                     : widget.config.defaultLigthColor),
@@ -663,7 +690,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
     }
 
     return InkWell(
-      onTap: _isSharing ? null : () => _showShareOptions(isDownloaded),
+      onTap: _isSharing ? null : () => _showShareOptions(isDownloaded, isDark),
       borderRadius: BorderRadius.circular(
         double.parse(borderRadius.toString()),
       ),

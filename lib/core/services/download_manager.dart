@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:prophet_kacou/core/database/db_manager.dart';
 import 'package:prophet_kacou/core/models/download_progress.dart';
 
 class DownloadManager {
   static final DownloadManager _instance = DownloadManager._internal();
   factory DownloadManager() => _instance;
+  final DBManager _dbManager = DBManager();
 
   final Dio _dio = Dio();
   final Map<String, CancelToken> _tasks = {};
@@ -35,7 +37,7 @@ class DownloadManager {
     _tasks[id] = cancelToken;
 
     final tempPath = "${fileFullPath.path}.tmp";
-
+    _dbManager.closeAll();
     try {
       await fileFullPath.parent.create(recursive: true);
       int received = 0;
@@ -79,6 +81,13 @@ class DownloadManager {
       }
 
       await File(tempPath).rename(fileFullPath.path);
+      // AJOUT : Forcer la synchronisation du fichier
+      final downloadedFile = File(fileFullPath.path);
+      final fileHandle = await downloadedFile.open(mode: FileMode.append);
+      await fileHandle.flush(); // Force l'écriture sur le disque
+      await fileHandle.close();
+      // Attendre un peu pour la synchronisation système
+      await Future.delayed(const Duration(milliseconds: 200));
 
       final completed = DownloadProgress(
         id: id,
@@ -91,6 +100,7 @@ class DownloadManager {
       _controllers[id]?.add(completed);
 
       // Fermer et nettoyer seulement après succès
+      
       await Future.delayed(const Duration(milliseconds: 100));
       await _controllers[id]?.close();
       _controllers.remove(id);

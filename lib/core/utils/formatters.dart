@@ -38,6 +38,15 @@ class ParsedReference {
   int verseNumber;
   ParsedReference({this.label, this.sermonNumber =0, this.verseNumber =0});
 }
+//print("link: ${widget.data.videoLink}");
+
+String getYoutubeVideoUrlById(String id){
+  if (id.isEmpty) return '';
+  if(id.startsWith("https://")){
+    return id;
+  }
+  return 'https://youtu.be/$id';
+}
 
 String getVideoId(String url) {
   if (url.isEmpty) return '';
@@ -132,6 +141,10 @@ Future<File> localSongPath(Song song, initial) async {
 
 String songIdInDownloadProviderFormatter(int id) {
   return 'song_$id';
+}
+
+String otherIdInDownloadProviderFormatter(int id) {
+  return 'other_$id';
 }
 
 int extractNumberValueFromAudioFormattedId(String key) {

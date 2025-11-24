@@ -27,7 +27,11 @@ class _HymnsPageState extends State<HymnsPage> {
   @override
   void initState() {
     super.initState();
-    _loadAlbums();
+
+    // ✅ Charger les données en arrière-plan après le build initial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAlbums();
+    });
   }
 
   Future<void> _loadAlbums({bool refresh = false}) async {

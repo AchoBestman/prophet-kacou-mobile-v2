@@ -1,4 +1,5 @@
 
+import 'package:prophet_kacou/core/models/app_data_update.dart';
 import 'package:prophet_kacou/core/models/country.dart';
 
 class Langue {
@@ -13,6 +14,7 @@ class Langue {
   final DateTime? updatedAt;
   final String? webTranslation;
   bool isDownloaded;
+  AppDataUpdate? currentUpdate;
 
   // Relation avec Country
   final Country? country;
@@ -30,6 +32,7 @@ class Langue {
     this.webTranslation,
     this.country,
     this.isDownloaded = false,
+    this.currentUpdate
   });
 
   /// Créer depuis la base de données
