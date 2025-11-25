@@ -27,10 +27,9 @@
     "biography": "Biographie",
     "photos": "Photos",
     "videos": "Vidéos",
-    
     "others": "Autres",
     "share": "Partager",
-    "settings": "Paramétres",
+    "settings": "Paramètres",
     "download_history": "Historique de téléchargements",
     "countries": "Pays",
     "informations": "Informations",
@@ -48,7 +47,7 @@
     "share_the_audio": "Partager l'audio",
     "share_the_epub": "Partager l'EPUB",
     "epub_not_available": "Génération EPUB en cours de développement",
-    "see_the_video":"Voir la video",
+    "see_the_video": "Voir la video",
     "open_the_file": "Ouvrir le fichier",
     "delete_the_audio": "Supprimer l'audio",
     "pause": "Pause",
@@ -166,5 +165,23 @@
     "delete_all": "Tout supprimer",
     "see": "Voir",
     "make_as_read": "Marquer comme lu"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "appearance": "Apparence",
+    "dark_mode": "Mode sombre",
+    "dark_mode_enabled": "Mode sombre activé",
+    "light_mode_enabled": "Mode clair activé",
+    "theme_mode": "Sélection du thème",
+    "light_theme": "Thème clair",
+    "dark_theme": "Thème sombre",
+    "system_theme": "Suivre le système",
+    "system_theme_desc": "Utiliser le thème de votre appareil",
+    "color_preview": "Aperçu des couleurs",
+    "light_bg": "Arrière-plan clair",
+    "dark_bg": "Arrière-plan sombre",
+    "primary_color": "Couleur principale",
+    "font_size": "Taille du texte",
+    "font": "Ajustez la taille du texte et la police dans toute l'application"
   }
 }
