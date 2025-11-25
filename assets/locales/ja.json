@@ -165,5 +165,23 @@
     "delete_all": "すべて削除",
     "see": "見る",
     "make_as_read": "既読にする"
-  }
+  },
+  "settings": {
+      "title": "設定",
+      "appearance": "外観",
+      "dark_mode": "ダークモード",
+      "dark_mode_enabled": "ダークモードが有効になりました",
+      "light_mode_enabled": "ライトモードが有効になりました",
+      "theme_mode": "テーマの選択",
+      "light_theme": "ライトテーマ",
+      "dark_theme": "ダークテーマ",
+      "system_theme": "システムに従う",
+      "system_theme_desc": "デバイスのテーマを使用する",
+      "color_preview": "色のプレビュー",
+      "light_bg": "ライト背景",
+      "dark_bg": "ダーク背景",
+      "primary_color": "主要カラー",
+      "font_size": "文字サイズ",
+      "font": "アプリ全体の文字サイズとフォントを調整する"
+    }
 }

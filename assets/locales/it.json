@@ -165,5 +165,23 @@
     "delete_all": "Elimina tutto",
     "see": "Vedi",
     "make_as_read": "Segna come letto"
-  }
+  },
+  "settings": {
+      "title": "Impostazioni",
+      "appearance": "Aspetto",
+      "dark_mode": "Modalità scura",
+      "dark_mode_enabled": "Modalità scura attivata",
+      "light_mode_enabled": "Modalità chiara attivata",
+      "theme_mode": "Selezione tema",
+      "light_theme": "Tema chiaro",
+      "dark_theme": "Tema scuro",
+      "system_theme": "Segui il sistema",
+      "system_theme_desc": "Usa il tema del dispositivo",
+      "color_preview": "Anteprima colore",
+      "light_bg": "Sfondo chiaro",
+      "dark_bg": "Sfondo scuro",
+      "primary_color": "Colore principale",
+      "font_size": "Dimensione testo",
+      "font": "Regola la dimensione e il carattere del testo nell’app"
+    }
 }

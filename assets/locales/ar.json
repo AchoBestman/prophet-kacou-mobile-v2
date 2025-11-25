@@ -165,5 +165,23 @@
     "delete_all": "حذف الكل",
     "see": "عرض",
     "make_as_read": "تحديد كمقروء"
-  }
+  },
+  "settings": {
+      "title": "الإعدادات",
+      "appearance": "المظهر",
+      "dark_mode": "الوضع الداكن",
+      "dark_mode_enabled": "تم تفعيل الوضع الداكن",
+      "light_mode_enabled": "تم تفعيل الوضع الفاتح",
+      "theme_mode": "اختيار السمة",
+      "light_theme": "السمة الفاتحة",
+      "dark_theme": "السمة الداكنة",
+      "system_theme": "اتّباع النظام",
+      "system_theme_desc": "استخدم سمة الجهاز",
+      "color_preview": "معاينة الألوان",
+      "light_bg": "خلفية فاتحة",
+      "dark_bg": "خلفية داكنة",
+      "primary_color": "اللون الرئيسي",
+      "font_size": "حجم الخط",
+      "font": "اضبط حجم الخط والخط المستخدم في التطبيق"
+    }
 }

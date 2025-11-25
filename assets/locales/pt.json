@@ -165,5 +165,23 @@
     "delete_all": "Excluir tudo",
     "see": "Ver",
     "make_as_read": "Marcar como lido"
-  }
+  },
+  "settings": {
+      "title": "Configurações",
+      "appearance": "Aparência",
+      "dark_mode": "Modo escuro",
+      "dark_mode_enabled": "Modo escuro ativado",
+      "light_mode_enabled": "Modo claro ativado",
+      "theme_mode": "Seleção de tema",
+      "light_theme": "Tema claro",
+      "dark_theme": "Tema escuro",
+      "system_theme": "Seguir sistema",
+      "system_theme_desc": "Usar o tema do dispositivo",
+      "color_preview": "Prévia de cores",
+      "light_bg": "Fundo claro",
+      "dark_bg": "Fundo escuro",
+      "primary_color": "Cor primária",
+      "font_size": "Tamanho do texto",
+      "font": "Ajuste o tamanho e a fonte do texto no app"
+    }
 }

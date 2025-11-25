@@ -165,5 +165,23 @@
     "delete_all": "Alles verwijderen",
     "see": "Bekijken",
     "make_as_read": "Markeren als gelezen"
-  }
+  },
+  "settings": {
+      "title": "Instellingen",
+      "appearance": "Weergave",
+      "dark_mode": "Donkere modus",
+      "dark_mode_enabled": "Donkere modus ingeschakeld",
+      "light_mode_enabled": "Lichte modus ingeschakeld",
+      "theme_mode": "Themakeuze",
+      "light_theme": "Licht thema",
+      "dark_theme": "Donker thema",
+      "system_theme": "Systeem volgen",
+      "system_theme_desc": "Gebruik het thema van het apparaat",
+      "color_preview": "Kleurvoorbeeld",
+      "light_bg": "Lichte achtergrond",
+      "dark_bg": "Donkere achtergrond",
+      "primary_color": "Primaire kleur",
+      "font_size": "Tekstgrootte",
+      "font": "Pas de tekstgrootte en lettertype in de app aan"
+    }
 }

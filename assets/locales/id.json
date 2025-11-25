@@ -165,5 +165,23 @@
     "delete_all": "Hapus semua",
     "see": "Lihat",
     "make_as_read": "Tandai sebagai dibaca"
-  }
+  },
+  "settings": {
+      "title": "Pengaturan",
+      "appearance": "Tampilan",
+      "dark_mode": "Mode gelap",
+      "dark_mode_enabled": "Mode gelap aktif",
+      "light_mode_enabled": "Mode terang aktif",
+      "theme_mode": "Pilihan tema",
+      "light_theme": "Tema terang",
+      "dark_theme": "Tema gelap",
+      "system_theme": "Ikuti sistem",
+      "system_theme_desc": "Gunakan tema perangkat",
+      "color_preview": "Pratinjau warna",
+      "light_bg": "Latar terang",
+      "dark_bg": "Latar gelap",
+      "primary_color": "Warna utama",
+      "font_size": "Ukuran teks",
+      "font": "Sesuaikan ukuran dan font teks dalam aplikasi"
+    }
 }

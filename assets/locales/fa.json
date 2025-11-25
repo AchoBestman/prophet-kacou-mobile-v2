@@ -165,5 +165,23 @@
     "delete_all": "حذف همه",
     "see": "مشاهده",
     "make_as_read": "علامت‌گذاری به عنوان خوانده‌شده"
-  }
+  },
+  "settings": {
+      "title": "تنظیمات",
+      "appearance": "ظاهر",
+      "dark_mode": "حالت تیره",
+      "dark_mode_enabled": "حالت تیره فعال شد",
+      "light_mode_enabled": "حالت روشن فعال شد",
+      "theme_mode": "انتخاب تم",
+      "light_theme": "تم روشن",
+      "dark_theme": "تم تیره",
+      "system_theme": "دنبال کردن سیستم",
+      "system_theme_desc": "استفاده از تم دستگاه",
+      "color_preview": "پیش‌نمایش رنگ",
+      "light_bg": "پس‌زمینه روشن",
+      "dark_bg": "پس‌زمینه تیره",
+      "primary_color": "رنگ اصلی",
+      "font_size": "اندازه متن",
+      "font": "اندازه و فونت متن را در سراسر برنامه تنظیم کنید"
+    }
 }

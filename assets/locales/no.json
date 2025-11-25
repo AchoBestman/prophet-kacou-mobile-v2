@@ -165,5 +165,23 @@
     "delete_all": "Slett alt",
     "see": "Se",
     "make_as_read": "Merk som lest"
-  }
+  },
+  "settings": {
+      "title": "Innstillinger",
+      "appearance": "Utseende",
+      "dark_mode": "Mørk modus",
+      "dark_mode_enabled": "Mørk modus aktivert",
+      "light_mode_enabled": "Lys modus aktivert",
+      "theme_mode": "Temavalg",
+      "light_theme": "Lyst tema",
+      "dark_theme": "Mørkt tema",
+      "system_theme": "Følg systemet",
+      "system_theme_desc": "Bruk enhetens tema",
+      "color_preview": "Fargeforhåndsvisning",
+      "light_bg": "Lys bakgrunn",
+      "dark_bg": "Mørk bakgrunn",
+      "primary_color": "Primærfarge",
+      "font_size": "Tekststørrelse",
+      "font": "Juster tekststørrelse og skrifttype i appen"
+    }
 }

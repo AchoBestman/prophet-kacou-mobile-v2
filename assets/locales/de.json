@@ -165,5 +165,23 @@
     "delete_all": "Alles löschen",
     "see": "Ansehen",
     "make_as_read": "Als gelesen markieren"
-  }
+  },
+  "settings": {
+      "title": "Einstellungen",
+      "appearance": "Darstellung",
+      "dark_mode": "Dunkelmodus",
+      "dark_mode_enabled": "Dunkelmodus aktiviert",
+      "light_mode_enabled": "Hellmodus aktiviert",
+      "theme_mode": "Themenauswahl",
+      "light_theme": "Helles Thema",
+      "dark_theme": "Dunkles Thema",
+      "system_theme": "System folgen",
+      "system_theme_desc": "Systemthema verwenden",
+      "color_preview": "Farbvorschau",
+      "light_bg": "Heller Hintergrund",
+      "dark_bg": "Dunkler Hintergrund",
+      "primary_color": "Hauptfarbe",
+      "font_size": "Textgröße",
+      "font": "Textgröße und Schriftart in der App anpassen"
+    }
 }

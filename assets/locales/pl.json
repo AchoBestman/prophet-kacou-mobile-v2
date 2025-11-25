@@ -165,5 +165,23 @@
     "delete_all": "Usuń wszystko",
     "see": "Zobacz",
     "make_as_read": "Oznacz jako przeczytane"
-  }
+  },
+  "settings": {
+      "title": "Ustawienia",
+      "appearance": "Wygląd",
+      "dark_mode": "Tryb ciemny",
+      "dark_mode_enabled": "Włączono tryb ciemny",
+      "light_mode_enabled": "Włączono tryb jasny",
+      "theme_mode": "Wybór motywu",
+      "light_theme": "Motyw jasny",
+      "dark_theme": "Motyw ciemny",
+      "system_theme": "Zgodnie z systemem",
+      "system_theme_desc": "Użyj motywu urządzenia",
+      "color_preview": "Podgląd kolorów",
+      "light_bg": "Jasne tło",
+      "dark_bg": "Ciemne tło",
+      "primary_color": "Kolor główny",
+      "font_size": "Rozmiar tekstu",
+      "font": "Dostosuj rozmiar i czcionkę tekstu w aplikacji"
+    }
 }

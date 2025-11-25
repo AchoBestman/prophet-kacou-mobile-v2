@@ -165,5 +165,23 @@
     "delete_all": "सभी हटाएँ",
     "see": "देखें",
     "make_as_read": "पढ़ा हुआ चिह्नित करें"
-  }
+  },
+  "settings": {
+      "title": "सेटिंग्स",
+      "appearance": "दिखावट",
+      "dark_mode": "डार्क मोड",
+      "dark_mode_enabled": "डार्क मोड सक्षम",
+      "light_mode_enabled": "लाइट मोड सक्षम",
+      "theme_mode": "थीम चयन",
+      "light_theme": "लाइट थीम",
+      "dark_theme": "डार्क थीम",
+      "system_theme": "सिस्टम का पालन करें",
+      "system_theme_desc": "अपने डिवाइस की थीम का उपयोग करें",
+      "color_preview": "रंग पूर्वावलोकन",
+      "light_bg": "हल्की पृष्ठभूमि",
+      "dark_bg": "गहरी पृष्ठभूमि",
+      "primary_color": "मुख्य रंग",
+      "font_size": "पाठ आकार",
+      "font": "एप में पाठ आकार और फ़ॉन्ट समायोजित करें"
+    }
 }

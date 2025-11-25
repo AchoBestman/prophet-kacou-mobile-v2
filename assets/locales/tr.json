@@ -165,5 +165,23 @@
     "delete_all": "Tümünü sil",
     "see": "Görüntüle",
     "make_as_read": "Okundu olarak işaretle"
-  }
+  },
+  "settings": {
+      "title": "设置",
+      "appearance": "外观",
+      "dark_mode": "深色模式",
+      "dark_mode_enabled": "深色模式已启用",
+      "light_mode_enabled": "浅色模式已启用",
+      "theme_mode": "主题选择",
+      "light_theme": "浅色主题",
+      "dark_theme": "深色主题",
+      "system_theme": "跟随系统",
+      "system_theme_desc": "使用设备主题",
+      "color_preview": "颜色预览",
+      "light_bg": "浅色背景",
+      "dark_bg": "深色背景",
+      "primary_color": "主颜色",
+      "font_size": "文字大小",
+      "font": "调整应用中的文字大小和字体"
+    }
 }

@@ -165,5 +165,23 @@
     "delete_all": "Șterge tot",
     "see": "Vezi",
     "make_as_read": "Marchează ca citit"
-  }
+  },
+  "settings": {
+      "title": "Setări",
+      "appearance": "Aspect",
+      "dark_mode": "Mod întunecat",
+      "dark_mode_enabled": "Mod întunecat activat",
+      "light_mode_enabled": "Mod luminos activat",
+      "theme_mode": "Selectare temă",
+      "light_theme": "Temă luminoasă",
+      "dark_theme": "Temă întunecată",
+      "system_theme": "Urmărește sistemul",
+      "system_theme_desc": "Folosește tema dispozitivului",
+      "color_preview": "Previzualizare culori",
+      "light_bg": "Fundal luminos",
+      "dark_bg": "Fundal întunecat",
+      "primary_color": "Culoare principală",
+      "font_size": "Mărime text",
+      "font": "Ajustați mărimea și fontul textului în aplicație"
+    }
 }
