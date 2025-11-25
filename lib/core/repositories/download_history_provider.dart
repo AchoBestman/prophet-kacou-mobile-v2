@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/constants/app_strings.dart';
+import 'package:prophet_kacou/core/models/audio_item.dart';
 import 'package:prophet_kacou/core/models/download_progress.dart';
 import 'package:prophet_kacou/core/models/download_history.dart';
 import 'package:prophet_kacou/core/services/download_manager.dart';
@@ -87,35 +88,50 @@ class DownloadHistoryProvider extends ChangeNotifier {
     return response;
   }
 
+
+// {
+//     // required String id,
+//     // required String title,
+//     // required String audioUrl,
+//     // required File filePath,
+//     // String? albumTitle,
+//     // int? albumId,
+//     // String? fileOriginalName,
+    
+//   }
+
   // Démarrer un nouveau téléchargement
-  Future<void> startDownload({
-    required String id,
-    required String title,
-    required String audioUrl,
-    required File filePath,
-    String? albumTitle,
-    int? albumId,
-    String? fileOriginalName,
-  }) async {
+  Future<void> startDownload(AudioItem audio) async {
+
+    final modelId = audio.albumId != null
+          ? songIdInDownloadProviderFormatter(audio.id)
+          : audio.fileOriginalName != null
+          ? otherIdInDownloadProviderFormatter(audio.id)
+          : sermonIdInDownloadProviderFormatter(audio.id);
+
     // Vérifier si le téléchargement existe déjà
-    final existingIndex = _history.indexWhere((h) => h.id == id);
+    final existingIndex = _history.indexWhere((h) => h.id == modelId);
     if (existingIndex != -1 && _history[existingIndex].isInProgress) {
       return; // Téléchargement déjà en cours
     }
 
     // Créer un nouvel historique
     final download = DownloadHistory(
-      id: id,
-      title: title,
-      audioUrl: audioUrl,
-      filePath: filePath,
+      id: modelId,
+      title: audio.title,
+      audioUrl: audio.audioUrl,
+      filePath: audio.localFullPath!,
       percent: 0.0,
       downloadedMb: 0.0,
       totalMb: 0.0,
       status: DownloadStatus.downloading,
       startedAt: DateTime.now(),
-      albumTitle: albumTitle,
-      albumId: albumId,
+      albumTitle: null,
+      albumId: audio.albumId,
+      type: audio.type,
+      videoLink: audio.videoLink,
+      fileOriginalName: audio.fileOriginalName,
+      content: audio.content
     );
 
     if (existingIndex != -1) {

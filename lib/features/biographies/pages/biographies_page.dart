@@ -68,7 +68,7 @@ class _BiographiesPageState extends State<BiographiesPage> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Erreur: $_error',
+                  i18n.tr("home.an_error_occurred"),
                   style: const TextStyle(color: Colors.red),
                   textAlign: TextAlign.center,
                 ),

@@ -93,7 +93,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
         IconButton(
           icon: Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward),
           onPressed: _toggleSortOrder,
-          tooltip: _isAscending ? 'Plus récent' : 'Plus ancien',
+          tooltip: _isAscending ? i18n.tr("home.more_recent") : i18n.tr("home.more_older"),
         ),
       ],
       body: Column(
@@ -141,7 +141,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                       children: [
                         const Icon(Icons.check_circle_rounded, size: 18),
                         const SizedBox(width: 8),
-                        Text('Terminés (${provider.completedCount})'),
+                        Text('${i18n.tr("home.finished")} (${provider.completedCount})'),
                       ],
                     ),
                   ),
@@ -153,7 +153,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                       children: [
                         const Icon(Icons.downloading_rounded, size: 18),
                         const SizedBox(width: 8),
-                        Text('En cours (${provider.inProgressCount})'),
+                        Text('${i18n.tr("home.pending")} (${provider.inProgressCount})'),
                       ],
                     ),
                   ),
@@ -192,7 +192,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Aucun téléchargement en cours',
+                  i18n.tr("home.no_pending_download"),
                   style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
@@ -227,7 +227,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Aucun téléchargement terminé',
+                  i18n.tr("home.no_finished_download"),
                   style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
@@ -345,7 +345,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                     icon: const Icon(Icons.close_rounded),
                     color: Colors.red,
                     onPressed: () => provider.cancelDownload(download.id),
-                    tooltip: 'Annuler',
+                    tooltip: i18n.tr("button.cancel"),
                   )
                 else
                   Row(
@@ -362,10 +362,11 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
                             title: download.title,
                             audioUrl: download.audioUrl,
                             albumId: download.albumId,
-                            fileOriginalName: null,
-                            videoLink: null,
                             localFullPath: snapshot.data!,
-                            content: download.title
+                            content: download.content,
+                            type: download.type,
+                            fileOriginalName: download.fileOriginalName,
+                            videoLink: download.videoLink,
                           );
 
                           return PlayDownloadShareButton(
@@ -445,7 +446,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
               children: [
                 if (download.completedAt != null)
                   Text(
-                    'Téléchargé le: ${dateFormat.format(download.completedAt!)}',
+                    '${i18n.tr("home.download_date")}: ${dateFormat.format(download.completedAt!)}',
                     style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                   ),
               ],
@@ -454,7 +455,7 @@ class _DownloadHistoryPageState extends State<DownloadHistoryPage>
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  'Erreur: ${download.error}',
+                  '${download.error}',
                   style: const TextStyle(fontSize: 10, color: Colors.red),
                 ),
               ),

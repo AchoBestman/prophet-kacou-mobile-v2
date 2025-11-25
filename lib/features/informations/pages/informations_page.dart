@@ -62,7 +62,7 @@ class _InformationsPageState extends State<InformationsPage> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        NotificactionService.showErrorMessage(context, 'Erreur : $e');
+        NotificactionService.showErrorMessage(context, i18n.tr("home.an_error_occurred"));
       }
     }
   }

@@ -1,4 +1,6 @@
 // lib/shared/widgets/update_button.dart
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/services/api_service.dart';
@@ -65,9 +67,10 @@ class UpdateButtonState extends State<UpdateButton> {
     } catch (e) {
       if (mounted) {
         setState(() => _isChecking = false);
+        log('Erreur de vérification: $e');
         NotificactionService.showErrorMessage(
           context,
-          'Erreur de vérification: $e',
+          i18n.tr("home.an_error_occurred"),
         );
       }
     }
@@ -89,7 +92,7 @@ class UpdateButtonState extends State<UpdateButton> {
     if (mounted) {
       NotificactionService.showSuccessMessage(
         context,
-        'Mise á jour effectué avec success!',
+        i18n.tr("home.update_is_done"),
       );
     }
   }
@@ -126,8 +129,8 @@ class UpdateButtonState extends State<UpdateButton> {
                 ),
           onPressed: _isChecking ? null : _handleTap,
           tooltip: widget.isOnLanguagesPage
-              ? 'Vérifier les mises à jour'
-              : 'Voir les mises à jour',
+              ? i18n.tr("home.check_update")
+              : i18n.tr("home.see_update"),
         ),
         if (_updateCount > 0 && !_isChecking)
           Positioned(

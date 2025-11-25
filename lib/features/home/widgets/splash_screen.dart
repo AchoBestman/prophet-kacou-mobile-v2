@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 
 class SplashScreen extends StatelessWidget {
   final double progress;
@@ -73,7 +74,7 @@ class SplashScreen extends StatelessWidget {
             const SizedBox(height: 30),
             // Texte de chargement
             Text(
-              'Chargement...',
+              i18n.tr("home.loading"),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,

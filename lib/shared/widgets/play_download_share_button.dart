@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
@@ -228,7 +230,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         if (mounted) {
           NotificactionService.showSuccessMessage(
             context,
-            "${widget.data.title} a été supprimé avec succès!",
+            "${widget.data.title} ${i18n.tr("home.has_been_deleted")}",
           );
         }
       }
@@ -237,9 +239,10 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
       await _refreshFileStatus();
     } catch (e) {
       if (mounted) {
+        log('Une erreur s\'est produite lors de la suppression: $e');
         NotificactionService.showErrorMessage(
           context,
-          'Une erreur s\'est produite lors de la suppression: $e',
+          i18n.tr("home.an_error_occurred")
         );
       }
     } finally {
@@ -268,27 +271,15 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
         listen: false,
       );
 
-      final modelId = widget.data.albumId != null
-          ? songIdInDownloadProviderFormatter(widget.data.id)
-          : widget.data.fileOriginalName != null
-          ? otherIdInDownloadProviderFormatter(widget.data.id)
-          : sermonIdInDownloadProviderFormatter(widget.data.id);
-
-      await downloadProvider.startDownload(
-        id: modelId,
-        title: widget.data.title,
-        audioUrl: widget.data.audioUrl,
-        filePath: widget.data.localFullPath!,
-        albumTitle: null,
-        albumId: widget.data.albumId,
-      );
+      await downloadProvider.startDownload(widget.data);
 
       if (!mounted) return;
     } catch (e) {
       if (!mounted) return;
+      log('Une erreur s\'est produite lors du téléchargement: $e');
       NotificactionService.showErrorMessage(
         context,
-        'Une erreur s\'est produite lors du téléchargement: $e',
+        i18n.tr("home.an_error_occurred")
       );
     } finally {
       if (mounted) {
@@ -316,7 +307,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
             if (widget.data.content != null)
               ListTile(
                 leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                title: const Text('Partager le PDF'),
+                title: Text(i18n.tr("home.share_the_pdf")),
                 enabled: !_isSharing,
                 onTap: _isSharing
                     ? null
@@ -334,7 +325,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                   Icons.music_note_rounded,
                   color: Colors.red,
                 ),
-                title: const Text('Partager l\'audio'),
+                title: Text(i18n.tr("home.share_the_audio")),
                 enabled: !_isSharing,
                 onTap: _isSharing
                     ? null
@@ -347,7 +338,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
             if (widget.data.content != null && widget.data.albumId == null)
               ListTile(
                 leading: const Icon(Icons.book, color: Colors.blue),
-                title: const Text('Partager l\'EPUB'),
+                title: Text(i18n.tr("home.share_the_epub")),
                 enabled: !_isSharing,
                 onTap: _isSharing
                     ? null
@@ -359,7 +350,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                         } else {
                           NotificactionService.showSuccessMessage(
                             context,
-                            'Génération EPUB en cours de développement',
+                            i18n.tr("home.epub_not_available"),
                           );
                         }
                       },
@@ -415,8 +406,8 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                         ),
                   title: Text(
                     widget.config.sermonVideoExist
-                        ? "Voir la video"
-                        : 'Ouvrir le fichier',
+                        ? i18n.tr("home.see_the_video")
+                        : i18n.tr("home.open_the_file"),
                   ),
                   enabled: !_isOpening,
                   onTap: _isOpening
@@ -439,7 +430,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.delete, color: Colors.red),
-                  title: const Text('Supprimer l\'audio'),
+                  title: Text(i18n.tr("home.delete_the_audio")),
                   enabled: !_isDeleting,
                   onTap: _isDeleting
                       ? null
@@ -464,7 +455,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                         ? Colors.orange
                         : null,
                   ),
-                  title: Text(isPlaying ? 'Pause' : 'Lecture'),
+                  title: Text(isPlaying ? i18n.tr("home.pause") : i18n.tr("home.play")),
                   onTap: () {
                     Navigator.pop(context);
                     _playAudio();
@@ -484,7 +475,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                         : Icons.download_rounded,
                     color: _isDownloaded ? Colors.orange : null,
                   ),
-                  title: Text(_isDownloaded ? 'Téléchargé' : 'Télécharger'),
+                  title: Text(_isDownloaded ? i18n.tr("home.downloaded") : i18n.tr("home.download")),
                   enabled: !isDownloading && !_isDownloadingManual,
                   onTap: (isDownloading || _isDownloadingManual)
                       ? null
@@ -522,7 +513,7 @@ class _PlayDownloadShareButtonState extends State<PlayDownloadShareButton> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.share, color: Colors.orange),
-                  title: const Text('Partager'),
+                  title: Text(i18n.tr("home.share")),
                   enabled: !_isSharing,
                   onTap: _isSharing
                       ? null

@@ -12,6 +12,7 @@ import 'dart:developer';
 Future<void> setDbUpdates(String initial) async {
   final Dio dio = Dio();
   final LangueRepository langueRepo = LangueRepository();
+  final DBManager _dbManager = DBManager();
   final canSendRequest = await getUpdateIsPending();
   if (canSendRequest != null && canSendRequest == true) {
     return;
@@ -19,7 +20,6 @@ Future<void> setDbUpdates(String initial) async {
 
   try {
     final localLangues = await DBManager.getAllExistingDB();
-    print("local langues to updates: $localLangues");
 
     setUpdateIsPending(true);
     final response = await dio.get(
@@ -34,16 +34,16 @@ Future<void> setDbUpdates(String initial) async {
 
     final responseBody = response.data;
     List<dynamic>? jsonData;
-print("responseBody: $responseBody");
+
     if (responseBody is List) {
       jsonData = responseBody;
-    } else if(responseBody is String) {
+    } else if (responseBody is String) {
       jsonData = jsonDecode(response.data);
     }
 
     //
-    if(jsonData == null){
-      return ;
+    if (jsonData == null) {
+      return;
     }
 
     final data = jsonData.map((json) => AppDataUpdate.fromJson(json)).toList();
@@ -57,25 +57,30 @@ print("responseBody: $responseBody");
 
     final common = data.firstWhere(
       (item) => item.langue == "common",
-      orElse: () =>
-          AppDataUpdate(langue: '', updatedAt: ''),
+      orElse: () => AppDataUpdate(langue: '', updatedAt: ''),
     );
 
     if (common.updatedAt.isNotEmpty) {
-     
       final lastUpdatedAt = await langueRepo.findLangueLastUpdate(
         i18n.lang,
         common.langue,
       );
 
-      if (lastUpdatedAt == null ||
-          DateTime.parse(
-            common.updatedAt,
-          ).isAfter(DateTime.parse(lastUpdatedAt.updatedAt))) {
-        try {
-          print('${common.updatedAt} download updated common database finish');
+      final commonHasNewupdate = lastUpdatedAt != null
+          ? DateTime.parse(common.updatedAt)
+                    .difference(DateTime.parse(lastUpdatedAt.updatedAt))
+                    .inMinutes >=
+                2
+          : false;
 
+      if (lastUpdatedAt == null || commonHasNewupdate) {
+        try {
+          print(
+            '${common.updatedAt} download updated common database finish for last upadte ${lastUpdatedAt!.updatedAt}',
+          );
+          //close all db before download
           await DownloadUtils.startDownloadCommonDB();
+          updateLangueLastUpdate(common);
           setUpdateIsPending(false);
         } catch (err) {
           log('Error downloading database: $err');
@@ -90,5 +95,3 @@ print("responseBody: $responseBody");
     setUpdateIsPending(false);
   }
 }
-
-

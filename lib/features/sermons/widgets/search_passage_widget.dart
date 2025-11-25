@@ -187,8 +187,8 @@ class SearchPassageWidgetState extends State<SearchPassageWidget> {
               ? Center(
                   child: Text(
                     query.isEmpty
-                        ? 'Enter a keyword to search verses'
-                        : 'No verses found',
+                        ? i18n.tr("home.enter_keyword_to_search")
+                        : i18n.tr("table.no_result"),
                     style: TextStyle(
                       fontSize: themeProvider.customFont.fontSize,
                       fontFamily: themeProvider.customFont.fontFamily,

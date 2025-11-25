@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,20 +7,25 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:prophet_kacou/core/models/song.dart'; // Ajustez selon votre modèle
 import 'package:prophet_kacou/core/utils/notificaction.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:slugify/slugify.dart';
 
 /// Fonction pour convertir HTML en texte brut
 String renderHtmlToText(String htmlString) {
   if (htmlString.isEmpty) return '';
-  
+
   return htmlString;
   //final document = parse(htmlString);
   //return document.body?.text ?? htmlString;
 }
 
 /// Génère un PDF pour un cantique
-Future<void> generateSongPdf(BuildContext context, Song? song, {String? albumTitle}) async {
+Future<void> generateSongPdf(
+  BuildContext context,
+  Song? song, {
+  String? albumTitle,
+}) async {
   if (song == null) return;
 
   // Charger les polices NotoSans pour Unicode
@@ -77,10 +83,10 @@ Future<void> generateSongPdf(BuildContext context, Song? song, {String? albumTit
           if (song.content != null && song.content!.isNotEmpty) {
             // Diviser le contenu par lignes
             final lines = song.content!.split('\n');
-            
+
             for (var line in lines) {
               final cleanedLine = renderHtmlToText(line);
-              
+
               content.add(
                 pw.Padding(
                   padding: const pw.EdgeInsets.only(bottom: 6),
@@ -119,9 +125,10 @@ Future<void> generateSongPdf(BuildContext context, Song? song, {String? albumTit
     );
   } catch (e) {
     if (context.mounted) {
+      log('Erreur lors de la génération du PDF: $e');
       NotificactionService.showErrorMessage(
         context,
-        'Erreur lors de la génération du PDF: $e',
+        i18n.tr("home.an_error_occurred"),
       );
     }
   }
@@ -192,10 +199,10 @@ Future<void> generateAlbumPdf(
             // Contenu du cantique
             if (song.content != null && song.content!.isNotEmpty) {
               final lines = song.content!.split('\n');
-              
+
               for (var line in lines) {
                 final cleanedLine = renderHtmlToText(line);
-                
+
                 content.add(
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(bottom: 6),
@@ -239,9 +246,10 @@ Future<void> generateAlbumPdf(
     );
   } catch (e) {
     if (context.mounted) {
+      log('Erreur lors de la génération du PDF: $e');
       NotificactionService.showErrorMessage(
         context,
-        'Erreur lors de la génération du PDF: $e',
+        i18n.tr("home.an_error_occurred"),
       );
     }
   }

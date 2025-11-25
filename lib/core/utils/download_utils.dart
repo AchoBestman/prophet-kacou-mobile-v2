@@ -72,7 +72,8 @@ class DownloadUtils {
       if (context.mounted) ConnectionUtils.showNoConnectionMessage(context);
       return;
     }
-
+    if(!context.mounted) return;
+    
     dynamic downloadUrl = await getDownloadUrl(context, initial);
     dynamic appDir = await PathUtils.getDatabaseRootDir();
 

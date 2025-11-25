@@ -1,8 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:prophet_kacou/core/utils/notificaction.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 
 Widget displayImage(BuildContext context, Sermon sermon) {
   final imgBytes = sermon.image?.file;
@@ -22,7 +26,13 @@ Widget displayImage(BuildContext context, Sermon sermon) {
 
         await OpenFilex.open(filePath);
       } catch (e) {
-        debugPrint("Erreur lors de l’ouverture de l’image : $e");
+        log("Erreur lors de l’ouverture de l’image : $e");
+        if (context.mounted) {
+          NotificactionService.showErrorMessage(
+            context,
+            i18n.tr("home.an_error_occurred"),
+          );
+        }
       }
     },
     child: Center(

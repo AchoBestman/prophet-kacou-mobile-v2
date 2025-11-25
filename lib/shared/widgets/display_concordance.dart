@@ -28,6 +28,7 @@ class _ConcordanceWidgetState extends State<ConcordanceWidget> {
         context,
         MaterialPageRoute(
           builder: (_) => SermonDetailPage(sermonNumber: c.sermonNumber, verseNumber: c.verseNumber),
+          settings: RouteSettings(name: "/sermon-details")
         ),
       );
   }

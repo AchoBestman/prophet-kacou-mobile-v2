@@ -127,6 +127,7 @@ class _SermonsPageState extends State<SermonsPage>
               context,
               MaterialPageRoute(
                 builder: (_) => SermonDetailPage(sermonNumber: sermon.number),
+                settings: RouteSettings(name: "/sermon-details")
               ),
             );
           },
@@ -177,6 +178,7 @@ class _SermonsPageState extends State<SermonsPage>
 
                           final audioItem = AudioItem(
                             id: sermon.number,
+                            type: AudioFolder.sermons,
                             title: sermonTitleFormatter(sermon),
                             audioUrl: sermon.audio!,
                             albumId: null,
@@ -243,7 +245,7 @@ class _SermonsPageState extends State<SermonsPage>
             ),
             const SizedBox(height: 16),
             Text(
-              searchQuery.isEmpty ? 'No sermons available' : 'No sermons found',
+              searchQuery.isEmpty ? i18n.tr("home.not_avaible_sermon") : i18n.tr("home.no_result"),
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -305,7 +307,7 @@ class _SermonsPageState extends State<SermonsPage>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Loading...',
+                        i18n.tr("home.waiting"),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.grey[300] : Colors.grey[700],
@@ -364,9 +366,9 @@ class _SermonsPageState extends State<SermonsPage>
                     unselectedLabelColor:
                         theme.tabBarTheme.unselectedLabelColor,
                     indicatorColor: theme.tabBarTheme.indicatorColor,
-                    tabs: const [
-                      Tab(text: 'SERMONS'),
-                      Tab(text: 'READ A PASSAGE'),
+                    tabs:  [
+                      Tab(text: i18n.tr("home.Prédications").toUpperCase()),
+                      Tab(text: i18n.tr("home.read_a_sermon").toUpperCase()),
                     ],
                   ),
                 ),

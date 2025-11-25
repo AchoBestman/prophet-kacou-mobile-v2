@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:prophet_kacou/core/models/sermon.dart';
 import 'package:prophet_kacou/core/utils/formatters.dart';
 import 'package:prophet_kacou/core/utils/notificaction.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:slugify/slugify.dart';
 
@@ -183,10 +185,10 @@ Future<void> generateSermonPdf(BuildContext context, Sermon? sermon) async {
     await Share.shareXFiles([XFile(file.path)], text: "${sermon.chapter}: ${sermon.title}", subject: "${sermon.subTitle}");
   } catch (e) {
     if (context.mounted) {
-      print('Erreur lors de la génération du PDF: $e');
+      log('Erreur lors de la génération du PDF: $e');
       NotificactionService.showErrorMessage(
         context,
-        'Erreur lors de la génération du PDF: $e',
+        i18n.tr("home.an_error_occurred"),
       );
     }
   }
@@ -197,7 +199,7 @@ Future<void> generateSermonEpub(BuildContext context, Sermon sermon) async {
   if (context.mounted) {
     NotificactionService.showSuccessMessage(
       context,
-      'Génération EPUB en cours de développement',
+      i18n.tr("home.epub_not_available"),
     );
   }
 }

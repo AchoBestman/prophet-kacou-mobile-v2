@@ -65,10 +65,10 @@ class _VerseLinksWidgetState extends State<VerseLinksWidget> {
             final text =
                 (extension == FileExtension.pdf ||
                     extension == FileExtension.doc)
-                ? "Le document"
+                ? i18n.tr("home.the_document")
                 : type == 'audio'
-                ? "L'audio"
-                : "La vidéo";
+                ? i18n.tr("home.the_audio")
+                : i18n.tr("home.the_video");
 
             final bool openLink =
                 (extension == FileExtension.pdf ||
@@ -88,6 +88,7 @@ class _VerseLinksWidgetState extends State<VerseLinksWidget> {
                 }
 
                 final audioItem = AudioItem(
+                  type: AudioFolder.others,
                   id: index + 1,
                   title: title,
                   audioUrl: url,
@@ -155,7 +156,7 @@ class _VerseLinksWidgetState extends State<VerseLinksWidget> {
               fontFamily: themeProvider.customFont.fontFamily,
               fontStyle: FontStyle.italic,
             ),
-            title: const Text("Voir le fichier associé"),
+            title: Text(i18n.tr("home.see_file_associated")), 
             onTap: ()=> _showModalBottom(isDark),
           ),
         ),

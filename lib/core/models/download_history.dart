@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:prophet_kacou/core/models/download_progress.dart';
+import 'package:prophet_kacou/core/models/play_mode.dart';
 
 class DownloadHistory {
   final String id;
@@ -16,6 +17,10 @@ class DownloadHistory {
   final DateTime? completedAt;
   final String? albumTitle;
   final int? albumId;
+  final AudioFolder type;
+  final String? videoLink;
+  final String? fileOriginalName;
+  final String? content;
 
   DownloadHistory({
     required this.id,
@@ -26,15 +31,23 @@ class DownloadHistory {
     required this.downloadedMb,
     required this.totalMb,
     required this.status,
+    required this.type,
     this.error,
     required this.startedAt,
     this.completedAt,
     this.albumTitle,
     this.albumId,
+    this.videoLink,
+    this.fileOriginalName,
+    this.content
   });
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'type': type,
+        'videoLink': videoLink,
+        'fileOriginalName': fileOriginalName,
+        'content': content,
         'title': title,
         'audioUrl': audioUrl,
         'filePath': filePath.path,
@@ -53,6 +66,7 @@ class DownloadHistory {
     return DownloadHistory(
       id: json['id'],
       title: json['title'],
+      type: json['type'],
       audioUrl: json['audioUrl'],
       filePath: json['filePath'],
       percent: (json['percent'] as num).toDouble(),
@@ -69,6 +83,9 @@ class DownloadHistory {
           : null,
       albumTitle: json['albumTitle'],
       albumId: json['albumId'],
+      videoLink: json['videoLink'],
+      fileOriginalName: json['fileOriginalName'],
+      content: json['content'],
     );
   }
 
@@ -86,6 +103,10 @@ class DownloadHistory {
     DateTime? completedAt,
     String? albumTitle,
     int? albumId,
+    AudioFolder? type,
+    String? videoLink,
+    String? fileOriginalName,
+    String? content,
   }) {
     return DownloadHistory(
       id: id ?? this.id,
@@ -101,6 +122,10 @@ class DownloadHistory {
       completedAt: completedAt ?? this.completedAt,
       albumTitle: albumTitle ?? this.albumTitle,
       albumId: albumId ?? this.albumId,
+      type: type ?? this.type,
+      videoLink: videoLink ?? this.videoLink,
+      fileOriginalName: fileOriginalName ?? this.fileOriginalName,
+      content: content ?? this.content
     );
   }
 

@@ -41,6 +41,7 @@ class MainLayout extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
+              
             ),
           ),
           actions: actions,
@@ -118,9 +119,9 @@ class MainLayout extends StatelessWidget {
                         ),
 
                         // 🟣 Bas : texte fixe centré
-                        const Center(
+                        Center(
                           child: Text(
-                            "Le livre du salut de notre génération",
+                            i18n.tr("home.the_book_of_our_generation"),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 15,

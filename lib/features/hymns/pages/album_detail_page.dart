@@ -46,7 +46,6 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
     });
   }
 
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -68,11 +67,10 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
         _filteredSongs = _songs;
         _isLoading = false;
       });
-
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        NotificactionService.showErrorMessage(context, 'Erreur : $e');
+        NotificactionService.showErrorMessage(context, i18n.tr("home.an_error_occurred"));
       }
     }
   }
@@ -108,15 +106,14 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
   }
 
   // Méthode pour générer le PDF
-  Future<void> _generatePdf(dynamic sermon) async {
+  Future<void> _generatePdf(dynamic song) async {
     if (mounted) {
-      generateSongPdf(context, sermon as Song);
+      generateSongPdf(context, song as Song);
     }
   }
 
   // Méthode pour générer l'EPUB (à implémenter)
-  Future<void> _generateEpub(dynamic sermon) async {
-  }
+  Future<void> _generateEpub(dynamic song) async {}
 
   Widget _buildSongCard(Song song, int index, bool isDark) {
     return Consumer2<AudioPlayerProvider, DownloadHistoryProvider>(
@@ -146,7 +143,9 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
-                      color: isCurrentSong ? Colors.orange : Theme.of(context).textTheme.bodyLarge?.color,
+                      color: isCurrentSong
+                          ? Colors.orange
+                          : Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -159,13 +158,14 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                     }
 
                     final audioItem = AudioItem(
+                      type: AudioFolder.hymns,
                       id: song.id,
                       title: song.title,
                       audioUrl: song.audio,
                       albumId: song.albumId,
                       fileOriginalName: null,
                       localFullPath: snapshot.data!,
-                      content: song.content
+                      content: song.content,
                     );
 
                     return PlayDownloadShareButton(
@@ -186,7 +186,7 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
                           ButtonType.play,
                           ButtonType.download,
                           ButtonType.share,
-                          ButtonType.delete
+                          ButtonType.delete,
                         ],
                       ),
                     );
@@ -205,76 +205,69 @@ class _AlbumDetailPageState extends State<AlbumDetailPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          MainLayout(
-            title: widget.album.title,
-            actions: [
-              Transform.scale(
-                scale: 0.85,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(_isSearching ? Icons.close : Icons.search),
-                      tooltip: i18n.tr('button.search'),
-                      onPressed: _toggleSearch,
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _isAscending
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
-                      ),
-                      tooltip: i18n.tr('button.order'),
-                      onPressed: _toggleSortOrder,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.home),
-                      tooltip: i18n.tr('title.albums'),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+    return MainLayout(
+      title: widget.album.title,
+      isHomePage: false,
+      actions: [
+        Transform.scale(
+          scale: 0.85,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                tooltip: i18n.tr('button.search'),
+                onPressed: _toggleSearch,
+              ),
+              IconButton(
+                icon: Icon(
+                  _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
                 ),
+                tooltip: i18n.tr('button.order'),
+                onPressed: _toggleSortOrder,
+              ),
+              IconButton(
+                icon: const Icon(Icons.home),
+                tooltip: i18n.tr('title.albums'),
+                onPressed: () => Navigator.pop(context),
               ),
             ],
-            body: Column(
-              children: [
-                if (_isSearching)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: i18n.tr('button.search'),
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onChanged: _onSearchChanged,
+          ),
+        ),
+      ],
+      body: Column(
+        children: [
+          if (_isSearching)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: i18n.tr('button.search'),
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: _onSearchChanged,
+              ),
+            ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredSongs.isEmpty
+                ? Center(child: Text(i18n.tr('table.no_result')))
+                : RefreshIndicator(
+                    onRefresh: _loadSongs,
+                    child: ListView.builder(
+                      itemCount: _filteredSongs.length,
+                      itemBuilder: (context, index) {
+                        final song = _filteredSongs[index];
+                        return _buildSongCard(song, index, isDark);
+                      },
                     ),
                   ),
-                Expanded(
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _filteredSongs.isEmpty
-                      ? Center(child: Text(i18n.tr('table.no_result')))
-                      : RefreshIndicator(
-                          onRefresh: _loadSongs,
-                          child: ListView.builder(
-                            itemCount: _filteredSongs.length,
-                            itemBuilder: (context, index) {
-                              final song = _filteredSongs[index];
-                              return _buildSongCard(song, index, isDark);
-                            },
-                          ),
-                        ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

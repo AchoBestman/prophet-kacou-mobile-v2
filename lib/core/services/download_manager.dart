@@ -37,6 +37,8 @@ class DownloadManager {
     _tasks[id] = cancelToken;
 
     final tempPath = "${fileFullPath.path}.tmp";
+
+    //close all db before download
     _dbManager.closeAll();
     try {
       await fileFullPath.parent.create(recursive: true);

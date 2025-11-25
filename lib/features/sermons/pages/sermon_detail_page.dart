@@ -21,7 +21,7 @@ import 'dart:io';
 class SermonDetailPage extends StatefulWidget {
   final int sermonNumber;
   final int? verseNumber; // ✅ Nouveau paramètre optionnel
-  static const routeName = '/sermon_detail';
+  static const routeName = '/sermon-details';
 
   const SermonDetailPage({
     super.key,
@@ -154,16 +154,16 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     if (_isLoading) {
       return MainLayout(
         isHomePage: false,
-        title: 'Sermon',
+        title: i18n.tr("home.sermon"),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_sermon == null) {
       return MainLayout(
-        title: 'Sermon',
+        title: i18n.tr("home.sermon"),
         isHomePage: false,
-        body: const Center(child: Text('Aucun sermon trouvé')),
+        body:  Center(child: Text(i18n.tr("home.not_avaible_sermon"))),
       );
     }
 
@@ -186,6 +186,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
             }
 
             final audioItem = AudioItem(
+              type: AudioFolder.sermons,
               id: _sermon!.number,
               title: sermonTitleFormatter(_sermon!),
               audioUrl: _sermon!.audio!,
@@ -193,7 +194,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
               albumId: null,
               fileOriginalName: null,
               localFullPath: snapshot.data!,
-              content: _sermon!.title, // just to make share pdf available
+              content: _sermon != null && _sermon!.verses != null && _sermon!.verses!.isNotEmpty ? _sermon!.title : null, // just to make share pdf available
             );
 
             return PlayDownloadShareButton(

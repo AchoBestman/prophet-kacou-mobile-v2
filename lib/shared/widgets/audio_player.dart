@@ -4,6 +4,7 @@ import 'package:prophet_kacou/core/models/play_mode.dart';
 import 'package:prophet_kacou/core/providers/audio_player_provider.dart';
 import 'package:prophet_kacou/features/hymns/pages/audio_detail_page.dart';
 import 'package:prophet_kacou/features/sermons/pages/sermon_detail_page.dart';
+import 'package:prophet_kacou/i18n/i18n.dart';
 import 'package:provider/provider.dart';
 
 class AudioPlayerWidget extends StatelessWidget {
@@ -189,19 +190,19 @@ class AudioPlayerWidget extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Arrêter la lecture'),
-        content: const Text('Voulez-vous arrêter la lecture en cours ?'),
+        title: Text(i18n.tr("home.stop_playing")),
+        content: Text(i18n.tr("alert.stop_playing")),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(i18n.tr("button.cancel")),
           ),
           TextButton(
             onPressed: () {
               provider.stop();
               Navigator.pop(context);
             },
-            child: const Text('Arrêter'),
+            child: Text(i18n.tr("button.confirm")),
           ),
         ],
       ),
@@ -210,21 +211,27 @@ class AudioPlayerWidget extends StatelessWidget {
 
   Widget _buildInfoButton(BuildContext context, AudioPlayerProvider provider) {
     final audio = provider.currentAudio;
-    if (audio == null) return const SizedBox.shrink();
+    if (audio == null || audio.content == null) {
+      return const SizedBox.shrink();
+    }
 
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
-    if (audio.albumId != null && audio.content != null) {
-      if (currentRoute == AudioDetailPage.routeName) {
-        return const SizedBox.shrink();
-      }
+    if (currentRoute == AudioDetailPage.routeName ||
+        currentRoute == SermonDetailPage.routeName) {
+      return const SizedBox.shrink();
+    }
 
+    if (audio.type == AudioFolder.hymns) {
       return IconButton(
         icon: const Icon(Icons.info_outline),
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => AudioDetailPage(audio: audio)),
+            MaterialPageRoute(
+              builder: (_) => AudioDetailPage(audio: audio),
+              settings: RouteSettings(name: "/album-details"),
+            ),
           );
         },
         iconSize: 25,
@@ -232,11 +239,7 @@ class AudioPlayerWidget extends StatelessWidget {
       );
     }
 
-    if (audio.albumId == null && !audio.title.toUpperCase().contains("Kacou")) {
-      if (currentRoute == SermonDetailPage.routeName) {
-        return const SizedBox.shrink();
-      }
-
+    if (audio.type == AudioFolder.sermons) {
       return IconButton(
         icon: const Icon(Icons.info_outline),
         onPressed: () {
@@ -244,6 +247,7 @@ class AudioPlayerWidget extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) => SermonDetailPage(sermonNumber: audio.id),
+              settings: RouteSettings(name: "/sermon-details"),
             ),
           );
         },

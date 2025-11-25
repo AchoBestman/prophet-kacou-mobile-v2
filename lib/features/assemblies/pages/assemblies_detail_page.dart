@@ -53,7 +53,7 @@ class _AssembliesDetailPageState extends State<AssembliesDetailPage> {
     } catch (e) {
       setState(() => _isLoading = false);
 
-      NotificactionService.showErrorMessage(context, 'Erreur : $e');
+      NotificactionService.showErrorMessage(context, i18n.tr("home.an_error_occurred"));
     }
   }
 

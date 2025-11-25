@@ -257,7 +257,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
         _isLoading = false;
       });
       if (mounted) {
-        NotificactionService.showErrorMessage(context, 'Erreur: $e');
+        NotificactionService.showErrorMessage(context, i18n.tr("home.an_error_occurred"));
       }
     }
   }
@@ -271,7 +271,9 @@ class _LanguagesPageState extends State<LanguagesPage> {
 
   Future _deleteLangue(Langue langue) async {
     if (!await ConnectionUtils.hasConnection()) {
-      ConnectionUtils.showNoConnectionMessage(context);
+      if (context.mounted) {
+        ConnectionUtils.showNoConnectionMessage(context);
+      }
       return;
     }
 
@@ -279,7 +281,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
 
     if (confirm) {
       final bool isDelete = await DBManager.deleteDatabase(langue.initial);
-      if(!isDelete) return;
+      if (!isDelete) return;
       _dbManager.closeAll();
       setState(() {
         // Marquer comme non téléchargée
@@ -290,7 +292,7 @@ class _LanguagesPageState extends State<LanguagesPage> {
       });
     }
 
-    return ;
+    return;
   }
 
   void _toggleSearch() {

@@ -134,6 +134,14 @@ class AudioPlayerProvider with ChangeNotifier {
   }
 
   Future<void> play() async {
+    if (_currentAudio == null) return;
+    if (!await ConnectionUtils.hasConnection() &&
+        !await localFileExit(_currentAudio!)) {
+      if (_context != null && _context!.mounted) {
+        ConnectionUtils.showNoConnectionMessage(_context!);
+      }
+      return;
+    }
     await _audioPlayer.play();
   }
 
@@ -203,13 +211,15 @@ class AudioPlayerProvider with ChangeNotifier {
 
         if (download != null) {
           final audioItem = AudioItem(
+            type: download.type,
             id: extractNumberValueFromAudioFormattedId(download.id),
             title: download.title,
             audioUrl: download.audioUrl,
             albumId: download.albumId,
-            fileOriginalName: null,
+            fileOriginalName: download.fileOriginalName,
             localFullPath: download.filePath,
-            content: download.title,
+            content: download.content,
+            videoLink: download.videoLink
           );
           await setAudio(_context!, audioItem, autoPlay: true);
           return;
@@ -237,10 +247,20 @@ class AudioPlayerProvider with ChangeNotifier {
             : await localSongPath(_song!, i18n.lang);
         final int id = _sermon != null ? _sermon!.id : _song!.id;
         final int? albumId = _sermon != null ? null : _song!.albumId;
-        final String? audioUrl = _sermon != null ? _sermon!.audio : _song!.audio;
-        final String? content = _sermon != null ? _sermon!.title : _song!.content;
+        final String? audioUrl = _sermon != null
+            ? _sermon!.audio
+            : _song!.audio;
+        final String? content = _sermon != null
+            ? _sermon!.title
+            : _song!.content;
+
+        final AudioFolder type = _sermon != null
+            ? AudioFolder.sermons
+            : AudioFolder.hymns;
+        final String? videoLink  = _sermon?.video;
 
         final audioItem = AudioItem(
+          type: type,
           id: id,
           title: title,
           audioUrl: audioUrl ?? "",
@@ -248,17 +268,17 @@ class AudioPlayerProvider with ChangeNotifier {
           fileOriginalName: null,
           localFullPath: filePath,
           content: content,
+          videoLink: videoLink
         );
 
         await setAudio(_context!, audioItem, autoPlay: true);
       }
-      debugPrint('Lecture suivante...');
     } catch (e) {
       debugPrint('Erreur playNext: $e');
       if (_context != null && _context!.mounted) {
         NotificactionService.showErrorMessage(
           _context!,
-          'Erreur lors de la lecture suivante: $e',
+          i18n.tr("home.an_error_occurred"),
         );
       }
     }
@@ -280,13 +300,15 @@ class AudioPlayerProvider with ChangeNotifier {
 
         if (download != null) {
           final audioItem = AudioItem(
+            type: download.type,
             id: extractNumberValueFromAudioFormattedId(download.id),
             title: download.title,
             audioUrl: download.audioUrl,
             albumId: download.albumId,
-            fileOriginalName: null,
             localFullPath: download.filePath,
-            content: download.title,
+            fileOriginalName: download.fileOriginalName,
+            content: download.content,
+            videoLink: download.videoLink
           );
           await setAudio(_context!, audioItem, autoPlay: true);
           return;
@@ -305,7 +327,7 @@ class AudioPlayerProvider with ChangeNotifier {
         _song = songMap['album_id'] != null ? Song.fromMap(songMap) : null;
         _sermon = songMap['album_id'] == null ? Sermon.fromMap(songMap) : null;
 
-         final String title = _sermon != null
+        final String title = _sermon != null
             ? sermonTitleFormatter(_sermon!)
             : _song!.title;
         final File filePath = _sermon != null
@@ -313,10 +335,21 @@ class AudioPlayerProvider with ChangeNotifier {
             : await localSongPath(_song!, i18n.lang);
         final int id = _sermon != null ? _sermon!.id : _song!.id;
         final int? albumId = _sermon != null ? null : _song!.albumId;
-        final String? audioUrl = _sermon != null ? _sermon!.audio : _song!.audio;
-        final String? content = _sermon != null ? _sermon!.title : _song!.content;
+        final String? audioUrl = _sermon != null
+            ? _sermon!.audio
+            : _song!.audio;
+        final String? content = _sermon != null
+            ? _sermon!.title
+            : _song!.content;
+
+        final AudioFolder type = _sermon != null
+            ? AudioFolder.sermons
+            : AudioFolder.hymns;
+        final String? videoLink  = _sermon?.video;
 
         final audioItem = AudioItem(
+          type: type,
+          videoLink: videoLink,
           id: id,
           title: title,
           audioUrl: audioUrl ?? "",
@@ -329,13 +362,12 @@ class AudioPlayerProvider with ChangeNotifier {
         await setAudio(_context!, audioItem, autoPlay: true);
       }
 
-      debugPrint('Lecture précédente...');
     } catch (e) {
       debugPrint('Erreur playPrevious: $e');
       if (_context != null && _context!.mounted) {
         NotificactionService.showErrorMessage(
           _context!,
-          'Erreur lors de la lecture précédente: $e',
+          i18n.tr("home.an_error_occurred"),
         );
       }
     }

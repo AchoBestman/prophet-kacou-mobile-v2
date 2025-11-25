@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return AnimatedTheme(
       data: themeProvider.lightTheme,
       duration: const Duration(milliseconds: 400),
@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
         // Utiliser onGenerateRoute pour mieux contrôler la navigation
         onGenerateRoute: (settings) {
           WidgetBuilder builder;
-          
+
           switch (settings.name) {
             case '/':
               builder = (context) => const LandingPage();
@@ -83,11 +83,8 @@ class HomePage extends StatelessWidget {
             default:
               builder = (context) => const LandingPage();
           }
-          
-          return MaterialPageRoute(
-            builder: builder,
-            settings: settings,
-          );
+
+          return MaterialPageRoute(builder: builder, settings: settings);
         },
       ),
     );
@@ -104,7 +101,7 @@ class LandingPage extends StatelessWidget {
         final title = i18n.tr('home.title');
         final version = "v.1.0.0";
         final titleAndVersion = "$title - $version";
-        
+
         return PopScope(
           // Empêcher le retour arrière sur la page d'accueil
           canPop: false,
@@ -121,11 +118,7 @@ class LandingPage extends StatelessWidget {
               bottom: true,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  LanguageSelector(),
-                  BodySection(),
-                  FooterSection(),
-                ],
+                children: [LanguageSelector(), BodySection(), FooterSection()],
               ),
             ),
           ),
