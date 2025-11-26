@@ -367,7 +367,7 @@ class _SermonsPageState extends State<SermonsPage>
                         theme.tabBarTheme.unselectedLabelColor,
                     indicatorColor: theme.tabBarTheme.indicatorColor,
                     tabs:  [
-                      Tab(text: i18n.tr("home.Prédications").toUpperCase()),
+                      Tab(text: i18n.tr("home.sermon").toUpperCase()),
                       Tab(text: i18n.tr("home.read_a_sermon").toUpperCase()),
                     ],
                   ),
