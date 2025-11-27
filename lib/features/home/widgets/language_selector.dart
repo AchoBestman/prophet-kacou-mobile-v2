@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:prophet_kacou/app/device_config.dart';
 import 'package:prophet_kacou/core/utils/langues.dart';
 import 'package:prophet_kacou/core/utils/path_utils.dart';
 import 'package:prophet_kacou/i18n/language_provider.dart';
@@ -18,11 +17,10 @@ class LanguageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final languages = LanguageData.homeLanguages();
     final languageProvider = Provider.of<LanguageProvider>(context);
-    final config = getConfig(context);
 
-    final double flagDefaultSize = config.flagDefaultSize;
-    final double flagSpacing = config.flagSpacing;
-    final double flagRunSpacing = config.flagRunSpacing;
+    final double flagDefaultSize = 32;
+    final double flagSpacing = 6;
+    final double flagRunSpacing = 4;
     final double flagIconWidth = flagDefaultSize + 27;
     final double textIconWidth = flagDefaultSize + 37;
     final double flagIconHeight = flagDefaultSize + 7;
@@ -43,7 +41,7 @@ class LanguageSelector extends StatelessWidget {
       children: [
         Container(
           color: Colors.white,
-          padding: const EdgeInsets.only(bottom: 0),
+          padding: const EdgeInsets.only(bottom: 20),
           child: Column(
             children: [
               Text(

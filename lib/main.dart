@@ -95,9 +95,6 @@ class _MyAppState extends State<MyApp> {
 
     // Liste de toutes les images à précharger
     final List<String> imagesToPreload = [
-      // Image de fond de BodySection
-      'assets/images/2000X3000.png',
-
       // Drapeaux de LanguageSelector
       'assets/images/drapeau/en.jpg',
       'assets/images/drapeau/fr.jpg',
@@ -109,7 +106,10 @@ class _MyAppState extends State<MyApp> {
       // Ajoutez d'autres drapeaux si nécessaire
 
       // Icône de l'application (si utilisée)
-      'assets/icons/icon.png',
+      'assets/icons/icon420x420.png',
+      'assets/icons/icon512x512.png',
+      'assets/icons/sea.png',
+      'assets/icons/philippe.png',
 
       // Ajoutez toutes les autres images utilisées dans HomePage
     ];

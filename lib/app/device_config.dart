@@ -83,8 +83,8 @@ ResponsiveConfig getConfig(BuildContext context) {
         spacing: 12,
         imageAlignment: 0.5,
         imageTopTitleMargin: 30,
-        flagDefaultSize: 36,
-        flagSpacing: 12,
+        flagDefaultSize: 32,
+        flagSpacing: 2,
         flagRunSpacing:5,
       );
 
@@ -100,8 +100,8 @@ ResponsiveConfig getConfig(BuildContext context) {
         spacing: 2,
         imageAlignment: 1.7,
         imageTopTitleMargin: 35,
-        flagDefaultSize: 33,
-        flagSpacing: 4,
+        flagDefaultSize: 32,
+        flagSpacing: 6,
         flagRunSpacing: 4,
       );
 

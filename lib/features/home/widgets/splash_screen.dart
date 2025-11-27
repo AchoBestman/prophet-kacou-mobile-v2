@@ -62,7 +62,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/icons/icon.png',
+                          'assets/icons/icon420x420.png',
                           fit: BoxFit.cover,
                         ),
                       ),

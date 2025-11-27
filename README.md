@@ -6,11 +6,36 @@ A new Flutter project.
 
 This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+## Pour renommer le nom de l'application
+dart run rename setAppName --targets ios,android --value "Prophet Kacou"
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Start the iOS Simulator with the following command:
+open -a Simulator
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# build apk for android
+flutter build apk --release
+
+# 1. Installer les dépendances
+flutter pub get
+
+# 2. Générer le splash screen natif
+dart run flutter_native_splash:create
+
+# 3. Générer les icônes de l'application
+dart run flutter_launcher_icons
+
+# 4. Nettoyer et reconstruire
+flutter clean
+flutter pub get
+
+# 5. Lancer l'application
+flutter run
+
+# Si vous rencontrez des problèmes, essayez :
+# Pour Android
+flutter build apk
+# Ou
+flutter build appbundle
+
+# Pour iOS (sur Mac uniquement)
+flutter build ios

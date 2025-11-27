@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:prophet_kacou/app/device_config.dart';
 import 'package:prophet_kacou/colors/custom_colors.dart';
 import 'package:prophet_kacou/i18n/i18n.dart';
 
@@ -8,19 +7,16 @@ class CitationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Configuration selon le type d'écran
-    final config = getConfig(context);
-
     return Container(
-      margin: EdgeInsets.only(top: config.topMargin),
       padding: EdgeInsets.only(
-        left: config.horizontalPadding,
-        right: config.horizontalPadding,
-        top: config.topPadding,
+        left: 8,
+        top: 4,
+        right: 4,
+        bottom: 2
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(blue: 1),
-        borderRadius: BorderRadius.circular(config.borderRadius),
+        borderRadius: BorderRadius.circular(0),
       ),
       child: Column(
         children: [
@@ -30,13 +26,13 @@ class CitationSection extends StatelessWidget {
             softWrap: true,
             style: TextStyle(
               color: pkpIndigo,
-              fontSize: config.textFontSize,
+              fontSize: 17,
               fontStyle: FontStyle.italic,
               fontWeight: FontWeight.w500,
               height: 1.4,
             ),
           ),
-          SizedBox(height: config.spacing),
+          SizedBox(height: 4),
           Align(
             alignment: Alignment.centerRight,
             child: Text(
@@ -44,7 +40,7 @@ class CitationSection extends StatelessWidget {
               style: TextStyle(
                 color: const Color(0xFF1565C0),
                 fontWeight: FontWeight.bold,
-                fontSize: config.referenceFontSize,
+                fontSize: 14,
               ),
             ),
           ),

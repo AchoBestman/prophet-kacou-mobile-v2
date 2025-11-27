@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 class ImagePreloader {
   /// Liste centralisée de toutes les images de l'application
   static const List<String> homePageImages = [
-    // Image de fond de BodySection
-    'assets/images/2000X3000.png',
-    
+
     // Drapeaux de LanguageSelector
     'assets/images/drapeau/en.jpg',
     'assets/images/drapeau/fr.jpg',
@@ -16,8 +14,11 @@ class ImagePreloader {
     'assets/images/drapeau/in.jpg',
     'assets/images/drapeau/sa.jpg',
     
-    // Icône de l'application
-    'assets/icons/icon.png',
+    // Icône de l'application (si utilisée)
+    'assets/icons/icon420x420.png',
+    'assets/icons/icon512x512.png',
+    'assets/icons/sea.png',
+    'assets/icons/philippe.png',
     
     // Ajoutez ici toutes les autres images utilisées dans HomePage
   ];

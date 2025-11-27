@@ -31,7 +31,7 @@ aikpeachile@AIKPEs-MacBook-Pro prophet_kacou %
 
 5. Lancer Flutter sur un simulateur spécifique
 
-xcrun simctl boot "iPhone 16 Pro"
+xcrun simctl boot "2D2E044F-7865-4EF9-9073-F43E37B699A9"
 flutter run -d "2D2E044F-7865-4EF9-9073-F43E37B699A9"
 
 xcrun simctl boot "iPhone SE"
